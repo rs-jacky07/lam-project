@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LAM — Life Architecture Map</title>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #05050f;
+      --accent: #4f8ef7;
+      --accent-glow: rgba(79,142,247,0.55);
+      --accent2: #93bfff;
+      --border: rgba(255,255,255,0.08);
+      --text: #eeeeff;
+      --text2: #7878a0;
+      --text3: #33334a;
+      --error: #f06a6a;
+      --success: #4ecb8d;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Pretendard', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ══════════════════════════════════════
+       INTRO — 3줄 순차 등장
+    ══════════════════════════════════════ */
+    #intro {
+      position: fixed; inset: 0; z-index: 100;
+      background: #000;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 4px;
+      transition: opacity 0.9s ease;
+    }
+    #intro.fade-out { opacity: 0; pointer-events: none; }
+
+    .intro-line {
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .intro-char {
+      display: inline-block;
+      font-size: clamp(32px, 8vw, 80px);
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #ffffff;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.45s ease, transform 0.45s ease,
+                  color 0.5s ease, text-shadow 0.5s ease;
+    }
+    .intro-char.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .intro-char.highlight {
+      color: var(--accent);
+      text-shadow:
+        0 0 16px var(--accent-glow),
+        0 0 48px var(--accent-glow),
+        0 0 100px rgba(79,142,247,0.25);
+    }
+
+    /* ══════════════════════════════════════
+       MAIN PAGE
+    ══════════════════════════════════════ */
+    #main-page {
+      position: fixed; inset: 0; z-index: 10;
+      opacity: 0;
+      transition: opacity 0.9s ease;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    #main-page.show { opacity: 1; }
+
+    /* 캔버스 (유성 + 별) */
+    #bgCanvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+    }
+
+    /* 마우스 따라다니는 빛 구체 — 3중 레이어 */
+    #cursor-orb {
+      position: fixed;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 50;
+      transform: translate(-50%, -50%);
+      /* 코어: 밝고 선명한 흰-파랑 */
+      background: radial-gradient(circle,
+        rgba(255,255,255,1)    0%,
+        rgba(180,215,255,0.95) 25%,
+        rgba(79,142,247,0.7)   55%,
+        transparent            100%);
+      box-shadow:
+        /* 중간 글로우 */
+        0 0 12px 4px  rgba(79,142,247,0.9),
+        /* 외곽 오라 */
+        0 0 40px 14px rgba(79,142,247,0.45),
+        /* 넓은 헤일로 */
+        0 0 90px 30px rgba(79,142,247,0.18);
+    }
+
+    /* 메인 콘텐츠 */
+    .main-content {
+      position: relative; z-index: 6;
+      text-align: center;
+      padding: 24px;
+      user-select: none;
+    }
+
+    .main-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(79,142,247,0.08);
+      border: 1px solid rgba(79,142,247,0.22);
+      border-radius: 100px;
+      padding: 7px 18px;
+      margin-bottom: 32px;
+      opacity: 0; transform: translateY(12px);
+      transition: opacity 0.7s ease 0.1s, transform 0.7s ease 0.1s;
+    }
+    #main-page.show .main-badge { opacity:1; transform:translateY(0); }
+
+    .badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2.2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50% { opacity:0.35; transform:scale(0.65); }
+    }
+    .badge-text {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--accent2);
+    }
+
+    /* 타이틀 — 전체 파란 그라데이션 통일 */
+    .main-title {
+      display: flex; flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      margin-bottom: 18px;
+      opacity: 0; transform: translateY(18px);
+      transition: opacity 0.8s ease 0.25s, transform 0.8s ease 0.25s;
+    }
+    #main-page.show .main-title { opacity:1; transform:translateY(0); }
+
+    .title-line {
+      font-size: clamp(38px, 7.5vw, 90px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.0;
+      background: linear-gradient(135deg, #a8c8ff 0%, var(--accent) 40%, #b8d4ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .title-line.dim {
+      background: linear-gradient(135deg, #d8e8ff 0%, #93bfff 60%, #c8deff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      opacity: 0.72;
+    }
+
+    .main-sub {
+      font-size: clamp(13px, 1.8vw, 15px);
+      color: var(--text2);
+      letter-spacing: 0.06em;
+      margin-bottom: 52px;
+      opacity: 0; transform: translateY(10px);
+      transition: opacity 0.7s ease 0.4s, transform 0.7s ease 0.4s;
+    }
+    #main-page.show .main-sub { opacity:1; transform:translateY(0); }
+
+    .btn-login {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 16px 48px;
+      background: linear-gradient(135deg, var(--accent) 0%, #7eb3ff 100%);
+      border: none; border-radius: 100px;
+      color: #fff;
+      font-family: 'Pretendard', sans-serif;
+      font-size: 16px; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.03em;
+      opacity: 0; transform: translateY(12px);
+      transition:
+        opacity 0.7s ease 0.55s, transform 0.7s ease 0.55s,
+        box-shadow 0.25s ease, scale 0.15s ease;
+    }
+    #main-page.show .btn-login { opacity:1; transform:translateY(0); }
+    .btn-login:hover {
+      box-shadow: 0 10px 36px rgba(79,142,247,0.55);
+      scale: 1.04;
+    }
+    .btn-login:active { scale: 0.97; }
+
+    .btn-arrow { transition: transform 0.22s ease; }
+    .btn-login:hover .btn-arrow { transform: translateX(5px); }
+
+    .main-footer {
+      position: absolute; bottom: 28px; left:0; right:0;
+      text-align: center;
+      font-size: 11px; color: var(--text3);
+      letter-spacing: 0.12em;
+      z-index: 6;
+      opacity: 0;
+      transition: opacity 0.8s ease 0.9s;
+    }
+    #main-page.show .main-footer { opacity:1; }
+
+    /* ══════════════════════════════════════
+       LOGIN MODAL
+    ══════════════════════════════════════ */
+    #modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(14px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    #modal-overlay.show { opacity:1; pointer-events:all; }
+
+    .modal {
+      width: 100%; max-width: 400px;
+      background: #0e0e1c;
+      border: 1px solid rgba(79,142,247,0.18);
+      border-radius: 20px;
+      padding: 36px 32px;
+      position: relative;
+      transform: translateY(22px) scale(0.96);
+      transition: transform 0.38s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+    }
+    #modal-overlay.show .modal { transform: translateY(0) scale(1); }
+
+    .modal-close {
+      position: absolute; top:16px; right:16px;
+      width:32px; height:32px; border-radius:50%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--text2); font-size:15px;
+      cursor: pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition: background 0.2s, color 0.2s;
+    }
+    .modal-close:hover { background:rgba(255,255,255,0.12); color:var(--text); }
+
+    .modal-logo {
+      font-size:12px; font-weight:700;
+      letter-spacing:0.14em; text-transform:uppercase;
+      color:var(--accent); margin-bottom:4px;
+    }
+    .modal-title { font-size:22px; font-weight:800; letter-spacing:-0.01em; margin-bottom:4px; }
+    .modal-sub { font-size:13px; color:var(--text2); margin-bottom:26px; }
+
+    .tabs {
+      display:flex;
+      background:rgba(255,255,255,0.04);
+      border-radius:10px; padding:4px; margin-bottom:22px;
+    }
+    .tab-btn {
+      flex:1; padding:9px; border:none;
+      background:transparent; color:var(--text2);
+      font-family:'Pretendard',sans-serif;
+      font-size:14px; font-weight:500;
+      border-radius:7px; cursor:pointer;
+      transition:all 0.2s ease;
+    }
+    .tab-btn.active { background:var(--accent); color:#fff; font-weight:700; }
+
+    .alert {
+      padding:11px 14px; border-radius:10px;
+      font-size:13px; font-weight:500;
+      margin-bottom:14px; display:none;
+      animation: alertIn 0.25s ease;
+    }
+    @keyframes alertIn {
+      from { opacity:0; transform:translateY(-6px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+    .alert.error  { display:block; background:rgba(240,106,106,0.12); border:1px solid rgba(240,106,106,0.3); color:var(--error); }
+    .alert.success{ display:block; background:rgba(78,203,141,0.12);  border:1px solid rgba(78,203,141,0.3);  color:var(--success); }
+
+    .form-group { margin-bottom:14px; }
+    .form-label {
+      display:block; font-size:11px; font-weight:600;
+      color:var(--text2); letter-spacing:0.08em;
+      text-transform:uppercase; margin-bottom:7px;
+    }
+    .form-input {
+      width:100%; padding:12px 15px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid var(--border);
+      border-radius:10px; color:var(--text);
+      font-family:'Pretendard',sans-serif; font-size:15px;
+      outline:none;
+      transition:border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input:focus {
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(79,142,247,0.15);
+    }
+    .form-input::placeholder { color:var(--text3); }
+
+    .btn-submit {
+      width:100%; padding:14px; margin-top:6px;
+      background:linear-gradient(135deg, var(--accent), #7eb3ff);
+      border:none; border-radius:10px;
+      color:#fff; font-family:'Pretendard',sans-serif;
+      font-size:15px; font-weight:700; cursor:pointer;
+      transition:transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    }
+    .btn-submit:hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(79,142,247,0.4); }
+    .btn-submit:active { transform:scale(0.98); }
+    .btn-submit:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+    .btn-submit.loading .btn-text { display:none; }
+    .btn-submit .btn-loading { display:none; }
+    .btn-submit.loading .btn-loading { display:inline; }
+
+    .form-panel { display:none; }
+    .form-panel.active { display:block; animation:alertIn 0.25s ease; }
+
+    @media (max-width:480px) {
+      .modal { padding:28px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 인트로 -->
+  <div id="intro">
+    <div class="intro-line" id="line-life"></div>
+    <div class="intro-line" id="line-arch"></div>
+    <div class="intro-line" id="line-map"></div>
+  </div>
+
+  <!-- 메인 -->
+  <div id="main-page">
+    <canvas id="bgCanvas"></canvas>
+    <div id="cursor-orb"></div>
+
+    <div class="main-content">
+      <div class="main-badge">
+        <div class="badge-dot"></div>
+        <span class="badge-text">Personal Growth Dashboard</span>
+      </div>
+      <div class="main-title">
+        <span class="title-line">Life</span>
+        <span class="title-line">Architecture</span>
+        <span class="title-line dim">Map</span>
+      </div>
+      <div class="main-sub">삶의 모든 영역을 설계하고, 기록하고, 성장하세요</div>
+      <button class="btn-login" onclick="openModal()">
+        시작하기 <span class="btn-arrow">→</span>
+      </button>
+    </div>
+
+    <div class="main-footer">LAM · Life Architecture Map · Personal Future Design</div>
+  </div>
+
+  <!-- 모달 -->
+  <div id="modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-logo">LAM</div>
+      <div class="modal-title">시작하기</div>
+      <div class="modal-sub">계정으로 로그인하거나 새로 가입하세요</div>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('login')">로그인</button>
+        <button class="tab-btn" onclick="switchTab('signup')">회원가입</button>
+      </div>
+
+      <div class="alert" id="alertBox"></div>
+
+      <div class="form-panel active" id="loginPanel">
+        <div class="form-group">
+          <label class="form-label">이메일</label>
+          <input type="email" class="form-input" id="loginEmail" placeholder="이메일을 입력하세요" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">비밀번호</label>
+          <input type="password" class="form-input" id="loginPassword" placeholder="비밀번호를 입력하세요"
+            onkeydown="if(event.key==='Enter') doLogin()" />
+        </div>
+        <button class="btn-submit" id="loginBtn" onclick="doLogin()">
+          <span class="btn-text">로그인</span>
+          <span class="btn-loading">로그인 중...</span>
+        </button>
+      </div>
+
+      <div class="form-panel" id="signupPanel">
+        <div class="form-group">
+          <label class="form-label">이름</label>
+          <input type="text" class="form-input" id="signupName" placeholder="이름을 입력하세요" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">이메일</label>
+          <input type="email" class="form-input" id="signupEmail" placeholder="이메일을 입력하세요" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">비밀번호</label>
+          <input type="password" class="form-input" id="signupPassword" placeholder="8자 이상 입력하세요"
+            onkeydown="if(event.key==='Enter') doSignup()" />
+        </div>
+        <button class="btn-submit" id="signupBtn" onclick="doSignup()">
+          <span class="btn-text">회원가입</span>
+          <span class="btn-loading">가입 중...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ── Supabase ── */
+    const SUPABASE_URL = 'https://jmumomvxylxbkagjnmxc.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptdW1vbXZ4eWx4YmthZ2pubXhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODc5NzksImV4cCI6MjA5NTg2Mzk3OX0.OQBcCmA7ULgZ28zujvuB_FH0WbUmlHqks_TY97FB7E8';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) { location.href = 'dashboard.html'; return; }
+      startIntro();
+    })();
+
+    /* ══════════════════════════════════════
+       CANVAS — 별 + 유성
+    ══════════════════════════════════════ */
+    const canvas = document.getElementById('bgCanvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, stars = [], meteors = [];
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // 별 초기화
+    for (let i = 0; i < 160; i++) {
+      stars.push({
+        x: Math.random(),
+        y: Math.random(),
+        r: Math.random() * 1.4 + 0.3,
+        a: Math.random(),
+        speed: 0.003 + Math.random() * 0.006,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+
+    // 유성 생성
+    function spawnMeteor() {
+      const angle = (Math.PI / 180) * (30 + Math.random() * 20);
+      meteors.push({
+        x: Math.random() * W * 1.5 - W * 0.25,
+        y: -20,
+        vx: Math.cos(angle) * (6 + Math.random() * 6),
+        vy: Math.sin(angle) * (6 + Math.random() * 6),
+        len: 80 + Math.random() * 140,
+        alpha: 1,
+        life: 1
+      });
+    }
+
+    let lastMeteor = 0;
+    function drawFrame(ts) {
+      ctx.clearRect(0, 0, W, H);
+
+      // 배경
+      const grad = ctx.createRadialGradient(W*0.5, H*0.5, 0, W*0.5, H*0.5, W*0.8);
+      grad.addColorStop(0, 'rgba(8,8,24,1)');
+      grad.addColorStop(1, 'rgba(2,2,10,1)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // 별
+      stars.forEach(s => {
+        s.phase += s.speed;
+        const a = 0.25 + 0.75 * Math.abs(Math.sin(s.phase));
+        ctx.beginPath();
+        ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(180,200,255,${a})`;
+        ctx.fill();
+      });
+
+      // 유성 스폰
+      if (ts - lastMeteor > 1200 + Math.random() * 2000) {
+        spawnMeteor();
+        lastMeteor = ts;
+      }
+
+      // 유성 그리기
+      meteors = meteors.filter(m => m.life > 0);
+      meteors.forEach(m => {
+        m.x += m.vx; m.y += m.vy;
+        m.life -= 0.018;
+        const alpha = m.life * 0.9;
+        const grd = ctx.createLinearGradient(
+          m.x, m.y,
+          m.x - m.vx / Math.hypot(m.vx, m.vy) * m.len,
+          m.y - m.vy / Math.hypot(m.vx, m.vy) * m.len
+        );
+        grd.addColorStop(0, `rgba(160,200,255,${alpha})`);
+        grd.addColorStop(0.3, `rgba(100,160,255,${alpha * 0.5})`);
+        grd.addColorStop(1, 'rgba(79,142,247,0)');
+        ctx.beginPath();
+        ctx.moveTo(m.x, m.y);
+        ctx.lineTo(
+          m.x - m.vx / Math.hypot(m.vx, m.vy) * m.len,
+          m.y - m.vy / Math.hypot(m.vx, m.vy) * m.len
+        );
+        ctx.strokeStyle = grd;
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+
+        // 머리 빛
+        const hGrd = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, 4);
+        hGrd.addColorStop(0, `rgba(220,235,255,${alpha})`);
+        hGrd.addColorStop(1, 'rgba(79,142,247,0)');
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = hGrd;
+        ctx.fill();
+      });
+
+      requestAnimationFrame(drawFrame);
+    }
+    requestAnimationFrame(drawFrame);
+
+    /* ══════════════════════════════════════
+       마우스 빛 구체
+    ══════════════════════════════════════ */
+    const orb = document.getElementById('cursor-orb');
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let orbX = mouseX, orbY = mouseY;
+
+    document.addEventListener('mousemove', e => {
+      mouseX = e.clientX; mouseY = e.clientY;
+    });
+
+    function lerpOrb() {
+      orbX += (mouseX - orbX) * 0.14;
+      orbY += (mouseY - orbY) * 0.14;
+      orb.style.left = orbX + 'px';
+      orb.style.top  = orbY + 'px';
+      requestAnimationFrame(lerpOrb);
+    }
+    lerpOrb();
+
+    /* ══════════════════════════════════════
+       INTRO — 3줄 순차 등장
+    ══════════════════════════════════════ */
+    function startIntro() {
+      const lines = [
+        { el: 'line-life', word: 'LIFE',         highlight: [0] },
+        { el: 'line-arch', word: 'ARCHITECTURE', highlight: [0] },
+        { el: 'line-map',  word: 'MAP',          highlight: [0] }
+      ];
+
+      let allSpans = [];
+      const lineSpans = [];
+
+      lines.forEach(({ el, word, highlight }) => {
+        const container = document.getElementById(el);
+        const spans = [];
+        word.split('').forEach((ch, ci) => {
+          const span = document.createElement('span');
+          span.className = 'intro-char';
+          span.textContent = ch;
+          span.dataset.hl = highlight.includes(ci) ? '1' : '0';
+          container.appendChild(span);
+          spans.push(span);
+        });
+        lineSpans.push(spans);
+        allSpans = allSpans.concat(spans);
+      });
+
+      // 1) 각 줄 통째로 등장 (줄 간격 300ms)
+      let t = 300;
+      lineSpans.forEach((spans, li) => {
+        const lineDelay = t + li * 320;
+        spans.forEach((span, ci) => {
+          setTimeout(() => span.classList.add('show'), lineDelay + ci * 45);
+        });
+      });
+
+      const showDone = t + (lineSpans.length - 1) * 320 + lineSpans[2].length * 45;
+
+      // 2) L A M 순서대로 강조
+      const lamSpans = allSpans.filter(s => s.dataset.hl === '1');
+      lamSpans.forEach((span, i) => {
+        setTimeout(() => span.classList.add('highlight'), showDone + 300 + i * 380);
+      });
+
+      const hlDone = showDone + 300 + lamSpans.length * 380 + 500;
+
+      // 3) 페이드 아웃 → 메인
+      setTimeout(() => {
+        document.getElementById('intro').classList.add('fade-out');
+        setTimeout(() => {
+          document.getElementById('intro').style.display = 'none';
+          document.getElementById('main-page').classList.add('show');
+        }, 900);
+      }, hlDone);
+    }
+
+    /* ══════════════════════════════════════
+       MODAL
+    ══════════════════════════════════════ */
+    function openModal()  { document.getElementById('modal-overlay').classList.add('show'); }
+    function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); clearAlert(); }
+    function handleOverlayClick(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach((b,i) =>
+        b.classList.toggle('active', i === (tab==='login'?0:1)));
+      document.getElementById('loginPanel').classList.toggle('active', tab==='login');
+      document.getElementById('signupPanel').classList.toggle('active', tab==='signup');
+      clearAlert();
+    }
+
+    function showAlert(msg, type='error') {
+      const b = document.getElementById('alertBox');
+      b.textContent = msg; b.className = 'alert ' + type;
+    }
+    function clearAlert() { document.getElementById('alertBox').className = 'alert'; }
+
+    async function doLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const pw    = document.getElementById('loginPassword').value;
+      if (!email || !pw) return showAlert('이메일과 비밀번호를 입력해주세요.');
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true; btn.classList.add('loading'); clearAlert();
+      const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+      btn.disabled = false; btn.classList.remove('loading');
+      if (error) showAlert('이메일 또는 비밀번호가 올바르지 않습니다.');
+      else { showAlert('로그인 성공! 이동 중...','success'); setTimeout(()=>location.href='dashboard.html',800); }
+    }
+
+    async function doSignup() {
+      const name  = document.getElementById('signupName').value.trim();
+      const email = document.getElementById('signupEmail').value.trim();
+      const pw    = document.getElementById('signupPassword').value;
+      if (!name||!email||!pw) return showAlert('모든 항목을 입력해주세요.');
+      if (pw.length < 8) return showAlert('비밀번호는 8자 이상이어야 합니다.');
+      const btn = document.getElementById('signupBtn');
+      btn.disabled = true; btn.classList.add('loading'); clearAlert();
+      const { data, error } = await sb.auth.signUp({ email, password: pw });
+      if (error) { btn.disabled=false; btn.classList.remove('loading'); showAlert('가입 실패: '+error.message); return; }
+      if (data.user) await sb.from('profiles').upsert({ id:data.user.id, email, name });
+      btn.disabled=false; btn.classList.remove('loading');
+      showAlert('가입 완료! 로그인해주세요.','success');
+      setTimeout(()=>switchTab('login'),1500);
+    }
+  </script>
+</body>
+</html>
