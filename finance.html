@@ -135,9 +135,18 @@
     .board-col { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
       padding:18px; display:flex; flex-direction:column; gap:11px; min-height:160px; }
     .col-head { display:flex; align-items:center; justify-content:space-between; }
+    .col-head-left { display:flex; align-items:center; gap:9px; }
+    .col-head-right { display:flex; align-items:center; gap:8px; }
+    .col-total { font-size:14px; font-weight:800; }
+    .col-tools { display:flex; gap:5px; }
+    .col-btn { width:28px; height:28px; border-radius:8px; border:1px solid var(--border);
+      background:var(--bg2); color:var(--text2); cursor:pointer; font-size:14px; font-weight:800;
+      display:flex; align-items:center; justify-content:center; font-family:'Pretendard',sans-serif;
+      transition:all 0.14s; line-height:1; }
+    .col-btn:hover { border-color:var(--accent); color:var(--accent2); background:rgba(91,155,255,0.1); }
+    .col-btn.sort { font-size:13px; }
     .col-title { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:800; }
     .col-dot { width:9px; height:9px; border-radius:50%; }
-    .col-total { font-size:15px; font-weight:800; }
     .col-income .col-total { color:var(--success); }
     .col-expense .col-total { color:var(--error); }
     .col-save .col-total { color:var(--gold); }
@@ -322,27 +331,42 @@
       <div class="board fade-up" style="animation-delay:0.12s">
         <div class="board-col col-income">
           <div class="col-head">
-            <div class="col-title"><span class="col-dot" style="background:var(--success)"></span> 수입</div>
+            <div class="col-head-left">
+              <div class="col-title"><span class="col-dot" style="background:var(--success)"></span> 수입</div>
+              <div class="col-tools">
+                <button class="col-btn" title="수입 추가" onclick="openModalType('income')">+</button>
+                <button class="col-btn sort" id="sortIncome" title="날짜 정렬" onclick="toggleSort('income')">↓</button>
+              </div>
+            </div>
             <div class="col-total" id="colIncomeTotal">0원</div>
           </div>
           <div class="col-body" id="colIncome"></div>
-          <button class="col-add" onclick="openModalType('income')">+ 수입 추가하기</button>
         </div>
         <div class="board-col col-expense">
           <div class="col-head">
-            <div class="col-title"><span class="col-dot" style="background:var(--error)"></span> 지출</div>
+            <div class="col-head-left">
+              <div class="col-title"><span class="col-dot" style="background:var(--error)"></span> 지출</div>
+              <div class="col-tools">
+                <button class="col-btn" title="지출 추가" onclick="openModalType('expense')">+</button>
+                <button class="col-btn sort" id="sortExpense" title="날짜 정렬" onclick="toggleSort('expense')">↓</button>
+              </div>
+            </div>
             <div class="col-total" id="colExpenseTotal">0원</div>
           </div>
           <div class="col-body" id="colExpense"></div>
-          <button class="col-add" onclick="openModalType('expense')">+ 지출 추가하기</button>
         </div>
         <div class="board-col col-save">
           <div class="col-head">
-            <div class="col-title"><span class="col-dot" style="background:var(--gold)"></span> 저축·투자</div>
+            <div class="col-head-left">
+              <div class="col-title"><span class="col-dot" style="background:var(--gold)"></span> 저축·투자</div>
+              <div class="col-tools">
+                <button class="col-btn" title="저축·투자 추가" onclick="openModalType('save')">+</button>
+                <button class="col-btn sort" id="sortSave" title="날짜 정렬" onclick="toggleSort('save')">↓</button>
+              </div>
+            </div>
             <div class="col-total" id="colSaveTotal">0원</div>
           </div>
           <div class="col-body" id="colSave"></div>
-          <button class="col-add" onclick="openModalType('save')">+ 저축·투자 추가하기</button>
         </div>
       </div>
 
@@ -390,6 +414,7 @@ let user=null, categoryId=null, editingId=null, curType='expense';
 let yearRecords=[];
 let selMonth = new Date().getMonth()+1;
 let searchText='';
+let sortDir = { income:'desc', expense:'desc', save:'desc' };  // 열별 날짜 정렬 (desc=최신순)
 const YEAR = new Date().getFullYear();
 const MEDALS = ['🥇','🥈','🥉'];
 
@@ -609,10 +634,27 @@ function visibleRecords(){
   });
 }
 
+function toggleSort(status){
+  sortDir[status] = sortDir[status]==='desc' ? 'asc' : 'desc';
+  const btn = $('sort'+status.charAt(0).toUpperCase()+status.slice(1));
+  if(btn) btn.textContent = sortDir[status]==='desc' ? '↓' : '↑';
+  renderBoard();
+}
+
 function renderBoard(){
   const vis = visibleRecords();
   const cols={income:[],expense:[],save:[]};
   vis.forEach(r=> cols[r.status]?.push(r));
+  // 열별 날짜 정렬 (동일 날짜는 created_at 보조)
+  ['income','expense','save'].forEach(st=>{
+    const dir = sortDir[st]==='asc' ? 1 : -1;
+    cols[st].sort((a,b)=>{
+      const da=(a.recorded_at||''), db=(b.recorded_at||'');
+      if(da!==db) return da<db ? -1*dir : 1*dir;
+      const ca=(a.created_at||''), cb=(b.created_at||'');
+      return ca<cb ? -1*dir : 1*dir;
+    });
+  });
   const totals={income:0,expense:0,save:0};
   vis.forEach(r=> totals[r.status]+=Number(r.value));
   $('colIncomeTotal').textContent = won(totals.income);
