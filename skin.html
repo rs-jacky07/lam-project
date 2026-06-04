@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LAM — 피부</title>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#07070f; --bg2:#0d0d1a; --card:#15151f; --card2:#1c1c2b;
+      --border:rgba(255,255,255,0.10);
+      --accent:#5b9bff; --accent2:#9cc6ff;
+      --text:#f4f4fb; --text2:#b8b8d4; --text3:#7e7ea4;
+      --success:#56d99a; --warning:#ffb338; --error:#ff7a7a; --gold:#ffc14d;
+      --pink:#ff8fc7; --purple:#b18cff;
+      --sidebar:232px; --radius:14px;
+    }
+    html, body { height:100%; font-family:'Pretendard',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; font-size:15px; }
+    .app { display:flex; height:100vh; overflow:hidden; }
+
+    /* SIDEBAR */
+    .sidebar { width:var(--sidebar); min-width:var(--sidebar); background:var(--bg2);
+      border-right:1px solid var(--border); display:flex; flex-direction:column;
+      padding:24px 0 0; overflow-y:auto; overflow-x:hidden; z-index:100; }
+    .sidebar::-webkit-scrollbar { width:0; }
+    .sidebar-logo { padding:0 20px 22px; border-bottom:1px solid var(--border); margin-bottom:18px; }
+    .logo-lam { font-size:20px; font-weight:800; letter-spacing:0.06em;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .logo-full { font-size:11px; color:var(--text3); letter-spacing:0.05em; margin-top:3px; }
+    .sidebar-section { padding:0 10px; margin-bottom:6px; }
+    .sidebar-label { font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+      color:var(--text3); padding:0 8px; margin-bottom:6px; }
+    .nav-item { display:flex; align-items:center; gap:9px; padding:10px 11px; border-radius:10px;
+      font-size:14px; font-weight:600; color:var(--text2); cursor:pointer; text-decoration:none;
+      transition:background 0.16s,color 0.16s; margin-bottom:2px; }
+    .nav-item:hover { background:rgba(255,255,255,0.07); color:var(--text); }
+    .nav-item.active { background:rgba(91,155,255,0.18); color:var(--accent2); font-weight:700; }
+    .nav-icon { font-size:15px; width:20px; text-align:center; flex-shrink:0; }
+    .sidebar-bottom { margin-top:auto; padding:14px 10px 20px; border-top:1px solid var(--border); }
+    .profile-card { display:flex; align-items:center; gap:9px; padding:10px 11px; border-radius:10px;
+      background:rgba(255,255,255,0.05); border:1px solid var(--border); margin-bottom:8px; }
+    .profile-avatar { width:32px; height:32px; border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0; }
+    .profile-name { font-size:14px; font-weight:700; color:var(--text); }
+    .profile-email { font-size:11px; color:var(--text3); margin-top:1px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; }
+    .btn-logout { width:100%; padding:9px; border-radius:8px; background:transparent;
+      border:1px solid var(--border); color:var(--text2); font-family:'Pretendard',sans-serif;
+      font-size:13px; font-weight:600; cursor:pointer; transition:all 0.16s; }
+    .btn-logout:hover { background:rgba(255,122,122,0.12); color:var(--error); border-color:rgba(255,122,122,0.35); }
+
+    /* MAIN */
+    .main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 28px;
+      border-bottom:1px solid var(--border); background:var(--bg); flex-shrink:0; }
+    .topbar-left h1 { font-size:20px; font-weight:800; letter-spacing:-0.01em; }
+    .topbar-left p { font-size:13px; color:var(--text2); margin-top:3px; }
+    .topbar-right { display:flex; align-items:center; gap:10px; }
+    .month-badge { padding:8px 15px; border-radius:9px; background:var(--card);
+      border:1px solid var(--border); font-size:14px; font-weight:700; color:var(--text); }
+    .btn-record { display:flex; align-items:center; gap:7px; padding:10px 20px; border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),#82b4ff); border:none; color:#fff;
+      font-family:'Pretendard',sans-serif; font-size:14px; font-weight:700; cursor:pointer;
+      transition:box-shadow 0.2s,scale 0.15s; }
+    .btn-record:hover { box-shadow:0 6px 22px rgba(91,155,255,0.5); scale:1.02; }
+    .btn-record:active { scale:0.98; }
+    .content { flex:1; overflow-y:auto; overflow-x:hidden; padding:24px 28px 48px;
+      display:flex; flex-direction:column; gap:18px; }
+    .content::-webkit-scrollbar { width:5px; }
+    .content::-webkit-scrollbar-track { background:transparent; }
+    .content::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+
+    .section-title { font-size:15px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px; margin-bottom:-4px; }
+    .section-title .tag { font-size:11px; font-weight:700; color:var(--text3); }
+
+    /* ══ 요약 카드 (트랙2 채널 성장 + 트랙1 요약) ══ */
+    .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .summary-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      padding:18px 20px; position:relative; overflow:hidden; transition:border-color 0.2s, transform 0.2s; }
+    .summary-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px;
+      background:var(--card-accent,var(--accent)); opacity:0.85; }
+    .summary-card:hover { border-color:rgba(255,255,255,0.16); transform:translateY(-2px); }
+    .sc-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .sc-icon { font-size:18px; }
+    .sc-edit { font-size:11px; color:var(--text3); cursor:pointer; border:1px solid var(--border);
+      border-radius:7px; padding:3px 8px; background:var(--bg2); font-weight:700; transition:all 0.14s; }
+    .sc-edit:hover { color:var(--accent2); border-color:var(--accent); }
+    .sc-value { font-size:23px; font-weight:800; letter-spacing:-0.02em; margin-bottom:3px; }
+    .sc-value.channel { color:var(--accent2); }
+    .sc-value.count { color:var(--pink); }
+    .sc-value.star { color:var(--gold); }
+    .sc-label { font-size:12px; color:var(--text2); font-weight:600; }
+    .sc-delta { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700;
+      margin-top:8px; padding:3px 9px; border-radius:100px; }
+    .sc-delta.up { color:var(--success); background:rgba(86,217,154,0.15); }
+    .sc-delta.dn { color:var(--error); background:rgba(255,122,122,0.15); }
+    .sc-delta.flat { color:var(--text3); background:rgba(255,255,255,0.06); }
+
+    /* ══ 툴바 ══ */
+    .toolbar { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      padding:14px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+    .toolbar-search { display:flex; align-items:center; gap:8px; background:var(--bg2);
+      border:1px solid var(--border); border-radius:10px; padding:10px 13px;
+      width:240px; flex-shrink:0; transition:border-color 0.16s; }
+    .toolbar-search:focus-within { border-color:var(--accent); }
+    .toolbar-search span { font-size:13px; color:var(--text2); }
+    .toolbar-search input { flex:1; min-width:0; background:transparent; border:none; outline:none;
+      color:var(--text); font-family:'Pretendard',sans-serif; font-size:14px; }
+    .toolbar-search input::placeholder { color:var(--text3); }
+    .month-row { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+    .month-chip { padding:7px 13px; border-radius:100px; font-size:13px; font-weight:700;
+      background:transparent; border:1px solid var(--border); color:var(--text2); cursor:pointer;
+      font-family:'Pretendard',sans-serif; transition:all 0.16s; }
+    .month-chip:hover { background:rgba(255,255,255,0.07); color:var(--text); }
+    .month-chip.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+    /* ══ 리뷰 보드 (트랙1, 2열: 화해/글로우픽) ══ */
+    .board { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; align-items:start; }
+    .board-col { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      padding:18px; display:flex; flex-direction:column; gap:11px; min-height:160px; }
+    .col-head { display:flex; align-items:center; justify-content:space-between; }
+    .col-head-left { display:flex; align-items:center; gap:9px; }
+    .col-title { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:800; }
+    .col-dot { width:9px; height:9px; border-radius:50%; }
+    .col-sub { font-size:12px; color:var(--text2); font-weight:600; }
+    .col-tools { display:flex; gap:5px; }
+    .col-btn { width:28px; height:28px; border-radius:8px; border:1px solid var(--border);
+      background:var(--bg2); color:var(--text2); cursor:pointer; font-size:14px; font-weight:800;
+      display:flex; align-items:center; justify-content:center; font-family:'Pretendard',sans-serif;
+      transition:all 0.14s; line-height:1; }
+    .col-btn:hover { border-color:var(--accent); color:var(--accent2); background:rgba(91,155,255,0.1); }
+    .col-btn.sort { font-size:13px; }
+    .col-body { display:flex; flex-direction:column; gap:9px; }
+    .rv { display:flex; align-items:stretch; background:var(--card2); border:1px solid var(--border);
+      border-radius:11px; overflow:hidden; transition:border-color 0.16s; }
+    .rv:hover { border-color:rgba(91,155,255,0.4); }
+    .rv-main { flex:1; min-width:0; padding:13px 15px; cursor:pointer; }
+    .rv-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .rv-prod { font-size:14px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rv-date { font-size:11px; color:var(--text3); flex-shrink:0; }
+    .rv-stars { font-size:13px; color:var(--gold); margin-top:5px; letter-spacing:1px; }
+    .rv-stars .off { color:var(--text3); }
+    .rv-memo { font-size:12px; color:var(--text2); margin-top:5px;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .rv-ops { display:flex; flex-direction:column; border-left:1px solid var(--border); }
+    .rv-ops button { flex:1; width:48px; border:none; background:transparent; cursor:pointer;
+      color:var(--text2); font-size:12px; font-weight:700; font-family:'Pretendard',sans-serif;
+      transition:background 0.14s,color 0.14s; }
+    .rv-ops button:hover { background:rgba(91,155,255,0.16); color:var(--accent2); }
+    .rv-ops button.del:hover { background:rgba(255,122,122,0.16); color:var(--error); }
+    .rv-ops button + button { border-top:1px solid var(--border); }
+    .col-empty { font-size:13px; color:var(--text3); text-align:center; padding:26px 0; }
+
+    /* MODAL 공통 */
+    .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.66); backdrop-filter:blur(4px);
+      display:none; align-items:center; justify-content:center; z-index:200; opacity:0; transition:opacity 0.22s; }
+    .modal-bg.on { display:flex; opacity:1; }
+    .modal { background:var(--card); border:1px solid var(--border); border-radius:18px;
+      padding:28px; width:430px; max-width:92vw; transform:scale(0.96); transition:transform 0.22s; }
+    .modal-bg.on .modal { transform:scale(1); }
+    .modal h3 { font-size:19px; font-weight:800; margin-bottom:22px; }
+    .field { margin-bottom:16px; }
+    .field label { display:block; font-size:13px; color:var(--text2); margin-bottom:8px; font-weight:700; }
+    .field input, .field select, .field textarea { width:100%; background:var(--bg2); border:1px solid var(--border);
+      border-radius:10px; padding:12px 14px; color:var(--text); font-size:15px;
+      font-family:'Pretendard',sans-serif; outline:none; transition:border-color 0.16s; resize:vertical; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--accent); }
+    .type-tabs { display:flex; gap:7px; }
+    .type-tabs button { flex:1; padding:11px; border-radius:10px; border:1px solid var(--border);
+      background:var(--bg2); color:var(--text2); font-size:14px; cursor:pointer;
+      font-family:'Pretendard',sans-serif; transition:all 0.16s; font-weight:700; }
+    .type-tabs button.on { background:rgba(91,155,255,0.18); color:var(--accent2); border-color:var(--accent); }
+    /* 별점 입력 */
+    .star-input { display:flex; gap:6px; font-size:30px; line-height:1; }
+    .star-input span { cursor:pointer; color:var(--text3); transition:color 0.12s, transform 0.12s; }
+    .star-input span:hover { transform:scale(1.15); }
+    .star-input span.on { color:var(--gold); }
+    .modal-foot { display:flex; gap:9px; margin-top:24px; }
+    .modal-foot button { flex:1; padding:13px; border-radius:10px; font-size:14px; font-weight:700;
+      cursor:pointer; border:none; font-family:'Pretendard',sans-serif; transition:all 0.16s; }
+    .btn-cancel { background:var(--card2); color:var(--text2); border:1px solid var(--border); }
+    .btn-cancel:hover { background:rgba(255,255,255,0.07); color:var(--text); }
+    .btn-save { background:linear-gradient(135deg,var(--accent),#82b4ff); color:#fff; }
+    .btn-save:hover { box-shadow:0 6px 22px rgba(91,155,255,0.5); }
+
+    .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(18px);
+      background:var(--accent); color:#fff; padding:13px 24px; border-radius:10px; font-size:14px;
+      font-weight:700; opacity:0; pointer-events:none; transition:all 0.28s; z-index:300; }
+    .toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+    .fade-up { opacity:0; transform:translateY(14px); animation:fadeUp 0.5s ease forwards; }
+    @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+
+    @media (max-width:900px){ .board { grid-template-columns:1fr; } }
+    @media (max-width:768px){
+      .sidebar { display:none; }
+      .topbar { padding:14px 16px; }
+      .content { padding:18px 14px 80px; }
+      .toolbar-search { width:100%; }
+      .summary-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
+      .sc-value { font-size:19px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-lam">LAM</div>
+      <div class="logo-full">Life Architecture Map</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">메뉴</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon">⊞</span> 대시보드</a>
+      <a class="nav-item" href="history.html"><span class="nav-icon">◷</span> 히스토리</a>
+      <a class="nav-item" href="compare.html"><span class="nav-icon">⟳</span> 월간 비교</a>
+    </div>
+    <div class="sidebar-section" style="margin-top:10px;">
+      <div class="sidebar-label">카테고리</div>
+      <a class="nav-item" href="finance.html"><span class="nav-icon">💰</span> 금융</a>
+      <a class="nav-item active" href="skin.html"><span class="nav-icon">✨</span> 피부</a>
+      <a class="nav-item" href="health.html"><span class="nav-icon">💪</span> 건강</a>
+      <a class="nav-item" href="music.html"><span class="nav-icon">🎵</span> 음악</a>
+      <a class="nav-item" href="study.html"><span class="nav-icon">📚</span> 공부</a>
+      <a class="nav-item" href="business.html"><span class="nav-icon">💼</span> 사업</a>
+    </div>
+    <div class="sidebar-section" style="margin-top:10px;">
+      <div class="sidebar-label">설정</div>
+      <a class="nav-item" href="settings.html"><span class="nav-icon">⚙</span> 설정</a>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="profile-card">
+        <div class="profile-avatar" id="profileAvatar">?</div>
+        <div style="min-width:0;">
+          <div class="profile-name" id="profileName">로딩 중...</div>
+          <div class="profile-email" id="profileEmail"></div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">로그아웃</button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>✨ 피부</h1>
+        <p id="todayDate"></p>
+      </div>
+      <div class="topbar-right">
+        <div class="month-badge" id="monthBadge"></div>
+        <button class="btn-record" onclick="openReview(false)">+ 리뷰 작성</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- 트랙2: 채널 성장 + 트랙1 요약 -->
+      <div class="section-title fade-up">📊 이번 달 요약 <span class="tag">· 채널 성장 & 리뷰 활동</span></div>
+      <div class="summary-grid fade-up">
+        <div class="summary-card" style="--card-accent:var(--accent)">
+          <div class="sc-top"><span class="sc-icon">📷</span><span class="sc-edit" onclick="openChannel('instagram')">기록</span></div>
+          <div class="sc-value channel" id="igValue">—</div>
+          <div class="sc-label">인스타 팔로워</div>
+          <div class="sc-delta flat" id="igDelta">전월 대비</div>
+        </div>
+        <div class="summary-card" style="--card-accent:var(--error)">
+          <div class="sc-top"><span class="sc-icon">▶️</span><span class="sc-edit" onclick="openChannel('youtube')">기록</span></div>
+          <div class="sc-value channel" id="ytValue">—</div>
+          <div class="sc-label">유튜브 구독자</div>
+          <div class="sc-delta flat" id="ytDelta">전월 대비</div>
+        </div>
+        <div class="summary-card" style="--card-accent:var(--pink)">
+          <div class="sc-top"><span class="sc-icon">📝</span></div>
+          <div class="sc-value count" id="reviewCount">0개</div>
+          <div class="sc-label">이번 달 리뷰 작성</div>
+          <div class="sc-delta flat" id="reviewSplit">화해 0 · 글로우픽 0</div>
+        </div>
+        <div class="summary-card" style="--card-accent:var(--gold)">
+          <div class="sc-top"><span class="sc-icon">⭐</span></div>
+          <div class="sc-value star" id="avgStar">—</div>
+          <div class="sc-label">평균 별점</div>
+          <div class="sc-delta flat" id="starSub">이번 달 작성 기준</div>
+        </div>
+      </div>
+
+      <!-- 툴바 -->
+      <div class="toolbar fade-up" style="animation-delay:0.06s">
+        <div class="toolbar-search">
+          <span>🔍</span>
+          <input id="searchInput" type="text" placeholder="제품명 · 후기 검색..." />
+        </div>
+        <div class="month-row" id="monthRow"></div>
+      </div>
+
+      <!-- 트랙1: 리뷰 보드 (화해 / 글로우픽) -->
+      <div class="section-title fade-up" style="animation-delay:0.1s">📝 리뷰 작성</div>
+      <div class="board fade-up" style="animation-delay:0.12s">
+        <div class="board-col col-hwahae">
+          <div class="col-head">
+            <div class="col-head-left">
+              <div class="col-title"><span class="col-dot" style="background:var(--pink)"></span> 화해</div>
+              <div class="col-tools">
+                <button class="col-btn" title="화해 리뷰 추가" onclick="openReviewPlatform('화해')">+</button>
+                <button class="col-btn sort" id="sortHwahae" title="날짜 정렬" onclick="toggleSort('화해')">↓</button>
+              </div>
+            </div>
+            <div class="col-sub" id="hwahaeSub">0개 · 평균 —</div>
+          </div>
+          <div class="col-body" id="colHwahae"></div>
+        </div>
+        <div class="board-col col-glowpick">
+          <div class="col-head">
+            <div class="col-head-left">
+              <div class="col-title"><span class="col-dot" style="background:var(--purple)"></span> 글로우픽</div>
+              <div class="col-tools">
+                <button class="col-btn" title="글로우픽 리뷰 추가" onclick="openReviewPlatform('글로우픽')">+</button>
+                <button class="col-btn sort" id="sortGlowpick" title="날짜 정렬" onclick="toggleSort('글로우픽')">↓</button>
+              </div>
+            </div>
+            <div class="col-sub" id="glowpickSub">0개 · 평균 —</div>
+          </div>
+          <div class="col-body" id="colGlowpick"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 리뷰 입력 모달 -->
+<div class="modal-bg" id="reviewModal">
+  <div class="modal">
+    <h3 id="rvModalTitle">리뷰 작성</h3>
+    <div class="field">
+      <label>플랫폼</label>
+      <div class="type-tabs" id="platTabs">
+        <button data-plat="화해" class="on">화해</button>
+        <button data-plat="글로우픽">글로우픽</button>
+      </div>
+    </div>
+    <div class="field"><label>제품명</label><input id="rvProd" type="text" placeholder="예: 토리든 다이브인 세럼" /></div>
+    <div class="field">
+      <label>별점</label>
+      <div class="star-input" id="starInput">
+        <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+      </div>
+    </div>
+    <div class="field"><label>리뷰 날짜</label><input id="rvDate" type="date" /></div>
+    <div class="field"><label>후기 (비고)</label><textarea id="rvMemo" rows="3" placeholder="사용감, 장단점 등"></textarea></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeReview()">취소</button>
+      <button class="btn-save" onclick="saveReview()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 채널 수치 기록 모달 -->
+<div class="modal-bg" id="channelModal">
+  <div class="modal">
+    <h3 id="chModalTitle">채널 수치 기록</h3>
+    <p style="font-size:13px; color:var(--text2); margin:-12px 0 20px; line-height:1.6;">
+      이번 달 현재 <b id="chName">팔로워</b> 수를 입력하세요. 매달 기록하면 전월 대비 증감이 표시됩니다.</p>
+    <div class="field"><label id="chLabel">팔로워 수</label><input id="chValue" type="text" inputmode="numeric" placeholder="0" /></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeChannel()">취소</button>
+      <button class="btn-save" onclick="saveChannel()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://jmumomvxylxbkagjnmxc.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptdW1vbXZ4eWx4YmthZ2pubXhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODc5NzksImV4cCI6MjA5NTg2Mzk3OX0.OQBcCmA7ULgZ28zujvuB_FH0WbUmlHqks_TY97FB7E8';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let user=null, categoryId=null;
+let metricMap = {};          // name -> metric id  (화해/글로우픽/instagram/youtube)
+let editingId=null, curPlat='화해', curStar=0;
+let yearRecords=[];
+let selMonth=new Date().getMonth()+1;
+let searchText='';
+let sortDir={ '화해':'desc', '글로우픽':'desc' };
+const YEAR=new Date().getFullYear();
+
+const $=id=>document.getElementById(id);
+const days=['일','월','화','수','목','금','토'];
+const numfmt=n=>Number(n).toLocaleString('ko-KR');
+
+(async function init(){
+  const now=new Date();
+  $('todayDate').textContent=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}요일`;
+  $('monthBadge').textContent=`${now.getMonth()+1}월`;
+
+  const { data:{ session } }=await sb.auth.getSession();
+  if(!session){ location.href='index.html'; return; }
+  user=session.user;
+
+  const { data:p }=await sb.from('profiles').select('name,email').eq('id',user.id).single();
+  const name=p?.name||user.email.split('@')[0];
+  $('profileName').textContent=name;
+  $('profileEmail').textContent=p?.email||user.email;
+  $('profileAvatar').textContent=name.charAt(0).toUpperCase();
+
+  categoryId=await ensureCategory();
+  await ensureMetrics();
+  buildMonthChips();
+  $('rvDate').value=new Date().toISOString().slice(0,10);
+  await loadYear();
+})();
+
+async function ensureCategory(){
+  const { data }=await sb.from('categories').select('id')
+    .eq('user_id',user.id).eq('name','피부').maybeSingle();
+  if(data) return data.id;
+  const { data:ins }=await sb.from('categories')
+    .insert({ user_id:user.id, name:'피부', icon:'✨', color:'#ff8fc7', sort_order:2 })
+    .select('id').single();
+  return ins.id;
+}
+
+/* 기본 지표 시드: 화해/글로우픽(리뷰), instagram/youtube(채널) */
+async function ensureMetrics(){
+  const defs=[
+    { name:'화해', unit:'점', type:'review' },
+    { name:'글로우픽', unit:'점', type:'review' },
+    { name:'instagram', unit:'명', type:'channel' },
+    { name:'youtube', unit:'명', type:'channel' },
+  ];
+  const { data:exist }=await sb.from('metrics').select('id,name')
+    .eq('user_id',user.id).eq('category_id',categoryId);
+  const have=(exist||[]).reduce((m,x)=>{ m[x.name]=x.id; return m; },{});
+  for(const d of defs){
+    if(have[d.name]){ metricMap[d.name]=have[d.name]; continue; }
+    const { data:ins }=await sb.from('metrics')
+      .insert({ user_id:user.id, category_id:categoryId, name:d.name, unit:d.unit, type:d.type })
+      .select('id').single();
+    if(ins) metricMap[d.name]=ins.id;
+  }
+}
+
+function buildMonthChips(){
+  $('monthRow').innerHTML=Array.from({length:12},(_,i)=>i+1).map(m=>
+    `<button class="month-chip ${m===selMonth?'active':''}" data-m="${m}">${m}월</button>`).join('');
+  document.querySelectorAll('.month-chip').forEach(b=>{
+    b.onclick=()=>{ selMonth=Number(b.dataset.m);
+      document.querySelectorAll('.month-chip').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active'); renderAll(); };
+  });
+}
+
+/* ── 별점 입력 ── */
+function setStar(v){
+  curStar=v;
+  [...$('starInput').children].forEach(s=> s.classList.toggle('on', Number(s.dataset.v)<=v));
+}
+[...document.querySelectorAll('#starInput span')].forEach(s=> s.onclick=()=>setStar(Number(s.dataset.v)));
+
+/* ── 플랫폼 탭 ── */
+function setPlat(p){
+  curPlat=p;
+  document.querySelectorAll('#platTabs button').forEach(b=>b.classList.toggle('on', b.dataset.plat===p));
+}
+document.querySelectorAll('#platTabs button').forEach(b=> b.onclick=()=>setPlat(b.dataset.plat));
+
+/* ── 리뷰 모달 ── */
+function openReview(edit){
+  if(!edit){
+    editingId=null; $('rvModalTitle').textContent='리뷰 작성';
+    setPlat('화해'); setStar(0);
+    $('rvProd').value=''; $('rvMemo').value='';
+    const d=new Date(YEAR, selMonth-1, Math.min(new Date().getDate(),28));
+    $('rvDate').value=d.toISOString().slice(0,10);
+  }
+  $('reviewModal').classList.add('on');
+}
+function openReviewPlatform(p){ openReview(false); setPlat(p); }
+function closeReview(){ $('reviewModal').classList.remove('on'); }
+$('reviewModal').addEventListener('click', e=>{ if(e.target.id==='reviewModal') closeReview(); });
+
+async function saveReview(){
+  const prod=$('rvProd').value.trim();
+  if(!prod){ toast('제품명을 입력하세요'); return; }
+  if(!curStar){ toast('별점을 선택하세요'); return; }
+  const payload={ user_id:user.id, category_id:categoryId, metric_id:metricMap[curPlat],
+    value:curStar, memo:`${prod}|${$('rvMemo').value.trim()}`, status:'review',
+    recorded_at:$('rvDate').value };
+  let err;
+  if(editingId){ ({error:err}=await sb.from('records').update(payload).eq('id',editingId)); }
+  else { ({error:err}=await sb.from('records').insert(payload)); }
+  if(err){ toast('저장 실패: '+err.message); return; }
+  closeReview(); toast(editingId?'수정되었습니다':'저장되었습니다'); await loadYear();
+}
+
+/* ── 채널 모달 ── */
+let curChannel='instagram';
+function openChannel(ch){
+  curChannel=ch;
+  const isIg=ch==='instagram';
+  $('chModalTitle').textContent= isIg?'인스타 팔로워 기록':'유튜브 구독자 기록';
+  $('chName').textContent= isIg?'팔로워':'구독자';
+  $('chLabel').textContent= isIg?'팔로워 수':'구독자 수';
+  // 이번 달 기존 기록이 있으면 불러오기
+  const cur=channelValueOf(ch, selMonth);
+  $('chValue').value= cur!=null ? numfmt(cur) : '';
+  $('channelModal').classList.add('on');
+}
+function closeChannel(){ $('channelModal').classList.remove('on'); }
+$('channelModal').addEventListener('click', e=>{ if(e.target.id==='channelModal') closeChannel(); });
+$('chValue').addEventListener('input', e=>{
+  const v=e.target.value.replace(/[^0-9]/g,''); e.target.value=v?numfmt(v):''; });
+
+async function saveChannel(){
+  const v=Number($('chValue').value.replace(/[^0-9]/g,''));
+  if(!v){ toast('숫자를 입력하세요'); return; }
+  // 같은 달 같은 채널 기록은 1개만 (있으면 update)
+  const mid=metricMap[curChannel];
+  const existing=yearRecords.find(r=> r.metric_id===mid && monthOf(r)===selMonth && r.status==='channel');
+  const recordedAt=`${YEAR}-${String(selMonth).padStart(2,'0')}-01`;
+  let err;
+  if(existing){ ({error:err}=await sb.from('records').update({ value:v }).eq('id',existing.id)); }
+  else { ({error:err}=await sb.from('records').insert({ user_id:user.id, category_id:categoryId,
+    metric_id:mid, value:v, memo:'', status:'channel', recorded_at:recordedAt })); }
+  if(err){ toast('저장 실패: '+err.message); return; }
+  closeChannel(); toast('저장되었습니다'); await loadYear();
+}
+
+/* ── ESC 공통 ── */
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeReview(); closeChannel(); } });
+
+/* ── 조회 ── */
+async function loadYear(){
+  const { data:recs, error }=await sb.from('records').select('*')
+    .eq('user_id',user.id).eq('category_id',categoryId)
+    .gte('recorded_at',`${YEAR}-01-01`).lte('recorded_at',`${YEAR}-12-31`)
+    .order('recorded_at',{ascending:false}).order('created_at',{ascending:false});
+  if(error){ toast('불러오기 실패'); return; }
+  yearRecords=recs||[]; renderAll();
+}
+
+function monthOf(r){ return Number((r.recorded_at||'').slice(5,7)); }
+function midName(id){ return Object.keys(metricMap).find(k=>metricMap[k]===id); }
+function prodOf(memo){ return (memo||'').split('|')[0]||''; }
+function noteOf(memo){ const p=(memo||'').split('|'); return p.slice(1).join('|'); }
+function channelValueOf(ch, month){
+  const mid=metricMap[ch];
+  const r=yearRecords.find(x=> x.metric_id===mid && monthOf(x)===month && x.status==='channel');
+  return r? Number(r.value) : null;
+}
+
+function renderAll(){ renderChannels(); renderReviewSummary(); renderBoard(); }
+
+/* 채널 카드 */
+function renderChannels(){
+  setChannelCard('instagram','igValue','igDelta');
+  setChannelCard('youtube','ytValue','ytDelta');
+}
+function setChannelCard(ch, valId, deltaId){
+  const cur=channelValueOf(ch, selMonth);
+  // 이전 가장 가까운 달
+  let prev=null;
+  for(let m=selMonth-1; m>=1; m--){ const v=channelValueOf(ch,m); if(v!=null){ prev=v; break; } }
+  $(valId).textContent = cur!=null ? numfmt(cur)+'명' : '—';
+  const el=$(deltaId);
+  if(cur==null){ el.className='sc-delta flat'; el.textContent='기록 없음'; return; }
+  if(prev==null){ el.className='sc-delta flat'; el.textContent='첫 기록'; return; }
+  const diff=cur-prev;
+  if(diff===0){ el.className='sc-delta flat'; el.textContent='전월과 동일'; return; }
+  el.className='sc-delta '+(diff>0?'up':'dn');
+  el.textContent=`${diff>0?'🔺':'🔻'} 전월 대비 ${diff>0?'+':''}${numfmt(diff)}명`;
+}
+
+/* 리뷰 요약 카드 */
+function renderReviewSummary(){
+  const revs=yearRecords.filter(r=>r.status==='review' && monthOf(r)===selMonth);
+  $('reviewCount').textContent=revs.length+'개';
+  const h=revs.filter(r=>midName(r.metric_id)==='화해').length;
+  const g=revs.filter(r=>midName(r.metric_id)==='글로우픽').length;
+  $('reviewSplit').textContent=`화해 ${h} · 글로우픽 ${g}`;
+  if(revs.length){
+    const avg=revs.reduce((s,r)=>s+Number(r.value),0)/revs.length;
+    $('avgStar').textContent='★ '+avg.toFixed(1);
+  } else $('avgStar').textContent='—';
+}
+
+$('searchInput').addEventListener('input', e=>{ searchText=e.target.value.trim().toLowerCase(); renderBoard(); });
+
+function toggleSort(plat){
+  sortDir[plat]= sortDir[plat]==='desc'?'asc':'desc';
+  const btn= plat==='화해'?$('sortHwahae'):$('sortGlowpick');
+  if(btn) btn.textContent= sortDir[plat]==='desc'?'↓':'↑';
+  renderBoard();
+}
+
+function reviewsOf(plat){
+  const mid=metricMap[plat];
+  let arr=yearRecords.filter(r=> r.status==='review' && r.metric_id===mid && monthOf(r)===selMonth);
+  if(searchText){
+    arr=arr.filter(r=>{ const hay=`${prodOf(r.memo)} ${noteOf(r.memo)}`.toLowerCase();
+      return hay.includes(searchText); });
+  }
+  const dir= sortDir[plat]==='asc'?1:-1;
+  arr.sort((a,b)=>{ const da=a.recorded_at||'', db=b.recorded_at||'';
+    if(da!==db) return da<db?-1*dir:1*dir;
+    return (a.created_at||'')<(b.created_at||'')?-1*dir:1*dir; });
+  return arr;
+}
+
+function stars(n){
+  let s=''; for(let i=1;i<=5;i++) s+= i<=n?'★':'<span class="off">★</span>'; return s;
+}
+
+function renderBoard(){
+  ['화해','글로우픽'].forEach(plat=>{
+    const arr=reviewsOf(plat);
+    const boxId= plat==='화해'?'colHwahae':'colGlowpick';
+    const subId= plat==='화해'?'hwahaeSub':'glowpickSub';
+    // 서브: 개수 + 평균 (검색 영향 없이 월 전체 기준)
+    const mid=metricMap[plat];
+    const monthAll=yearRecords.filter(r=> r.status==='review' && r.metric_id===mid && monthOf(r)===selMonth);
+    const avg= monthAll.length? (monthAll.reduce((s,r)=>s+Number(r.value),0)/monthAll.length).toFixed(1) : null;
+    $(subId).textContent=`${monthAll.length}개 · 평균 ${avg?('★'+avg):'—'}`;
+
+    const card=r=>{
+      const prod=prodOf(r.memo), note=noteOf(r.memo);
+      const d=(r.recorded_at||'').slice(5).replace('-','.');
+      const rj=JSON.stringify(r).replace(/'/g,"&#39;");
+      return `<div class="rv">
+        <div class="rv-main" onclick='editReview(${rj})'>
+          <div class="rv-top"><span class="rv-prod">${prod||'(제품명 없음)'}</span><span class="rv-date">${d}</span></div>
+          <div class="rv-stars">${stars(Number(r.value))}</div>
+          ${note?`<div class="rv-memo">${note}</div>`:''}
+        </div>
+        <div class="rv-ops">
+          <button onclick='editReview(${rj})'>수정</button>
+          <button class="del" onclick="delReview('${r.id}')">삭제</button>
+        </div></div>`;
+    };
+    $(boxId).innerHTML= arr.length? arr.map(card).join('') : '<div class="col-empty">기록 없음</div>';
+  });
+}
+
+window.editReview=function(r){
+  editingId=r.id; $('rvModalTitle').textContent='리뷰 수정';
+  setPlat(midName(r.metric_id)||'화해'); setStar(Number(r.value));
+  $('rvProd').value=prodOf(r.memo); $('rvMemo').value=noteOf(r.memo);
+  $('rvDate').value=(r.recorded_at||'').slice(0,10);
+  $('reviewModal').classList.add('on');
+};
+window.delReview=async function(id){
+  if(!confirm('이 리뷰를 삭제할까요?')) return;
+  const { error }=await sb.from('records').delete().eq('id',id);
+  if(error){ toast('삭제 실패'); return; }
+  toast('삭제되었습니다'); await loadYear();
+};
+
+async function doLogout(){ await sb.auth.signOut(); location.href='index.html'; }
+let tT;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on');
+  clearTimeout(tT); tT=setTimeout(()=>t.classList.remove('on'),2200); }
+</script>
+</body>
+</html>
