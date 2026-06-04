@@ -79,11 +79,13 @@
     .cmp-row { display:grid; grid-template-columns:130px 1fr 1fr 1fr; align-items:stretch; }
     .cmp-row + .cmp-row { border-top:1px solid var(--border); }
     .cmp-row.head { background:rgba(255,255,255,0.04); }
+    .cmp-row.data { min-height:150px; }   /* 두 데이터 행 높이 동일 고정 */
     .cmp-label { display:flex; flex-direction:column; justify-content:center; gap:3px;
       padding:16px 20px; border-right:1px solid var(--border); }
     .cmp-label .t { font-size:15px; font-weight:800; color:var(--text); }
     .cmp-label .s { font-size:11px; color:var(--text3); }
-    .cmp-cell { padding:16px 20px; border-right:1px solid var(--border); text-align:right; }
+    .cmp-cell { padding:16px 20px; border-right:1px solid var(--border); text-align:right;
+      display:flex; flex-direction:column; justify-content:center; align-items:flex-end; }
     .cmp-cell:last-child { border-right:none; }
     .cmp-cell .ct { font-size:12px; color:var(--text2); margin-bottom:5px; font-weight:600; letter-spacing:0.03em; }
     .cmp-head-cell { display:flex; align-items:center; justify-content:flex-end; gap:7px; }
@@ -95,6 +97,13 @@
     .cmp-cell.save .cv { color:var(--gold); }
     .cmp-cell .delta { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700;
       margin-top:6px; padding:3px 9px; border-radius:100px; }
+    .cmp-bar { width:100%; height:7px; margin-top:9px; background:rgba(255,255,255,0.07);
+      border-radius:100px; overflow:hidden; }
+    .cmp-bar i { display:block; height:100%; width:0; border-radius:100px;
+      transition:width 0.9s cubic-bezier(0.4,0,0.2,1); }
+    .cmp-cell.income .cmp-bar i { background:linear-gradient(90deg,var(--success),#8af0bf); }
+    .cmp-cell.expense .cmp-bar i { background:linear-gradient(90deg,var(--error),#ffb0b0); }
+    .cmp-cell.save .cmp-bar i { background:linear-gradient(90deg,var(--gold),#ffe0a0); }
     .delta.up   { color:var(--error);   background:rgba(255,122,122,0.15); }
     .delta.dn   { color:var(--success); background:rgba(86,217,154,0.15); }
     .delta.flat { color:var(--text3);   background:rgba(255,255,255,0.06); }
@@ -156,6 +165,11 @@
     .tx-ops button.del:hover { background:rgba(255,122,122,0.16); color:var(--error); }
     .tx-ops button + button { border-top:1px solid var(--border); }
     .col-empty { font-size:13px; color:var(--text3); text-align:center; padding:26px 0; }
+    .col-add { margin-top:2px; width:100%; padding:11px; border-radius:10px;
+      background:transparent; border:1px dashed var(--border); color:var(--text2);
+      font-family:'Pretendard',sans-serif; font-size:13px; font-weight:700; cursor:pointer;
+      transition:all 0.16s; }
+    .col-add:hover { border-color:var(--accent); color:var(--accent2); background:rgba(91,155,255,0.08); }
 
     /* MODAL */
     .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.66); backdrop-filter:blur(4px);
@@ -266,26 +280,29 @@
           <div class="cmp-cell"><div class="cmp-head-cell"><span class="dot" style="background:var(--error)"></span><span class="ht" style="color:var(--error)">지출</span></div></div>
           <div class="cmp-cell"><div class="cmp-head-cell"><span class="dot" style="background:var(--gold)"></span><span class="ht" style="color:var(--gold)">저축·투자</span></div></div>
         </div>
-        <div class="cmp-row">
+        <div class="cmp-row data">
           <div class="cmp-label"><span class="t">최근 평균</span><span class="s" id="avgRange">데이터 누적 시</span></div>
-          <div class="cmp-cell income"><div class="cv" id="avgIncome">0원</div></div>
-          <div class="cmp-cell expense"><div class="cv" id="avgExpense">0원</div></div>
-          <div class="cmp-cell save"><div class="cv" id="avgSave">0원</div></div>
+          <div class="cmp-cell income"><div class="cv" id="avgIncome">0원</div><div class="cmp-bar"><i id="barAvgIncome"></i></div></div>
+          <div class="cmp-cell expense"><div class="cv" id="avgExpense">0원</div><div class="cmp-bar"><i id="barAvgExpense"></i></div></div>
+          <div class="cmp-cell save"><div class="cv" id="avgSave">0원</div><div class="cmp-bar"><i id="barAvgSave"></i></div></div>
         </div>
-        <div class="cmp-row">
+        <div class="cmp-row data">
           <div class="cmp-label"><span class="t" id="curMonthLabel">이번 달</span><span class="s">선택한 달 · 평균 대비</span></div>
           <div class="cmp-cell income">
             <div class="cv" id="curIncome">0원</div>
+            <div class="cmp-bar"><i id="barCurIncome"></i></div>
             <div class="delta flat" id="dIncome">—</div>
             <div class="cmp-rank" id="rankIncome"></div>
           </div>
           <div class="cmp-cell expense">
             <div class="cv" id="curExpense">0원</div>
+            <div class="cmp-bar"><i id="barCurExpense"></i></div>
             <div class="delta flat" id="dExpense">—</div>
             <div class="cmp-rank" id="rankExpense"></div>
           </div>
           <div class="cmp-cell save">
             <div class="cv" id="curSave">0원</div>
+            <div class="cmp-bar"><i id="barCurSave"></i></div>
             <div class="delta flat" id="dSave">—</div>
             <div class="cmp-rank" id="rankSave"></div>
           </div>
@@ -309,6 +326,7 @@
             <div class="col-total" id="colIncomeTotal">0원</div>
           </div>
           <div class="col-body" id="colIncome"></div>
+          <button class="col-add" onclick="openModalType('income')">+ 수입 추가하기</button>
         </div>
         <div class="board-col col-expense">
           <div class="col-head">
@@ -316,6 +334,7 @@
             <div class="col-total" id="colExpenseTotal">0원</div>
           </div>
           <div class="col-body" id="colExpense"></div>
+          <button class="col-add" onclick="openModalType('expense')">+ 지출 추가하기</button>
         </div>
         <div class="board-col col-save">
           <div class="col-head">
@@ -323,6 +342,7 @@
             <div class="col-total" id="colSaveTotal">0원</div>
           </div>
           <div class="col-body" id="colSave"></div>
+          <button class="col-add" onclick="openModalType('save')">+ 저축·투자 추가하기</button>
         </div>
       </div>
 
@@ -445,6 +465,10 @@ function openModal(edit){
   }
   $('modalBg').classList.add('on');
 }
+function openModalType(t){
+  openModal(false);
+  setType(t);
+}
 function closeModal(){ $('modalBg').classList.remove('on'); }
 $('modalBg').addEventListener('click', e=>{ if(e.target.id==='modalBg') closeModal(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
@@ -526,6 +550,11 @@ function renderCompare(){
   $('curExpense').textContent = won(cur.exp);
   $('curSave').textContent = won(cur.sav);
 
+  // 가로 막대: 각 유형별 (평균/이번달) 중 큰 값을 100% 기준으로
+  setBar('barAvgIncome','barCurIncome', avg.inc, cur.inc);
+  setBar('barAvgExpense','barCurExpense', avg.exp, cur.exp);
+  setBar('barAvgSave','barCurSave', avg.sav, cur.sav);
+
   setDelta('dIncome', cur.inc, avg.inc, true);
   setDelta('dExpense', cur.exp, avg.exp, false);
   setDelta('dSave', cur.sav, avg.sav, true);
@@ -533,6 +562,15 @@ function renderCompare(){
   renderRank('rankIncome', topCats(curRecs,'income'));
   renderRank('rankExpense', topCats(curRecs,'expense'));
   renderRank('rankSave', topCats(curRecs,'save'));
+}
+
+/* 가로 막대 폭 계산: 둘 중 큰 값 = 100% */
+function setBar(avgId, curId, avgVal, curVal){
+  const max = Math.max(avgVal, curVal);
+  const a = $(avgId), c = $(curId);
+  if(!a || !c) return;
+  a.style.width = max ? (avgVal/max*100)+'%' : '0%';
+  c.style.width = max ? (curVal/max*100)+'%' : '0%';
 }
 
 /* 증감: 이모지 + 색 배지 */
