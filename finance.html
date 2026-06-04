@@ -9,13 +9,15 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg:#07070f; --bg2:#0d0d1a; --card:#11111e; --card2:#161626;
-      --border:rgba(255,255,255,0.07); --accent:#4f8ef7; --accent2:#93bfff;
-      --text:#eeeeff; --text2:#7070a0; --text3:#3a3a58;
-      --success:#4ecb8d; --warning:#f5a623; --error:#f06a6a; --gold:#f5a623;
+      --bg:#07070f; --bg2:#0d0d1a; --card:#15151f; --card2:#1c1c2b;
+      --border:rgba(255,255,255,0.10);
+      --accent:#5b9bff; --accent2:#9cc6ff;
+      /* 시인성 강화: 본문 텍스트 더 밝게, 보조 텍스트도 끌어올림 */
+      --text:#f4f4fb; --text2:#b8b8d4; --text3:#7e7ea4;
+      --success:#56d99a; --warning:#ffb338; --error:#ff7a7a; --gold:#ffc14d;
       --sidebar:232px; --radius:14px;
     }
-    html, body { height:100%; font-family:'Pretendard',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; }
+    html, body { height:100%; font-family:'Pretendard',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; font-size:15px; }
     .app { display:flex; height:100vh; overflow:hidden; }
 
     /* SIDEBAR */
@@ -24,168 +26,167 @@
       padding:24px 0 0; overflow-y:auto; overflow-x:hidden; z-index:100; }
     .sidebar::-webkit-scrollbar { width:0; }
     .sidebar-logo { padding:0 20px 22px; border-bottom:1px solid var(--border); margin-bottom:18px; }
-    .logo-lam { font-size:19px; font-weight:800; letter-spacing:0.06em;
+    .logo-lam { font-size:20px; font-weight:800; letter-spacing:0.06em;
       background:linear-gradient(135deg,var(--accent),var(--accent2));
       -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-    .logo-full { font-size:10px; color:var(--text3); letter-spacing:0.05em; margin-top:3px; }
+    .logo-full { font-size:11px; color:var(--text3); letter-spacing:0.05em; margin-top:3px; }
     .sidebar-section { padding:0 10px; margin-bottom:6px; }
-    .sidebar-label { font-size:10px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase;
-      color:var(--text3); padding:0 8px; margin-bottom:5px; }
-    .nav-item { display:flex; align-items:center; gap:9px; padding:9px 11px; border-radius:10px;
-      font-size:13px; font-weight:500; color:var(--text2); cursor:pointer; text-decoration:none;
-      transition:background 0.16s,color 0.16s; margin-bottom:1px; }
-    .nav-item:hover { background:rgba(255,255,255,0.05); color:var(--text); }
-    .nav-item.active { background:rgba(79,142,247,0.13); color:var(--accent); font-weight:600; }
-    .nav-icon { font-size:14px; width:20px; text-align:center; flex-shrink:0; }
+    .sidebar-label { font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+      color:var(--text3); padding:0 8px; margin-bottom:6px; }
+    .nav-item { display:flex; align-items:center; gap:9px; padding:10px 11px; border-radius:10px;
+      font-size:14px; font-weight:600; color:var(--text2); cursor:pointer; text-decoration:none;
+      transition:background 0.16s,color 0.16s; margin-bottom:2px; }
+    .nav-item:hover { background:rgba(255,255,255,0.07); color:var(--text); }
+    .nav-item.active { background:rgba(91,155,255,0.18); color:var(--accent2); font-weight:700; }
+    .nav-icon { font-size:15px; width:20px; text-align:center; flex-shrink:0; }
     .sidebar-bottom { margin-top:auto; padding:14px 10px 20px; border-top:1px solid var(--border); }
     .profile-card { display:flex; align-items:center; gap:9px; padding:10px 11px; border-radius:10px;
-      background:rgba(255,255,255,0.03); border:1px solid var(--border); margin-bottom:8px; }
-    .profile-avatar { width:30px; height:30px; border-radius:50%;
+      background:rgba(255,255,255,0.05); border:1px solid var(--border); margin-bottom:8px; }
+    .profile-avatar { width:32px; height:32px; border-radius:50%;
       background:linear-gradient(135deg,var(--accent),var(--accent2));
-      display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; flex-shrink:0; }
-    .profile-name { font-size:13px; font-weight:600; color:var(--text); }
-    .profile-email { font-size:10px; color:var(--text3); margin-top:1px;
+      display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0; }
+    .profile-name { font-size:14px; font-weight:700; color:var(--text); }
+    .profile-email { font-size:11px; color:var(--text3); margin-top:1px;
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; }
-    .btn-logout { width:100%; padding:8px; border-radius:8px; background:transparent;
+    .btn-logout { width:100%; padding:9px; border-radius:8px; background:transparent;
       border:1px solid var(--border); color:var(--text2); font-family:'Pretendard',sans-serif;
-      font-size:12px; cursor:pointer; transition:background 0.16s,color 0.16s,border-color 0.16s; }
-    .btn-logout:hover { background:rgba(240,106,106,0.09); color:var(--error); border-color:rgba(240,106,106,0.28); }
+      font-size:13px; font-weight:600; cursor:pointer; transition:all 0.16s; }
+    .btn-logout:hover { background:rgba(255,122,122,0.12); color:var(--error); border-color:rgba(255,122,122,0.35); }
 
     /* MAIN */
     .main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
-    .topbar { display:flex; align-items:center; justify-content:space-between; padding:16px 26px;
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 28px;
       border-bottom:1px solid var(--border); background:var(--bg); flex-shrink:0; }
-    .topbar-left h1 { font-size:17px; font-weight:700; letter-spacing:-0.01em; }
-    .topbar-left p { font-size:11px; color:var(--text2); margin-top:2px; }
+    .topbar-left h1 { font-size:20px; font-weight:800; letter-spacing:-0.01em; }
+    .topbar-left p { font-size:13px; color:var(--text2); margin-top:3px; }
     .topbar-right { display:flex; align-items:center; gap:10px; }
-    .month-badge { padding:7px 14px; border-radius:9px; background:var(--card);
-      border:1px solid var(--border); font-size:13px; font-weight:600; color:var(--text2); }
-    .btn-record { display:flex; align-items:center; gap:7px; padding:8px 18px; border-radius:10px;
-      background:linear-gradient(135deg,var(--accent),#7eb3ff); border:none; color:#fff;
-      font-family:'Pretendard',sans-serif; font-size:13px; font-weight:700; cursor:pointer;
+    .month-badge { padding:8px 15px; border-radius:9px; background:var(--card);
+      border:1px solid var(--border); font-size:14px; font-weight:700; color:var(--text); }
+    .btn-record { display:flex; align-items:center; gap:7px; padding:10px 20px; border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),#82b4ff); border:none; color:#fff;
+      font-family:'Pretendard',sans-serif; font-size:14px; font-weight:700; cursor:pointer;
       transition:box-shadow 0.2s,scale 0.15s; }
-    .btn-record:hover { box-shadow:0 6px 20px rgba(79,142,247,0.4); scale:1.02; }
+    .btn-record:hover { box-shadow:0 6px 22px rgba(91,155,255,0.5); scale:1.02; }
     .btn-record:active { scale:0.98; }
-    .content { flex:1; overflow-y:auto; overflow-x:hidden; padding:22px 26px 40px;
+    .content { flex:1; overflow-y:auto; overflow-x:hidden; padding:24px 28px 48px;
       display:flex; flex-direction:column; gap:18px; }
-    .content::-webkit-scrollbar { width:4px; }
+    .content::-webkit-scrollbar { width:5px; }
     .content::-webkit-scrollbar-track { background:transparent; }
     .content::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
 
-    /* ══ 비교 카드 (2줄: 최근 평균 / 이번 달) ══ */
-    .compare {
-      background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-      overflow:hidden;
-    }
-    .cmp-row { display:grid; grid-template-columns:108px 1fr 1fr 1fr; align-items:stretch; }
+    /* ══ 비교 카드 ══ */
+    .compare { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    .cmp-row { display:grid; grid-template-columns:130px 1fr 1fr 1fr; align-items:stretch; }
     .cmp-row + .cmp-row { border-top:1px solid var(--border); }
-    .cmp-row.head { background:rgba(255,255,255,0.02); }
-    .cmp-label { display:flex; flex-direction:column; justify-content:center; gap:2px;
-      padding:14px 18px; border-right:1px solid var(--border); }
-    .cmp-label .t { font-size:13px; font-weight:700; }
-    .cmp-label .s { font-size:10px; color:var(--text3); }
-    .cmp-cell { padding:14px 18px; border-right:1px solid var(--border); text-align:right; }
+    .cmp-row.head { background:rgba(255,255,255,0.04); }
+    .cmp-label { display:flex; flex-direction:column; justify-content:center; gap:3px;
+      padding:16px 20px; border-right:1px solid var(--border); }
+    .cmp-label .t { font-size:15px; font-weight:800; color:var(--text); }
+    .cmp-label .s { font-size:11px; color:var(--text3); }
+    .cmp-cell { padding:16px 20px; border-right:1px solid var(--border); text-align:right; }
     .cmp-cell:last-child { border-right:none; }
-    .cmp-cell .ct { font-size:10px; color:var(--text3); margin-bottom:4px; letter-spacing:0.04em; }
-    .cmp-cell .cv { font-size:18px; font-weight:800; letter-spacing:-0.02em; }
+    .cmp-cell .ct { font-size:12px; color:var(--text2); margin-bottom:5px; font-weight:600; letter-spacing:0.03em; }
+    .cmp-head-cell { display:flex; align-items:center; justify-content:flex-end; gap:7px; }
+    .cmp-head-cell .dot { width:9px; height:9px; border-radius:50%; }
+    .cmp-head-cell .ht { font-size:13px; font-weight:700; }
+    .cmp-cell .cv { font-size:21px; font-weight:800; letter-spacing:-0.02em; }
     .cmp-cell.income .cv { color:var(--success); }
     .cmp-cell.expense .cv { color:var(--error); }
     .cmp-cell.save .cv { color:var(--gold); }
-    .cmp-cell .delta { font-size:10px; font-weight:600; margin-top:3px; }
-    .delta.up { color:var(--error); }
-    .delta.dn { color:var(--success); }
-    .delta.flat { color:var(--text3); }
-    @media (max-width:768px){
-      .cmp-row { grid-template-columns:80px 1fr 1fr 1fr; }
-      .cmp-cell { padding:11px 9px; }
-      .cmp-cell .cv { font-size:14px; }
-    }
+    .cmp-cell .delta { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700;
+      margin-top:6px; padding:3px 9px; border-radius:100px; }
+    .delta.up   { color:var(--error);   background:rgba(255,122,122,0.15); }
+    .delta.dn   { color:var(--success); background:rgba(86,217,154,0.15); }
+    .delta.flat { color:var(--text3);   background:rgba(255,255,255,0.06); }
+    .cmp-rank { margin-top:9px; display:flex; flex-direction:column; gap:3px; align-items:flex-end; }
+    .cmp-rank .r { font-size:11px; color:var(--text2); }
+    .cmp-rank .r b { color:var(--text); font-weight:700; }
+    .cmp-rank .r .medal { margin-right:3px; }
 
-    /* ══ 툴바: 검색(좌, 짧게) + 월 칩(우) ══ */
+    /* ══ 툴바 ══ */
     .toolbar { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-      padding:13px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+      padding:14px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
     .toolbar-search { display:flex; align-items:center; gap:8px; background:var(--bg2);
-      border:1px solid var(--border); border-radius:10px; padding:9px 12px;
-      width:230px; flex-shrink:0; transition:border-color 0.16s; }
+      border:1px solid var(--border); border-radius:10px; padding:10px 13px;
+      width:240px; flex-shrink:0; transition:border-color 0.16s; }
     .toolbar-search:focus-within { border-color:var(--accent); }
-    .toolbar-search span { font-size:12px; color:var(--text3); }
+    .toolbar-search span { font-size:13px; color:var(--text2); }
     .toolbar-search input { flex:1; min-width:0; background:transparent; border:none; outline:none;
-      color:var(--text); font-family:'Pretendard',sans-serif; font-size:13px; }
+      color:var(--text); font-family:'Pretendard',sans-serif; font-size:14px; }
     .toolbar-search input::placeholder { color:var(--text3); }
     .month-row { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
-    .month-chip { padding:6px 11px; border-radius:100px; font-size:12px; font-weight:600;
+    .month-chip { padding:7px 13px; border-radius:100px; font-size:13px; font-weight:700;
       background:transparent; border:1px solid var(--border); color:var(--text2); cursor:pointer;
       font-family:'Pretendard',sans-serif; transition:all 0.16s; }
-    .month-chip:hover { background:rgba(255,255,255,0.05); color:var(--text); }
+    .month-chip:hover { background:rgba(255,255,255,0.07); color:var(--text); }
     .month-chip.active { background:var(--accent); border-color:var(--accent); color:#fff; }
 
-    /* ══ 3열 거래 보드 ══ */
+    /* ══ 3열 보드 ══ */
     .board { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; align-items:start; }
     .board-col { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-      padding:16px; display:flex; flex-direction:column; gap:10px; min-height:160px; }
+      padding:18px; display:flex; flex-direction:column; gap:11px; min-height:160px; }
     .col-head { display:flex; align-items:center; justify-content:space-between; }
-    .col-title { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; }
-    .col-dot { width:8px; height:8px; border-radius:50%; }
-    .col-total { font-size:13px; font-weight:800; }
+    .col-title { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:800; }
+    .col-dot { width:9px; height:9px; border-radius:50%; }
+    .col-total { font-size:15px; font-weight:800; }
     .col-income .col-total { color:var(--success); }
     .col-expense .col-total { color:var(--error); }
     .col-save .col-total { color:var(--gold); }
-    .col-body { display:flex; flex-direction:column; gap:8px; }
-
+    .col-body { display:flex; flex-direction:column; gap:9px; }
     .tx { display:flex; align-items:stretch; background:var(--card2); border:1px solid var(--border);
       border-radius:11px; overflow:hidden; transition:border-color 0.16s; }
-    .tx:hover { border-color:rgba(79,142,247,0.3); }
-    .tx-main { flex:1; min-width:0; padding:11px 13px; cursor:pointer;
+    .tx:hover { border-color:rgba(91,155,255,0.4); }
+    .tx-main { flex:1; min-width:0; padding:13px 15px; cursor:pointer;
       display:flex; align-items:center; justify-content:space-between; gap:10px; }
     .tx-left { min-width:0; }
-    .tx-cat { font-size:13px; font-weight:600; }
-    .tx-memo { font-size:11px; color:var(--text2); margin-top:2px;
+    .tx-cat { font-size:14px; font-weight:700; color:var(--text); }
+    .tx-memo { font-size:12px; color:var(--text2); margin-top:3px;
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px; }
     .tx-right { text-align:right; flex-shrink:0; }
-    .tx-amt { font-size:14px; font-weight:800; letter-spacing:-0.01em; }
+    .tx-amt { font-size:15px; font-weight:800; letter-spacing:-0.01em; }
     .col-income .tx-amt { color:var(--success); }
     .col-expense .tx-amt { color:var(--error); }
     .col-save .tx-amt { color:var(--gold); }
-    .tx-date { font-size:10px; color:var(--text3); margin-top:2px; }
+    .tx-date { font-size:11px; color:var(--text3); margin-top:3px; }
     .tx-ops { display:flex; flex-direction:column; border-left:1px solid var(--border); }
-    .tx-ops button { flex:1; width:44px; border:none; background:transparent; cursor:pointer;
-      color:var(--text3); font-size:11px; font-weight:600; font-family:'Pretendard',sans-serif;
+    .tx-ops button { flex:1; width:48px; border:none; background:transparent; cursor:pointer;
+      color:var(--text2); font-size:12px; font-weight:700; font-family:'Pretendard',sans-serif;
       transition:background 0.14s,color 0.14s; }
-    .tx-ops button:hover { background:rgba(79,142,247,0.12); color:var(--accent2); }
-    .tx-ops button.del:hover { background:rgba(240,106,106,0.12); color:var(--error); }
+    .tx-ops button:hover { background:rgba(91,155,255,0.16); color:var(--accent2); }
+    .tx-ops button.del:hover { background:rgba(255,122,122,0.16); color:var(--error); }
     .tx-ops button + button { border-top:1px solid var(--border); }
-    .col-empty { font-size:12px; color:var(--text3); text-align:center; padding:24px 0; }
+    .col-empty { font-size:13px; color:var(--text3); text-align:center; padding:26px 0; }
 
     /* MODAL */
-    .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);
+    .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.66); backdrop-filter:blur(4px);
       display:none; align-items:center; justify-content:center; z-index:200; opacity:0; transition:opacity 0.22s; }
     .modal-bg.on { display:flex; opacity:1; }
     .modal { background:var(--card); border:1px solid var(--border); border-radius:18px;
-      padding:26px; width:420px; max-width:92vw; transform:scale(0.96); transition:transform 0.22s; }
+      padding:28px; width:430px; max-width:92vw; transform:scale(0.96); transition:transform 0.22s; }
     .modal-bg.on .modal { transform:scale(1); }
-    .modal h3 { font-size:17px; font-weight:700; margin-bottom:20px; }
-    .field { margin-bottom:15px; }
-    .field label { display:block; font-size:12px; color:var(--text2); margin-bottom:7px; font-weight:600; }
+    .modal h3 { font-size:19px; font-weight:800; margin-bottom:22px; }
+    .field { margin-bottom:16px; }
+    .field label { display:block; font-size:13px; color:var(--text2); margin-bottom:8px; font-weight:700; }
     .field input, .field select { width:100%; background:var(--bg2); border:1px solid var(--border);
-      border-radius:10px; padding:11px 13px; color:var(--text); font-size:14px;
+      border-radius:10px; padding:12px 14px; color:var(--text); font-size:15px;
       font-family:'Pretendard',sans-serif; outline:none; transition:border-color 0.16s; }
     .field input:focus, .field select:focus { border-color:var(--accent); }
     .type-tabs { display:flex; gap:7px; }
-    .type-tabs button { flex:1; padding:10px; border-radius:10px; border:1px solid var(--border);
-      background:var(--bg2); color:var(--text2); font-size:13px; cursor:pointer;
-      font-family:'Pretendard',sans-serif; transition:all 0.16s; font-weight:600; }
-    .type-tabs button.on { background:rgba(79,142,247,0.13); color:var(--accent); border-color:var(--accent); }
-    .modal-foot { display:flex; gap:9px; margin-top:22px; }
-    .modal-foot button { flex:1; padding:12px; border-radius:10px; font-size:13px; font-weight:700;
+    .type-tabs button { flex:1; padding:11px; border-radius:10px; border:1px solid var(--border);
+      background:var(--bg2); color:var(--text2); font-size:14px; cursor:pointer;
+      font-family:'Pretendard',sans-serif; transition:all 0.16s; font-weight:700; }
+    .type-tabs button.on { background:rgba(91,155,255,0.18); color:var(--accent2); border-color:var(--accent); }
+    .modal-foot { display:flex; gap:9px; margin-top:24px; }
+    .modal-foot button { flex:1; padding:13px; border-radius:10px; font-size:14px; font-weight:700;
       cursor:pointer; border:none; font-family:'Pretendard',sans-serif; transition:all 0.16s; }
     .btn-cancel { background:var(--card2); color:var(--text2); border:1px solid var(--border); }
-    .btn-cancel:hover { background:rgba(255,255,255,0.05); color:var(--text); }
-    .btn-save { background:linear-gradient(135deg,var(--accent),#7eb3ff); color:#fff; }
-    .btn-save:hover { box-shadow:0 6px 20px rgba(79,142,247,0.4); }
+    .btn-cancel:hover { background:rgba(255,255,255,0.07); color:var(--text); }
+    .btn-save { background:linear-gradient(135deg,var(--accent),#82b4ff); color:#fff; }
+    .btn-save:hover { box-shadow:0 6px 22px rgba(91,155,255,0.5); }
 
     .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(18px);
-      background:var(--accent); color:#fff; padding:12px 22px; border-radius:10px; font-size:13px;
-      font-weight:600; opacity:0; pointer-events:none; transition:all 0.28s; z-index:300; }
+      background:var(--accent); color:#fff; padding:13px 24px; border-radius:10px; font-size:14px;
+      font-weight:700; opacity:0; pointer-events:none; transition:all 0.28s; z-index:300; }
     .toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
     .fade-up { opacity:0; transform:translateY(14px); animation:fadeUp 0.5s ease forwards; }
     @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
@@ -193,9 +194,12 @@
     @media (max-width:900px){ .board { grid-template-columns:1fr; } }
     @media (max-width:768px){
       .sidebar { display:none; }
-      .topbar { padding:13px 16px; }
-      .content { padding:16px 14px 80px; }
+      .topbar { padding:14px 16px; }
+      .content { padding:18px 14px 80px; }
       .toolbar-search { width:100%; }
+      .cmp-row { grid-template-columns:92px 1fr 1fr 1fr; }
+      .cmp-cell { padding:12px 10px; }
+      .cmp-cell .cv { font-size:16px; }
     }
   </style>
 </head>
@@ -254,13 +258,13 @@
 
     <div class="content">
 
-      <!-- ① 비교 카드 (최근 평균 / 선택 월) -->
+      <!-- ① 비교 카드 -->
       <div class="compare fade-up">
         <div class="cmp-row head">
           <div class="cmp-label"><span class="t">구분</span></div>
-          <div class="cmp-cell"><div class="ct">수입</div></div>
-          <div class="cmp-cell"><div class="ct">지출</div></div>
-          <div class="cmp-cell"><div class="ct">저축·투자</div></div>
+          <div class="cmp-cell"><div class="cmp-head-cell"><span class="dot" style="background:var(--success)"></span><span class="ht" style="color:var(--success)">수입</span></div></div>
+          <div class="cmp-cell"><div class="cmp-head-cell"><span class="dot" style="background:var(--error)"></span><span class="ht" style="color:var(--error)">지출</span></div></div>
+          <div class="cmp-cell"><div class="cmp-head-cell"><span class="dot" style="background:var(--gold)"></span><span class="ht" style="color:var(--gold)">저축·투자</span></div></div>
         </div>
         <div class="cmp-row">
           <div class="cmp-label"><span class="t">최근 평균</span><span class="s" id="avgRange">데이터 누적 시</span></div>
@@ -269,14 +273,26 @@
           <div class="cmp-cell save"><div class="cv" id="avgSave">0원</div></div>
         </div>
         <div class="cmp-row">
-          <div class="cmp-label"><span class="t" id="curMonthLabel">이번 달</span><span class="s">선택한 달</span></div>
-          <div class="cmp-cell income"><div class="cv" id="curIncome">0원</div><div class="delta flat" id="dIncome">—</div></div>
-          <div class="cmp-cell expense"><div class="cv" id="curExpense">0원</div><div class="delta flat" id="dExpense">—</div></div>
-          <div class="cmp-cell save"><div class="cv" id="curSave">0원</div><div class="delta flat" id="dSave">—</div></div>
+          <div class="cmp-label"><span class="t" id="curMonthLabel">이번 달</span><span class="s">선택한 달 · 평균 대비</span></div>
+          <div class="cmp-cell income">
+            <div class="cv" id="curIncome">0원</div>
+            <div class="delta flat" id="dIncome">—</div>
+            <div class="cmp-rank" id="rankIncome"></div>
+          </div>
+          <div class="cmp-cell expense">
+            <div class="cv" id="curExpense">0원</div>
+            <div class="delta flat" id="dExpense">—</div>
+            <div class="cmp-rank" id="rankExpense"></div>
+          </div>
+          <div class="cmp-cell save">
+            <div class="cv" id="curSave">0원</div>
+            <div class="delta flat" id="dSave">—</div>
+            <div class="cmp-rank" id="rankSave"></div>
+          </div>
         </div>
       </div>
 
-      <!-- ② 툴바: 검색 + 월 칩 -->
+      <!-- ② 툴바 -->
       <div class="toolbar fade-up" style="animation-delay:0.06s">
         <div class="toolbar-search">
           <span>🔍</span>
@@ -285,7 +301,7 @@
         <div class="month-row" id="monthRow"></div>
       </div>
 
-      <!-- ③ 3열 거래 보드 -->
+      <!-- ③ 3열 보드 -->
       <div class="board fade-up" style="animation-delay:0.12s">
         <div class="board-col col-income">
           <div class="col-head">
@@ -351,16 +367,16 @@ const CAT_OPTS = {
 };
 
 let user=null, categoryId=null, editingId=null, curType='expense';
-let yearRecords=[];           // 올해 전체 거래 (월 비교/평균용)
-let selMonth = new Date().getMonth()+1;   // 선택된 월 (1~12)
+let yearRecords=[];
+let selMonth = new Date().getMonth()+1;
 let searchText='';
 const YEAR = new Date().getFullYear();
+const MEDALS = ['🥇','🥈','🥉'];
 
 const won = n => Number(n).toLocaleString('ko-KR') + '원';
 const $ = id => document.getElementById(id);
 const days = ['일','월','화','수','목','금','토'];
 
-/* 초기화 */
 (async function init(){
   const now = new Date();
   $('todayDate').textContent = `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}요일`;
@@ -388,12 +404,11 @@ async function ensureFinanceCategory(){
     .eq('user_id',user.id).eq('name','금융').maybeSingle();
   if(data) return data.id;
   const { data:ins } = await sb.from('categories')
-    .insert({ user_id:user.id, name:'금융', icon:'💰', color:'#4ecb8d', sort_order:1 })
+    .insert({ user_id:user.id, name:'금융', icon:'💰', color:'#56d99a', sort_order:1 })
     .select('id').single();
   return ins.id;
 }
 
-/* 월 칩 1~12 */
 function buildMonthChips(){
   $('monthRow').innerHTML = Array.from({length:12},(_,i)=>i+1).map(m=>
     `<button class="month-chip ${m===selMonth?'active':''}" data-m="${m}">${m}월</button>`
@@ -403,13 +418,11 @@ function buildMonthChips(){
       selMonth = Number(b.dataset.m);
       document.querySelectorAll('.month-chip').forEach(x=>x.classList.remove('active'));
       b.classList.add('active');
-      $('curMonthLabel').textContent = `${selMonth}월`;
       renderAll();
     };
   });
 }
 
-/* 유형 탭 (모달) */
 function setType(t){
   curType=t;
   document.querySelectorAll('.type-tabs button').forEach(b=>b.classList.toggle('on', b.dataset.type===t));
@@ -421,14 +434,12 @@ $('fAmt').addEventListener('input', e=>{
   e.target.value = v ? Number(v).toLocaleString('ko-KR') : '';
 });
 
-/* 모달 열기/닫기 + ESC + 바깥클릭 */
 function openModal(edit){
   if(!edit){
     editingId=null;
     $('modalTitle').textContent='새 거래 입력';
     setType('expense');
     $('fAmt').value=''; $('fMemo').value='';
-    // 선택된 월의 1일을 기본 날짜로
     const d = new Date(YEAR, selMonth-1, Math.min(new Date().getDate(), 28));
     $('fDate').value = d.toISOString().slice(0,10);
   }
@@ -438,7 +449,6 @@ function closeModal(){ $('modalBg').classList.remove('on'); }
 $('modalBg').addEventListener('click', e=>{ if(e.target.id==='modalBg') closeModal(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 
-/* 저장 */
 async function saveRecord(){
   const amt = Number($('fAmt').value.replace(/[^0-9]/g,''));
   if(!amt){ toast('금액을 입력하세요'); return; }
@@ -456,7 +466,6 @@ async function saveRecord(){
   await loadYear();
 }
 
-/* 올해 전체 조회 */
 async function loadYear(){
   const first = `${YEAR}-01-01`, last = `${YEAR}-12-31`;
   const { data:recs, error } = await sb.from('records').select('*')
@@ -482,16 +491,25 @@ function sums(recs){
   return {inc,exp,sav};
 }
 
+/* 특정 유형의 카테고리별 TOP3 (선택 월) */
+function topCats(recs, status){
+  const grp={};
+  recs.filter(r=>r.status===status).forEach(r=>{
+    const c=parseCat(r.memo); grp[c]=(grp[c]||0)+Number(r.value);
+  });
+  const total = Object.values(grp).reduce((s,v)=>s+v,0);
+  return Object.entries(grp).sort((a,b)=>b[1]-a[1]).slice(0,3)
+    .map(([cat,amt])=>({cat, amt, pct: total?Math.round(amt/total*100):0}));
+}
+
 function renderAll(){ renderCompare(); renderBoard(); }
 
-/* 비교 카드 */
 function renderCompare(){
-  // 데이터가 있는 월 집합
   const monthsWithData = [...new Set(yearRecords.map(monthOf))];
-  const cur = sums(yearRecords.filter(r=>monthOf(r)===selMonth));
+  const curRecs = yearRecords.filter(r=>monthOf(r)===selMonth);
+  const cur = sums(curRecs);
 
-  // 평균: 데이터가 있는 달들의 평균 (없으면 현재 월만)
-  let avg = {inc:0,exp:0,sav:0}, rangeText='데이터 누적 시';
+  let avg = {inc:0,exp:0,sav:0}, rangeText='데이터 누적 시 비교';
   if(monthsWithData.length){
     const tot = sums(yearRecords);
     const n = monthsWithData.length;
@@ -508,25 +526,38 @@ function renderCompare(){
   $('curExpense').textContent = won(cur.exp);
   $('curSave').textContent = won(cur.sav);
 
-  setDelta('dIncome', cur.inc, avg.inc, true);   // 수입은 늘면 좋음
-  setDelta('dExpense', cur.exp, avg.exp, false);  // 지출은 늘면 나쁨
-  setDelta('dSave', cur.sav, avg.sav, true);      // 저축은 늘면 좋음
+  setDelta('dIncome', cur.inc, avg.inc, true);
+  setDelta('dExpense', cur.exp, avg.exp, false);
+  setDelta('dSave', cur.sav, avg.sav, true);
+
+  renderRank('rankIncome', topCats(curRecs,'income'));
+  renderRank('rankExpense', topCats(curRecs,'expense'));
+  renderRank('rankSave', topCats(curRecs,'save'));
 }
 
-/* 평균 대비 증감 표시 (goodWhenUp: 증가가 긍정이면 true) */
+/* 증감: 이모지 + 색 배지 */
 function setDelta(id, cur, avg, goodWhenUp){
   const el = $(id);
-  if(!avg){ el.className='delta flat'; el.textContent='—'; return; }
+  if(!avg && !cur){ el.className='delta flat'; el.textContent='기록 없음'; return; }
+  if(!avg){ el.className='delta flat'; el.textContent='첫 기록'; return; }
   const diff = cur - avg;
+  if(diff===0){ el.className='delta flat'; el.textContent='⚖️ 평균과 동일'; return; }
   const pct = Math.round(diff/avg*100);
-  if(diff===0){ el.className='delta flat'; el.textContent='평균과 동일'; return; }
   const up = diff>0;
   const good = (up && goodWhenUp) || (!up && !goodWhenUp);
-  el.className = 'delta ' + (good ? 'dn' : 'up');  // dn=초록(좋음), up=빨강(주의)
-  el.textContent = `${up?'▲':'▼'} 평균 대비 ${Math.abs(pct)}%`;
+  el.className = 'delta ' + (good ? 'dn' : 'up');
+  const emoji = up ? '🔺' : '🔻';
+  el.textContent = `${emoji} 평균 대비 ${up?'+':'-'}${Math.abs(pct)}%`;
 }
 
-/* 검색 */
+function renderRank(id, top){
+  const el = $(id);
+  if(!top.length){ el.innerHTML=''; return; }
+  el.innerHTML = top.map((t,i)=>
+    `<span class="r"><span class="medal">${MEDALS[i]}</span><b>${t.cat}</b> ${t.pct}%</span>`
+  ).join('');
+}
+
 $('searchInput').addEventListener('input', e=>{ searchText=e.target.value.trim().toLowerCase(); renderBoard(); });
 
 function visibleRecords(){
@@ -540,7 +571,6 @@ function visibleRecords(){
   });
 }
 
-/* 3열 보드 */
 function renderBoard(){
   const vis = visibleRecords();
   const cols={income:[],expense:[],save:[]};
@@ -578,7 +608,6 @@ function renderBoard(){
   $('colSave').innerHTML    = cols.save.length    ? cols.save.map(card).join('')    : '<div class="col-empty">기록 없음</div>';
 }
 
-/* 수정 */
 window.editRec = function(r){
   editingId = r.id;
   $('modalTitle').textContent='거래 수정';
@@ -591,7 +620,6 @@ window.editRec = function(r){
   $('modalBg').classList.add('on');
 };
 
-/* 삭제 */
 window.delRec = async function(id){
   if(!confirm('이 기록을 삭제할까요?')) return;
   const { error } = await sb.from('records').delete().eq('id',id);
