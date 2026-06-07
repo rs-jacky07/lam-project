@@ -7,7 +7,7 @@
   <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     :root {
       --bg:#07070f; --bg2:#0d0d1a; --card:#15151f; --card2:#1c1c2b;
       --border:rgba(255,255,255,0.10);
@@ -17,7 +17,7 @@
       --pink:#ff8fc7; --purple:#b18cff; --ig:#e1568a; --yt:#ff5b5b;
       --sidebar:232px; --radius:14px;
     }
-    html, body { height:100%; font-family:'Pretendard',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; font-size:15px; }
+    html,body { height:100%; font-family:'Pretendard',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; font-size:15px; }
     .app { display:flex; height:100vh; overflow:hidden; }
 
     /* SIDEBAR */
@@ -74,31 +74,38 @@
     .content::-webkit-scrollbar-track { background:transparent; }
     .content::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
 
-    .section-title { font-size:15px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px; margin-bottom:-4px; }
-    .section-title .tag { font-size:11px; font-weight:700; color:var(--text3); }
-
-    /* 요약 카드 */
+    /* 요약 카드 4개 */
     .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
     .summary-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-      padding:18px 20px; position:relative; overflow:hidden; transition:border-color 0.2s, transform 0.2s; }
+      padding:18px 20px; position:relative; overflow:hidden; transition:border-color 0.2s,transform 0.2s; }
     .summary-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px;
       background:var(--card-accent,var(--accent)); opacity:0.85; }
     .summary-card:hover { border-color:rgba(255,255,255,0.16); transform:translateY(-2px); }
     .sc-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
     .sc-icon { font-size:18px; }
-    .sc-edit { font-size:11px; color:var(--text3); cursor:pointer; border:1px solid var(--border);
-      border-radius:7px; padding:3px 8px; background:var(--bg2); font-weight:700; transition:all 0.14s; }
-    .sc-edit:hover { color:var(--accent2); border-color:var(--accent); }
-    .sc-value { font-size:23px; font-weight:800; letter-spacing:-0.02em; margin-bottom:3px; }
-    .sc-value.channel { color:var(--accent2); }
-    .sc-value.count { color:var(--pink); }
-    .sc-value.star { color:var(--gold); }
-    .sc-label { font-size:12px; color:var(--text2); font-weight:600; }
+    .sc-value { font-size:24px; font-weight:800; letter-spacing:-0.02em; margin-bottom:3px; }
+    .sc-label { font-size:12px; color:var(--text2); font-weight:600; margin-bottom:10px; }
+
+    /* 미니 TOP3 분포 */
+    .sc-dist { display:flex; flex-direction:column; gap:4px; margin-top:6px; }
+    .sc-dist-row { display:flex; align-items:center; gap:6px; font-size:11px; }
+    .sc-dist-label { color:var(--text2); min-width:48px; font-weight:600; }
+    .sc-dist-bar-wrap { flex:1; height:4px; background:rgba(255,255,255,0.07); border-radius:100px; overflow:hidden; }
+    .sc-dist-bar { height:100%; border-radius:100px; transition:width 0.8s ease; }
+    .sc-dist-val { color:var(--text3); min-width:28px; text-align:right; }
+
+    /* 보완 카드 */
+    .suggest-list { display:flex; flex-direction:column; gap:7px; margin-top:4px; }
+    .suggest-item { font-size:12px; color:var(--text2); line-height:1.5; }
+    .suggest-item strong { color:var(--warning); }
+    .suggest-none { font-size:12px; color:var(--success); font-weight:600; }
+
+    /* 평균 비교 배지 */
     .sc-delta { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700;
-      margin-top:8px; padding:3px 9px; border-radius:100px; }
-    .sc-delta.up { color:var(--success); background:rgba(86,217,154,0.15); }
-    .sc-delta.dn { color:var(--error); background:rgba(255,122,122,0.15); }
-    .sc-delta.flat { color:var(--text3); background:rgba(255,255,255,0.06); }
+      margin-top:6px; padding:3px 9px; border-radius:100px; }
+    .sc-delta.up   { color:var(--success); background:rgba(86,217,154,0.15); }
+    .sc-delta.dn   { color:var(--error);   background:rgba(255,122,122,0.15); }
+    .sc-delta.flat { color:var(--text3);   background:rgba(255,255,255,0.06); }
 
     /* 툴바 */
     .toolbar { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
@@ -136,6 +143,7 @@
     .col-btn.sort { font-size:13px; }
     .col-body { display:flex; flex-direction:column; gap:9px; }
 
+    /* 카드 아이템 */
     .item { display:flex; align-items:stretch; background:var(--card2); border:1px solid var(--border);
       border-radius:11px; overflow:hidden; transition:border-color 0.16s; }
     .item:hover { border-color:rgba(91,155,255,0.4); }
@@ -145,12 +153,20 @@
     .item-date { font-size:11px; color:var(--text3); flex-shrink:0; }
     .badges { display:flex; gap:5px; margin-top:6px; flex-wrap:wrap; }
     .badge { font-size:10px; font-weight:800; padding:3px 8px; border-radius:100px; letter-spacing:0.02em; }
-    .badge.hwahae { background:rgba(255,143,199,0.18); color:var(--pink); }
+    .badge.hwahae   { background:rgba(255,143,199,0.18); color:var(--pink); }
     .badge.glowpick { background:rgba(177,140,255,0.18); color:var(--purple); }
-    .badge.buy { background:rgba(86,217,154,0.16); color:var(--success); }
-    .badge.gift { background:rgba(255,193,77,0.16); color:var(--gold); }
-    .badge.ig { background:rgba(225,86,138,0.18); color:#ff8fb6; }
-    .badge.yt { background:rgba(255,91,91,0.18); color:#ff9a9a; }
+    .badge.buy      { background:rgba(86,217,154,0.16);  color:var(--success); }
+    .badge.gift     { background:rgba(255,193,77,0.16);  color:var(--gold); }
+    .badge.ig       { background:rgba(225,86,138,0.18);  color:#ff8fb6; }
+    .badge.yt       { background:rgba(255,91,91,0.18);   color:#ff9a9a; }
+    .badge.skin-dry     { background:rgba(91,155,255,0.16);  color:var(--accent2); }
+    .badge.skin-oily    { background:rgba(255,179,56,0.16);  color:var(--warning); }
+    .badge.skin-combo   { background:rgba(86,217,154,0.16);  color:var(--success); }
+    .badge.skin-sensitive { background:rgba(255,122,122,0.16); color:var(--error); }
+    .badge.skin-all     { background:rgba(177,140,255,0.16);  color:var(--purple); }
+    .badge.skin-normal  { background:rgba(255,255,255,0.1);   color:var(--text2); }
+    .badge.cat-item { background:rgba(91,155,255,0.12); color:var(--accent2); }
+    .badge.ctype-item { background:rgba(255,193,77,0.12); color:var(--gold); }
     .item-stars { font-size:13px; color:var(--gold); margin-top:6px; letter-spacing:1px; }
     .item-stars .off { color:var(--text3); }
     .item-memo { font-size:12px; color:var(--text2); margin-top:6px;
@@ -169,23 +185,25 @@
       display:none; align-items:center; justify-content:center; z-index:200; opacity:0; transition:opacity 0.22s; }
     .modal-bg.on { display:flex; opacity:1; }
     .modal { background:var(--card); border:1px solid var(--border); border-radius:18px;
-      padding:28px; width:440px; max-width:92vw; transform:scale(0.96); transition:transform 0.22s;
+      padding:28px; width:460px; max-width:92vw; transform:scale(0.96); transition:transform 0.22s;
       max-height:90vh; overflow-y:auto; }
     .modal-bg.on .modal { transform:scale(1); }
     .modal h3 { font-size:19px; font-weight:800; margin-bottom:22px; }
     .field { margin-bottom:16px; }
     .field label { display:block; font-size:13px; color:var(--text2); margin-bottom:8px; font-weight:700; }
-    .field input, .field select, .field textarea { width:100%; background:var(--bg2); border:1px solid var(--border);
+    .field input, .field select, .field textarea {
+      width:100%; background:var(--bg2); border:1px solid var(--border);
       border-radius:10px; padding:12px 14px; color:var(--text); font-size:15px;
       font-family:'Pretendard',sans-serif; outline:none; transition:border-color 0.16s; resize:vertical; }
     .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--accent); }
-    .type-tabs { display:flex; gap:7px; }
-    .type-tabs button { flex:1; padding:11px; border-radius:10px; border:1px solid var(--border);
+    .field select option { background:var(--bg2); }
+    .type-tabs { display:flex; gap:7px; flex-wrap:wrap; }
+    .type-tabs button { flex:1; min-width:80px; padding:11px; border-radius:10px; border:1px solid var(--border);
       background:var(--bg2); color:var(--text2); font-size:14px; cursor:pointer;
       font-family:'Pretendard',sans-serif; transition:all 0.16s; font-weight:700; }
     .type-tabs button.on { background:rgba(91,155,255,0.18); color:var(--accent2); border-color:var(--accent); }
     .star-input { display:flex; gap:6px; font-size:30px; line-height:1; }
-    .star-input span { cursor:pointer; color:var(--text3); transition:color 0.12s, transform 0.12s; }
+    .star-input span { cursor:pointer; color:var(--text3); transition:color 0.12s,transform 0.12s; }
     .star-input span:hover { transform:scale(1.15); }
     .star-input span.on { color:var(--gold); }
     .modal-foot { display:flex; gap:9px; margin-top:24px; }
@@ -203,8 +221,8 @@
     .fade-up { opacity:0; transform:translateY(14px); animation:fadeUp 0.5s ease forwards; }
     @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
 
-    @media (max-width:900px){ .board { grid-template-columns:1fr; } }
-    @media (max-width:768px){
+    @media (max-width:900px) { .board { grid-template-columns:1fr; } .summary-grid { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:768px) {
       .sidebar { display:none; }
       .topbar { padding:14px 16px; }
       .content { padding:18px 14px 80px; }
@@ -269,33 +287,43 @@
 
     <div class="content">
 
-      <!-- 요약 -->
-      <div class="section-title fade-up">📊 이번 달 요약 <span class="tag">· 팔로워/구독자는 주 1회 기록</span></div>
+      <!-- 요약 카드 4개 -->
       <div class="summary-grid fade-up">
-        <div class="summary-card" style="--card-accent:var(--ig)">
-          <div class="sc-top"><span class="sc-icon">📷</span><span class="sc-edit" onclick="openChannel('instagram')">주간 기록</span></div>
-          <div class="sc-value channel" id="igValue">—</div>
-          <div class="sc-label">인스타 팔로워 (최근 기록)</div>
-          <div class="sc-delta flat" id="igDelta">지난 기록 대비</div>
-        </div>
-        <div class="summary-card" style="--card-accent:var(--yt)">
-          <div class="sc-top"><span class="sc-icon">▶️</span><span class="sc-edit" onclick="openChannel('youtube')">주간 기록</span></div>
-          <div class="sc-value channel" id="ytValue">—</div>
-          <div class="sc-label">유튜브 구독자 (최근 기록)</div>
-          <div class="sc-delta flat" id="ytDelta">지난 기록 대비</div>
-        </div>
+
+        <!-- 카드1: 리뷰 -->
         <div class="summary-card" style="--card-accent:var(--pink)">
           <div class="sc-top"><span class="sc-icon">📝</span></div>
-          <div class="sc-value count" id="reviewCount">0개</div>
-          <div class="sc-label">이번 달 리뷰 작성</div>
-          <div class="sc-delta flat" id="reviewSplit">화해 0 · 글로우픽 0</div>
+          <div class="sc-value" id="sc-reviewCount" style="color:var(--pink)">0개</div>
+          <div class="sc-label">이번 달 리뷰</div>
+          <div class="sc-delta flat" id="sc-reviewDelta">월평균 — 개</div>
+          <div class="sc-dist" id="sc-reviewDist"></div>
         </div>
+
+        <!-- 카드2: 콘텐츠 -->
         <div class="summary-card" style="--card-accent:var(--accent)">
           <div class="sc-top"><span class="sc-icon">🎬</span></div>
-          <div class="sc-value channel" id="contentCount">0개</div>
+          <div class="sc-value" id="sc-contentCount" style="color:var(--accent2)">0개</div>
           <div class="sc-label">이번 달 콘텐츠 업로드</div>
-          <div class="sc-delta flat" id="contentSplit">인스타 0 · 유튜브 0</div>
+          <div class="sc-delta flat" id="sc-contentDelta">월평균 — 개</div>
+          <div class="sc-dist" id="sc-contentDist"></div>
         </div>
+
+        <!-- 카드3: 평균 별점 -->
+        <div class="summary-card" style="--card-accent:var(--gold)">
+          <div class="sc-top"><span class="sc-icon">⭐</span></div>
+          <div class="sc-value" id="sc-starValue" style="color:var(--gold)">—</div>
+          <div class="sc-label">이번 달 평균 별점</div>
+          <div class="sc-delta flat" id="sc-starDelta">전체 평균 —</div>
+          <div class="sc-dist" id="sc-catDist"></div>
+        </div>
+
+        <!-- 카드4: 보완 필요 -->
+        <div class="summary-card" style="--card-accent:var(--warning)">
+          <div class="sc-top"><span class="sc-icon">💡</span></div>
+          <div class="sc-value" style="font-size:15px; color:var(--warning); margin-bottom:8px;">이번 달 보완 필요</div>
+          <div class="suggest-list" id="sc-suggest"></div>
+        </div>
+
       </div>
 
       <!-- 툴바 -->
@@ -309,7 +337,7 @@
 
       <!-- 2열 보드 -->
       <div class="board fade-up" style="animation-delay:0.12s">
-        <!-- 리뷰 작성 -->
+        <!-- 리뷰 -->
         <div class="board-col">
           <div class="col-head">
             <div class="col-head-left">
@@ -323,7 +351,7 @@
           </div>
           <div class="col-body" id="colReview"></div>
         </div>
-        <!-- 콘텐츠 업로드 -->
+        <!-- 콘텐츠 -->
         <div class="board-col">
           <div class="col-head">
             <div class="col-head-left">
@@ -363,6 +391,32 @@
     </div>
     <div class="field"><label>제품명</label><input id="rvProd" type="text" placeholder="예: 토리든 다이브인 세럼" /></div>
     <div class="field">
+      <label>제품 카테고리</label>
+      <select id="rvCat">
+        <option value="">선택하세요</option>
+        <option>스킨/토너</option>
+        <option>에센스/세럼</option>
+        <option>크림/로션</option>
+        <option>선크림</option>
+        <option>클렌징</option>
+        <option>마스크팩</option>
+        <option>아이크림</option>
+        <option>미스트</option>
+        <option>기타</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>적합 피부 타입</label>
+      <div class="type-tabs" id="skinTabs" style="flex-wrap:wrap;">
+        <button data-skin="건성" class="on">건성</button>
+        <button data-skin="지성">지성</button>
+        <button data-skin="수부지">수부지</button>
+        <button data-skin="복합성">복합성</button>
+        <button data-skin="민감성">민감성</button>
+        <button data-skin="모든피부">모든피부</button>
+      </div>
+    </div>
+    <div class="field">
       <label>별점</label>
       <div class="star-input" id="starInput">
         <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
@@ -388,6 +442,28 @@
         <button data-chan="youtube">유튜브</button>
       </div>
     </div>
+    <div class="field">
+      <label>콘텐츠 유형</label>
+      <div class="type-tabs" id="ctypeTabs" style="flex-wrap:wrap;">
+        <button data-ctype="단독리뷰" class="on">단독리뷰</button>
+        <button data-ctype="비교리뷰">비교리뷰</button>
+        <button data-ctype="루틴소개">루틴소개</button>
+        <button data-ctype="성분분석">성분분석</button>
+        <button data-ctype="추천리스트">추천리스트</button>
+        <button data-ctype="기타">기타</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>적합 피부 타입</label>
+      <div class="type-tabs" id="ctSkinTabs" style="flex-wrap:wrap;">
+        <button data-ctskin="건성" class="on">건성</button>
+        <button data-ctskin="지성">지성</button>
+        <button data-ctskin="수부지">수부지</button>
+        <button data-ctskin="복합성">복합성</button>
+        <button data-ctskin="민감성">민감성</button>
+        <button data-ctskin="모든피부">모든피부</button>
+      </div>
+    </div>
     <div class="field"><label>콘텐츠 제목 / 주제</label><input id="ctTitle" type="text" placeholder="예: 여름 수분크림 비교 릴스" /></div>
     <div class="field"><label>업로드 날짜</label><input id="ctDate" type="date" /></div>
     <div class="field"><label>메모 (선택)</label><textarea id="ctMemo" rows="3" placeholder="기획 의도, 반응 등"></textarea></div>
@@ -398,283 +474,235 @@
   </div>
 </div>
 
-<!-- 채널 수치 모달 -->
-<div class="modal-bg" id="channelModal">
-  <div class="modal">
-    <h3 id="chModalTitle">주간 수치 기록</h3>
-    <p style="font-size:13px; color:var(--text2); margin:-12px 0 20px; line-height:1.6;">
-      오늘 기준 <b id="chName">팔로워</b> 수를 입력하세요. 주 1회 기록하면 대시보드에서 주차별 상승률을 볼 수 있습니다.</p>
-    <div class="field"><label id="chLabel">팔로워 수</label><input id="chValue" type="text" inputmode="numeric" placeholder="0" /></div>
-    <div class="field"><label>기록 날짜</label><input id="chDate" type="date" /></div>
-    <div class="modal-foot">
-      <button class="btn-cancel" onclick="closeChannel()">취소</button>
-      <button class="btn-save" onclick="saveChannel()">저장</button>
-    </div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL = 'https://jmumomvxylxbkagjnmxc.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptdW1vbXZ4eWx4YmthZ2pubXhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODc5NzksImV4cCI6MjA5NTg2Mzk3OX0.OQBcCmA7ULgZ28zujvuB_FH0WbUmlHqks_TY97FB7E8';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-let user=null, categoryId=null, metricMap={};
-let editingId=null, curPlat='화해', curBuy='직접구매', curStar=0, curChan='instagram';
-let editingContentId=null;
-let yearRecords=[];
-let selMonth=new Date().getMonth()+1;
-let searchText='';
-let sortDir={ review:'desc', content:'desc' };
-const YEAR=new Date().getFullYear();
-
+const SUPABASE_URL='https://jmumomvxylxbkagjnmxc.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptdW1vbXZ4eWx4YmthZ2pubXhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODc5NzksImV4cCI6MjA5NTg2Mzk3OX0.OQBcCmA7ULgZ28zujvuB_FH0WbUmlHqks_TY97FB7E8';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
-const days=['일','월','화','수','목','금','토'];
-const numfmt=n=>Number(n).toLocaleString('ko-KR');
 
-(async function init(){
-  const now=new Date();
-  $('todayDate').textContent=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}요일`;
-  $('monthBadge').textContent=`${now.getMonth()+1}월`;
-  const { data:{ session } }=await sb.auth.getSession();
-  if(!session){ location.href='index.html'; return; }
-  user=session.user;
-  const { data:p }=await sb.from('profiles').select('name,email').eq('id',user.id).single();
-  const name=p?.name||user.email.split('@')[0];
+/* 날짜 */
+const now=new Date();
+const days=['일','월','화','수','목','금','토'];
+$('todayDate').textContent=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}요일`;
+$('monthBadge').textContent=`${now.getMonth()+1}월`;
+
+let selMonth=now.getMonth()+1;
+let yearRecords=[], metricMap={}, searchText='';
+let sortDir={review:'desc', content:'desc'};
+let editingId=null, editingContentId=null;
+let curStar=0, curPlat='화해', curBuy='직접구매', curSkin='건성';
+let curChan='instagram', curCtype='단독리뷰', curCtSkin='건성';
+
+const monthOf=r=>{ const d=r.recorded_at||r.created_at||''; return d?Number(d.slice(5,7)):0; };
+const part=(s,i)=>{ if(!s) return ''; return (s.split('|')[i]||'').trim(); };
+const midName=id=>{ for(const[k,v] of Object.entries(metricMap)) if(v===id) return k; return ''; };
+const numfmt=n=>Number(n).toLocaleString();
+
+/* 월 칩 */
+function buildMonthChips(){
+  const row=$('monthRow'); row.innerHTML='';
+  for(let m=1;m<=12;m++){
+    const btn=document.createElement('button');
+    btn.className='month-chip'+(m===selMonth?' active':'');
+    btn.textContent=m+'월';
+    btn.onclick=()=>{ selMonth=m; buildMonthChips(); renderAll(); };
+    row.appendChild(btn);
+  }
+}
+buildMonthChips();
+
+/* 로그인 확인 */
+let userId=null;
+(async()=>{
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){location.href='index.html';return;}
+  userId=session.user.id;
+  const {data:p}=await sb.from('profiles').select('name,email').eq('id',userId).single();
+  const name=p?.name||session.user.email.split('@')[0];
   $('profileName').textContent=name;
-  $('profileEmail').textContent=p?.email||user.email;
+  $('profileEmail').textContent=p?.email||session.user.email;
   $('profileAvatar').textContent=name.charAt(0).toUpperCase();
-  categoryId=await ensureCategory();
   await ensureMetrics();
-  buildMonthChips();
-  const today=new Date().toISOString().slice(0,10);
-  $('rvDate').value=today; $('ctDate').value=today; $('chDate').value=today;
   await loadYear();
 })();
 
-async function ensureCategory(){
-  const { data }=await sb.from('categories').select('id')
-    .eq('user_id',user.id).eq('name','피부').maybeSingle();
-  if(data) return data.id;
-  const { data:ins }=await sb.from('categories')
-    .insert({ user_id:user.id, name:'피부', icon:'✨', color:'#ff8fc7', sort_order:2 })
-    .select('id').single();
-  return ins.id;
-}
 async function ensureMetrics(){
-  const defs=[
-    { name:'화해', unit:'점', type:'review' },
-    { name:'글로우픽', unit:'점', type:'review' },
-    { name:'instagram', unit:'명', type:'channel' },
-    { name:'youtube', unit:'명', type:'channel' },
-  ];
-  const { data:exist }=await sb.from('metrics').select('id,name')
-    .eq('user_id',user.id).eq('category_id',categoryId);
-  const have=(exist||[]).reduce((m,x)=>{ m[x.name]=x.id; return m; },{});
-  for(const d of defs){
-    if(have[d.name]){ metricMap[d.name]=have[d.name]; continue; }
-    const { data:ins }=await sb.from('metrics')
-      .insert({ user_id:user.id, category_id:categoryId, name:d.name, unit:d.unit, type:d.type })
-      .select('id').single();
-    if(ins) metricMap[d.name]=ins.id;
+  const names=['화해','글로우픽','instagram','youtube'];
+  const {data:existing}=await sb.from('metrics').select('id,name').eq('user_id',userId);
+  const existMap={};
+  (existing||[]).forEach(m=>existMap[m.name]=m.id);
+  for(const n of names){
+    if(!existMap[n]){
+      const type=n==='instagram'||n==='youtube'?'channel':'review';
+      const {data:ins}=await sb.from('metrics').insert({user_id:userId,name:n,type,unit:''}).select().single();
+      if(ins) existMap[n]=ins.id;
+    }
   }
+  metricMap=existMap;
 }
-function buildMonthChips(){
-  $('monthRow').innerHTML=Array.from({length:12},(_,i)=>i+1).map(m=>
-    `<button class="month-chip ${m===selMonth?'active':''}" data-m="${m}">${m}월</button>`).join('');
-  document.querySelectorAll('.month-chip').forEach(b=>{
-    b.onclick=()=>{ selMonth=Number(b.dataset.m);
-      document.querySelectorAll('.month-chip').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active'); renderAll(); };
-  });
-}
-
-/* 별점 */
-function setStar(v){ curStar=v;
-  [...$('starInput').children].forEach(s=> s.classList.toggle('on', Number(s.dataset.v)<=v)); }
-[...document.querySelectorAll('#starInput span')].forEach(s=> s.onclick=()=>setStar(Number(s.dataset.v)));
-/* 플랫폼/구매유형/채널 탭 */
-function setPlat(p){ curPlat=p; document.querySelectorAll('#platTabs button').forEach(b=>b.classList.toggle('on', b.dataset.plat===p)); }
-function setBuy(b2){ curBuy=b2; document.querySelectorAll('#buyTabs button').forEach(b=>b.classList.toggle('on', b.dataset.buy===b2)); }
-function setChan(c){ curChan=c; document.querySelectorAll('#chanTabs button').forEach(b=>b.classList.toggle('on', b.dataset.chan===c)); }
-document.querySelectorAll('#platTabs button').forEach(b=> b.onclick=()=>setPlat(b.dataset.plat));
-document.querySelectorAll('#buyTabs button').forEach(b=> b.onclick=()=>setBuy(b.dataset.buy));
-document.querySelectorAll('#chanTabs button').forEach(b=> b.onclick=()=>setChan(b.dataset.chan));
-
-/* 리뷰 모달 */
-function openReview(edit){
-  if(!edit){ editingId=null; $('rvModalTitle').textContent='리뷰 작성';
-    setPlat('화해'); setBuy('직접구매'); setStar(0);
-    $('rvProd').value=''; $('rvMemo').value='';
-    const d=new Date(YEAR, selMonth-1, Math.min(new Date().getDate(),28));
-    $('rvDate').value=d.toISOString().slice(0,10);
-  }
-  $('reviewModal').classList.add('on');
-}
-function closeReview(){ $('reviewModal').classList.remove('on'); }
-$('reviewModal').addEventListener('click', e=>{ if(e.target.id==='reviewModal') closeReview(); });
-async function saveReview(){
-  const prod=$('rvProd').value.trim();
-  if(!prod){ toast('제품명을 입력하세요'); return; }
-  if(!curStar){ toast('별점을 선택하세요'); return; }
-  // memo: 제품명|구매유형|후기
-  const memo=`${prod}|${curBuy}|${$('rvMemo').value.trim()}`;
-  const payload={ user_id:user.id, category_id:categoryId, metric_id:metricMap[curPlat],
-    value:curStar, memo, status:'review', recorded_at:$('rvDate').value };
-  let err;
-  if(editingId){ ({error:err}=await sb.from('records').update(payload).eq('id',editingId)); }
-  else { ({error:err}=await sb.from('records').insert(payload)); }
-  if(err){ toast('저장 실패: '+err.message); return; }
-  closeReview(); toast(editingId?'수정되었습니다':'저장되었습니다'); await loadYear();
-}
-
-/* 콘텐츠 모달 */
-function openContent(edit){
-  if(!edit){ editingContentId=null; $('ctModalTitle').textContent='콘텐츠 업로드 기록';
-    setChan('instagram'); $('ctTitle').value=''; $('ctMemo').value='';
-    const d=new Date(YEAR, selMonth-1, Math.min(new Date().getDate(),28));
-    $('ctDate').value=d.toISOString().slice(0,10);
-  }
-  $('contentModal').classList.add('on');
-}
-function closeContent(){ $('contentModal').classList.remove('on'); }
-$('contentModal').addEventListener('click', e=>{ if(e.target.id==='contentModal') closeContent(); });
-async function saveContent(){
-  const title=$('ctTitle').value.trim();
-  if(!title){ toast('콘텐츠 제목을 입력하세요'); return; }
-  const memo=`${title}|${$('ctMemo').value.trim()}`;
-  const payload={ user_id:user.id, category_id:categoryId, metric_id:metricMap[curChan],
-    value:1, memo, status:'content', recorded_at:$('ctDate').value };
-  let err;
-  if(editingContentId){ ({error:err}=await sb.from('records').update(payload).eq('id',editingContentId)); }
-  else { ({error:err}=await sb.from('records').insert(payload)); }
-  if(err){ toast('저장 실패: '+err.message); return; }
-  closeContent(); toast(editingContentId?'수정되었습니다':'저장되었습니다'); await loadYear();
-}
-
-/* 채널 수치 모달 (주 1회) */
-function openChannel(ch){
-  curChan=ch;
-  const isIg=ch==='instagram';
-  $('chModalTitle').textContent= isIg?'인스타 팔로워 주간 기록':'유튜브 구독자 주간 기록';
-  $('chName').textContent= isIg?'팔로워':'구독자';
-  $('chLabel').textContent= isIg?'팔로워 수':'구독자 수';
-  $('chValue').value='';
-  $('chDate').value=new Date().toISOString().slice(0,10);
-  $('channelModal').classList.add('on');
-}
-function closeChannel(){ $('channelModal').classList.remove('on'); }
-$('channelModal').addEventListener('click', e=>{ if(e.target.id==='channelModal') closeChannel(); });
-$('chValue').addEventListener('input', e=>{ const v=e.target.value.replace(/[^0-9]/g,''); e.target.value=v?numfmt(v):''; });
-async function saveChannel(){
-  const v=Number($('chValue').value.replace(/[^0-9]/g,''));
-  if(!v){ toast('숫자를 입력하세요'); return; }
-  const mid=metricMap[curChan];
-  const date=$('chDate').value;
-  // 같은 날짜 기록이 있으면 업데이트
-  const existing=yearRecords.find(r=> r.metric_id===mid && r.status==='channel' && (r.recorded_at||'').slice(0,10)===date);
-  let err;
-  if(existing){ ({error:err}=await sb.from('records').update({ value:v }).eq('id',existing.id)); }
-  else { ({error:err}=await sb.from('records').insert({ user_id:user.id, category_id:categoryId,
-    metric_id:mid, value:v, memo:'', status:'channel', recorded_at:date })); }
-  if(err){ toast('저장 실패: '+err.message); return; }
-  closeChannel(); toast('저장되었습니다'); await loadYear();
-}
-
-document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeReview(); closeContent(); closeChannel(); } });
 
 async function loadYear(){
-  const { data:recs, error }=await sb.from('records').select('*')
-    .eq('user_id',user.id).eq('category_id',categoryId)
-    .gte('recorded_at',`${YEAR}-01-01`).lte('recorded_at',`${YEAR}-12-31`)
-    .order('recorded_at',{ascending:false}).order('created_at',{ascending:false});
-  if(error){ toast('불러오기 실패'); return; }
-  yearRecords=recs||[]; renderAll();
+  const y=now.getFullYear();
+  const {data,error}=await sb.from('records').select('*')
+    .eq('user_id',userId)
+    .gte('recorded_at',`${y}-01-01`).lte('recorded_at',`${y}-12-31`)
+    .order('recorded_at',{ascending:false});
+  if(error){toast('데이터 로드 실패');return;}
+  yearRecords=data||[];
+  renderAll();
 }
 
-function monthOf(r){ return Number((r.recorded_at||'').slice(5,7)); }
-function midName(id){ return Object.keys(metricMap).find(k=>metricMap[k]===id); }
-function part(memo,i){ return (memo||'').split('|')[i]||''; }
+function renderAll(){ renderSummary(); renderBoard(); }
 
-function renderAll(){ renderChannels(); renderSummary(); renderBoard(); }
-
-/* 채널 카드: 최근 기록 + 직전 기록 대비 (주간) */
-function setChannelCard(ch, valId, deltaId){
-  const mid=metricMap[ch];
-  const recs=yearRecords.filter(r=> r.metric_id===mid && r.status==='channel')
-    .sort((a,b)=>(a.recorded_at||'')<(b.recorded_at||'')?1:-1); // 최신순
-  if(!recs.length){ $(valId).textContent='—'; const e=$(deltaId); e.className='sc-delta flat'; e.textContent='기록 없음'; return; }
-  const cur=Number(recs[0].value);
-  $(valId).textContent=numfmt(cur)+'명';
-  const e=$(deltaId);
-  if(recs.length<2){ e.className='sc-delta flat'; e.textContent='첫 기록'; return; }
-  const prev=Number(recs[1].value);
-  const diff=cur-prev;
-  if(diff===0){ e.className='sc-delta flat'; e.textContent='지난 기록과 동일'; return; }
-  e.className='sc-delta '+(diff>0?'up':'dn');
-  e.textContent=`${diff>0?'🔺':'🔻'} 지난 기록 대비 ${diff>0?'+':''}${numfmt(diff)}명`;
-}
-function renderChannels(){ setChannelCard('instagram','igValue','igDelta'); setChannelCard('youtube','ytValue','ytDelta'); }
-
+/* ── 요약 카드 ── */
 function renderSummary(){
-  const revs=yearRecords.filter(r=>r.status==='review' && monthOf(r)===selMonth);
-  $('reviewCount').textContent=revs.length+'개';
-  const h=revs.filter(r=>midName(r.metric_id)==='화해').length;
-  const g=revs.filter(r=>midName(r.metric_id)==='글로우픽').length;
-  $('reviewSplit').textContent=`화해 ${h} · 글로우픽 ${g}`;
-  const conts=yearRecords.filter(r=>r.status==='content' && monthOf(r)===selMonth);
-  $('contentCount').textContent=conts.length+'개';
-  const ig=conts.filter(r=>midName(r.metric_id)==='instagram').length;
-  const yt=conts.filter(r=>midName(r.metric_id)==='youtube').length;
-  $('contentSplit').textContent=`인스타 ${ig} · 유튜브 ${yt}`;
+  const allRevs  = yearRecords.filter(r=>r.status==='review');
+  const allConts = yearRecords.filter(r=>r.status==='content');
+  const mRevs    = allRevs.filter(r=>monthOf(r)===selMonth);
+  const mConts   = allConts.filter(r=>monthOf(r)===selMonth);
+
+  /* 월평균 계산 (데이터 있는 월만) */
+  function monthAvg(arr){
+    const byMonth={};
+    arr.forEach(r=>{ const m=monthOf(r); byMonth[m]=(byMonth[m]||0)+1; });
+    const vals=Object.values(byMonth);
+    return vals.length? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1): null;
+  }
+
+  /* 카드1: 리뷰 수 */
+  $('sc-reviewCount').textContent=mRevs.length+'개';
+  const rvAvg=monthAvg(allRevs);
+  const rvDelta=$('sc-reviewDelta');
+  if(rvAvg){
+    const diff=mRevs.length-Number(rvAvg);
+    rvDelta.className='sc-delta '+(diff>=0?'up':'dn');
+    rvDelta.textContent=`월평균 ${rvAvg}개 대비 ${diff>=0?'+':''}${diff.toFixed(1)}`;
+  } else { rvDelta.className='sc-delta flat'; rvDelta.textContent='월평균 집계 중'; }
+  /* 리뷰 피부타입 분포 */
+  $('sc-reviewDist').innerHTML=skinDist(mRevs, 'review');
+
+  /* 카드2: 콘텐츠 수 */
+  $('sc-contentCount').textContent=mConts.length+'개';
+  const ctAvg=monthAvg(allConts);
+  const ctDelta=$('sc-contentDelta');
+  if(ctAvg){
+    const diff=mConts.length-Number(ctAvg);
+    ctDelta.className='sc-delta '+(diff>=0?'up':'dn');
+    ctDelta.textContent=`월평균 ${ctAvg}개 대비 ${diff>=0?'+':''}${diff.toFixed(1)}`;
+  } else { ctDelta.className='sc-delta flat'; ctDelta.textContent='월평균 집계 중'; }
+  /* 콘텐츠 피부타입 분포 */
+  $('sc-contentDist').innerHTML=skinDist(mConts, 'content');
+
+  /* 카드3: 평균 별점 + 제품 카테고리 TOP3 */
+  const starVal=$('sc-starValue'), starDelta=$('sc-starDelta');
+  if(mRevs.length){
+    const avg=(mRevs.reduce((s,r)=>s+Number(r.value),0)/mRevs.length).toFixed(1);
+    starVal.textContent='★ '+avg;
+    const allAvg=allRevs.length?(allRevs.reduce((s,r)=>s+Number(r.value),0)/allRevs.length).toFixed(1):null;
+    if(allAvg){
+      const d=(Number(avg)-Number(allAvg)).toFixed(1);
+      starDelta.className='sc-delta '+(d>=0?'up':'dn');
+      starDelta.textContent=`전체 평균 ★${allAvg} (${d>=0?'+':''}${d})`;
+    } else { starDelta.className='sc-delta flat'; starDelta.textContent=`전체 평균 ★${avg}`; }
+  } else { starVal.textContent='—'; starDelta.className='sc-delta flat'; starDelta.textContent='리뷰 없음'; }
+  /* 제품 카테고리 TOP3 */
+  $('sc-catDist').innerHTML=catTop3(mRevs);
+
+  /* 카드4: 보완 필요 */
+  $('sc-suggest').innerHTML=buildSuggest(mRevs, mConts);
 }
 
-$('searchInput').addEventListener('input', e=>{ searchText=e.target.value.trim().toLowerCase(); renderBoard(); });
-function toggleSort(kind){
-  sortDir[kind]= sortDir[kind]==='desc'?'asc':'desc';
-  const btn= kind==='review'?$('sortReview'):$('sortContent');
-  if(btn) btn.textContent= sortDir[kind]==='desc'?'↓':'↑';
-  renderBoard();
+function skinDist(arr, type){
+  const skinTypes=['건성','지성','수부지','복합성','민감성','모든피부'];
+  const counts={};
+  skinTypes.forEach(s=>counts[s]=0);
+  arr.forEach(r=>{
+    const s=type==='review'? part(r.memo,3): part(r.memo,2);
+    if(counts[s]!==undefined) counts[s]++;
+  });
+  const total=arr.length||1;
+  const sorted=skinTypes.filter(s=>counts[s]>0).sort((a,b)=>counts[b]-counts[a]).slice(0,3);
+  if(!sorted.length) return '<div style="font-size:11px;color:var(--text3)">데이터 없음</div>';
+  return sorted.map(s=>`
+    <div class="sc-dist-row">
+      <span class="sc-dist-label">${s}</span>
+      <div class="sc-dist-bar-wrap"><div class="sc-dist-bar" style="width:${Math.round(counts[s]/total*100)}%;background:var(--accent)"></div></div>
+      <span class="sc-dist-val">${counts[s]}</span>
+    </div>`).join('');
 }
-function sortArr(arr, dir){
-  const d= dir==='asc'?1:-1;
-  return arr.sort((a,b)=>{ const da=a.recorded_at||'', db=b.recorded_at||'';
-    if(da!==db) return da<db?-1*d:1*d;
-    return (a.created_at||'')<(b.created_at||'')?-1*d:1*d; });
-}
-function stars(n){ let s=''; for(let i=1;i<=5;i++) s+= i<=n?'★':'<span class="off">★</span>'; return s; }
 
+function catTop3(revs){
+  const cats={};
+  revs.forEach(r=>{ const c=part(r.memo,4); if(c) cats[c]=(cats[c]||0)+1; });
+  const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  if(!sorted.length) return '<div style="font-size:11px;color:var(--text3)">카테고리 데이터 없음</div>';
+  const medals=['🥇','🥈','🥉'];
+  return sorted.map(([c,n],i)=>`
+    <div class="sc-dist-row">
+      <span class="sc-dist-label">${medals[i]} ${c}</span>
+      <span class="sc-dist-val" style="color:var(--text2)">${n}건</span>
+    </div>`).join('');
+}
+
+function buildSuggest(revs, conts){
+  const items=[];
+  /* 피부타입별 리뷰 부족 */
+  const skinTypes=['건성','지성','수부지','복합성','민감성'];
+  const rvSkin={};
+  revs.forEach(r=>{ const s=part(r.memo,3); if(s) rvSkin[s]=(rvSkin[s]||0)+1; });
+  const minSkin=skinTypes.filter(s=>!rvSkin[s]||rvSkin[s]<2);
+  if(minSkin.length) items.push(`<div class="suggest-item"><strong>${minSkin.slice(0,2).join(', ')}</strong> 피부 리뷰가 부족해요</div>`);
+  /* 콘텐츠 유형 부족 */
+  const ctypes=['비교리뷰','성분분석','루틴소개'];
+  const ctSeen={};
+  conts.forEach(r=>{ const c=part(r.memo,1); if(c) ctSeen[c]=true; });
+  const missing=ctypes.filter(c=>!ctSeen[c]);
+  if(missing.length) items.push(`<div class="suggest-item"><strong>${missing[0]}</strong> 콘텐츠가 없어요</div>`);
+  /* 콘텐츠 피부 부족 */
+  const ctSkin={};
+  conts.forEach(r=>{ const s=part(r.memo,2); if(s) ctSkin[s]=(ctSkin[s]||0)+1; });
+  const missCt=skinTypes.filter(s=>!ctSkin[s]);
+  if(missCt.length) items.push(`<div class="suggest-item"><strong>${missCt.slice(0,2).join(', ')}</strong> 피부 콘텐츠가 없어요</div>`);
+
+  if(!items.length) return '<div class="suggest-none">✅ 이번 달 밸런스 좋아요!</div>';
+  return items.slice(0,3).join('');
+}
+
+/* ── 보드 렌더 ── */
 function renderBoard(){
-  // 리뷰
-  let revs=yearRecords.filter(r=>r.status==='review' && monthOf(r)===selMonth);
-  const monthRevAll=revs.slice();
+  /* 리뷰 */
+  let revs=yearRecords.filter(r=>r.status==='review'&&monthOf(r)===selMonth);
+  const allMRevs=revs.slice();
   if(searchText) revs=revs.filter(r=>`${part(r.memo,0)} ${part(r.memo,2)}`.toLowerCase().includes(searchText));
-  revs=sortArr(revs, sortDir.review);
-  const avg= monthRevAll.length? (monthRevAll.reduce((s,r)=>s+Number(r.value),0)/monthRevAll.length).toFixed(1):null;
-  $('reviewSub').textContent=`${monthRevAll.length}개 · 평균 ${avg?('★'+avg):'—'}`;
-  $('colReview').innerHTML= revs.length? revs.map(reviewCard).join('') : '<div class="col-empty">기록 없음</div>';
-
-  // 콘텐츠
-  let conts=yearRecords.filter(r=>r.status==='content' && monthOf(r)===selMonth);
-  const monthContAll=conts.slice();
+  revs=sortArr(revs,sortDir.review);
+  const avg=allMRevs.length?(allMRevs.reduce((s,r)=>s+Number(r.value),0)/allMRevs.length).toFixed(1):null;
+  $('reviewSub').textContent=`${allMRevs.length}개 · 평균 ${avg?('★'+avg):'—'}`;
+  $('colReview').innerHTML=revs.length?revs.map(reviewCard).join(''):'<div class="col-empty">기록 없음</div>';
+  /* 콘텐츠 */
+  let conts=yearRecords.filter(r=>r.status==='content'&&monthOf(r)===selMonth);
+  const allMConts=conts.slice();
   if(searchText) conts=conts.filter(r=>`${part(r.memo,0)} ${part(r.memo,1)}`.toLowerCase().includes(searchText));
-  conts=sortArr(conts, sortDir.content);
-  $('contentSub').textContent=`${monthContAll.length}개`;
-  $('colContent').innerHTML= conts.length? conts.map(contentCard).join('') : '<div class="col-empty">기록 없음</div>';
+  conts=sortArr(conts,sortDir.content);
+  $('contentSub').textContent=`${allMConts.length}개`;
+  $('colContent').innerHTML=conts.length?conts.map(contentCard).join(''):'<div class="col-empty">기록 없음</div>';
 }
 
 function reviewCard(r){
-  const prod=part(r.memo,0), buy=part(r.memo,1), note=part(r.memo,2);
+  const prod=part(r.memo,0), buy=part(r.memo,1), note=part(r.memo,2), skin=part(r.memo,3), cat=part(r.memo,4);
   const plat=midName(r.metric_id);
   const d=(r.recorded_at||'').slice(5).replace('-','.');
   const rj=JSON.stringify(r).replace(/'/g,"&#39;");
-  const platBadge= plat==='화해'?'<span class="badge hwahae">화해</span>':'<span class="badge glowpick">글로우픽</span>';
-  const buyBadge= buy==='체험단'?'<span class="badge gift">체험단</span>':'<span class="badge buy">직접구매</span>';
+  const platBadge=plat==='화해'?'<span class="badge hwahae">화해</span>':'<span class="badge glowpick">글로우픽</span>';
+  const buyBadge=buy==='체험단'?'<span class="badge gift">체험단</span>':'<span class="badge buy">직접구매</span>';
+  const skinClass={'건성':'skin-dry','지성':'skin-oily','수부지':'skin-combo','복합성':'skin-normal','민감성':'skin-sensitive','모든피부':'skin-all'}[skin]||'skin-normal';
+  const skinBadge=skin?`<span class="badge ${skinClass}">${skin}</span>`:'';
+  const catBadge=cat?`<span class="badge cat-item">${cat}</span>`:'';
   return `<div class="item">
     <div class="item-main" onclick='editReview(${rj})'>
       <div class="item-top"><span class="item-title">${prod||'(제품명 없음)'}</span><span class="item-date">${d}</span></div>
-      <div class="badges">${platBadge}${buyBadge}</div>
+      <div class="badges">${platBadge}${buyBadge}${skinBadge}${catBadge}</div>
       <div class="item-stars">${stars(Number(r.value))}</div>
       ${note?`<div class="item-memo">${note}</div>`:''}
     </div>
@@ -683,16 +711,20 @@ function reviewCard(r){
       <button class="del" onclick="delRec('${r.id}')">삭제</button>
     </div></div>`;
 }
+
 function contentCard(r){
-  const title=part(r.memo,0), note=part(r.memo,1);
+  const title=part(r.memo,0), ctype=part(r.memo,1), skin=part(r.memo,2), note=part(r.memo,3);
   const chan=midName(r.metric_id);
   const d=(r.recorded_at||'').slice(5).replace('-','.');
   const rj=JSON.stringify(r).replace(/'/g,"&#39;");
-  const chBadge= chan==='instagram'?'<span class="badge ig">인스타그램</span>':'<span class="badge yt">유튜브</span>';
+  const chBadge=chan==='instagram'?'<span class="badge ig">인스타그램</span>':'<span class="badge yt">유튜브</span>';
+  const skinClass={'건성':'skin-dry','지성':'skin-oily','수부지':'skin-combo','복합성':'skin-normal','민감성':'skin-sensitive','모든피부':'skin-all'}[skin]||'skin-normal';
+  const skinBadge=skin?`<span class="badge ${skinClass}">${skin}</span>`:'';
+  const ctypeBadge=ctype?`<span class="badge ctype-item">${ctype}</span>`:'';
   return `<div class="item">
     <div class="item-main" onclick='editContent(${rj})'>
       <div class="item-top"><span class="item-title">${title||'(제목 없음)'}</span><span class="item-date">${d}</span></div>
-      <div class="badges">${chBadge}</div>
+      <div class="badges">${chBadge}${ctypeBadge}${skinBadge}</div>
       ${note?`<div class="item-memo">${note}</div>`:''}
     </div>
     <div class="item-ops">
@@ -701,27 +733,133 @@ function contentCard(r){
     </div></div>`;
 }
 
+/* ── 모달 ── */
+function openReview(isEdit){
+  if(!isEdit){ editingId=null; $('rvModalTitle').textContent='리뷰 작성';
+    setPlat('화해'); setBuy('직접구매'); setSkin('건성'); setStar(0);
+    $('rvProd').value=''; $('rvCat').value=''; $('rvMemo').value='';
+    $('rvDate').value=now.toISOString().slice(0,10); }
+  $('reviewModal').classList.add('on');
+}
+function closeReview(){ $('reviewModal').classList.remove('on'); editingId=null; }
+
+function openContent(isEdit){
+  if(!isEdit){ editingContentId=null; $('ctModalTitle').textContent='콘텐츠 업로드 기록';
+    setChan('instagram'); setCtype('단독리뷰'); setCtSkin('건성');
+    $('ctTitle').value=''; $('ctMemo').value='';
+    $('ctDate').value=now.toISOString().slice(0,10); }
+  $('contentModal').classList.add('on');
+}
+function closeContent(){ $('contentModal').classList.remove('on'); editingContentId=null; }
+
+/* 탭 세터 */
+function setPlat(v){ curPlat=v; document.querySelectorAll('#platTabs button').forEach(b=>b.classList.toggle('on',b.dataset.plat===v)); }
+function setBuy(v){ curBuy=v; document.querySelectorAll('#buyTabs button').forEach(b=>b.classList.toggle('on',b.dataset.buy===v)); }
+function setSkin(v){ curSkin=v; document.querySelectorAll('#skinTabs button').forEach(b=>b.classList.toggle('on',b.dataset.skin===v)); }
+function setChan(v){ curChan=v; document.querySelectorAll('#chanTabs button').forEach(b=>b.classList.toggle('on',b.dataset.chan===v)); }
+function setCtype(v){ curCtype=v; document.querySelectorAll('#ctypeTabs button').forEach(b=>b.classList.toggle('on',b.dataset.ctype===v)); }
+function setCtSkin(v){ curCtSkin=v; document.querySelectorAll('#ctSkinTabs button').forEach(b=>b.classList.toggle('on',b.dataset.ctskin===v)); }
+
+document.querySelectorAll('#platTabs button').forEach(b=>b.onclick=()=>setPlat(b.dataset.plat));
+document.querySelectorAll('#buyTabs button').forEach(b=>b.onclick=()=>setBuy(b.dataset.buy));
+document.querySelectorAll('#skinTabs button').forEach(b=>b.onclick=()=>setSkin(b.dataset.skin));
+document.querySelectorAll('#chanTabs button').forEach(b=>b.onclick=()=>setChan(b.dataset.chan));
+document.querySelectorAll('#ctypeTabs button').forEach(b=>b.onclick=()=>setCtype(b.dataset.ctype));
+document.querySelectorAll('#ctSkinTabs button').forEach(b=>b.onclick=()=>setCtSkin(b.dataset.ctskin));
+
+/* 별점 */
+function setStar(n){ curStar=n; document.querySelectorAll('#starInput span').forEach(s=>s.classList.toggle('on',Number(s.dataset.v)<=n)); }
+document.querySelectorAll('#starInput span').forEach(s=>s.onclick=()=>setStar(Number(s.dataset.v)));
+
+/* 저장 — 리뷰 memo 구조: 제품명|구매유형|후기|피부타입|제품카테고리 */
+async function saveReview(){
+  const prod=$('rvProd').value.trim();
+  const cat=$('rvCat').value;
+  const memo=$('rvMemo').value.trim();
+  const date=$('rvDate').value;
+  if(!prod) return toast('제품명을 입력해주세요');
+  if(!curStar) return toast('별점을 선택해주세요');
+  if(!date) return toast('날짜를 선택해주세요');
+  const memoStr=`${prod}|${curBuy}|${memo}|${curSkin}|${cat}`;
+  const payload={ user_id:userId, metric_id:metricMap[curPlat], status:'review',
+    value:String(curStar), memo:memoStr, recorded_at:date };
+  let error;
+  if(editingId){ ({error}=await sb.from('records').update(payload).eq('id',editingId)); }
+  else { ({error}=await sb.from('records').insert(payload)); }
+  if(error){ toast('저장 실패: '+error.message); return; }
+  toast(editingId?'수정되었습니다':'리뷰가 저장되었습니다');
+  closeReview(); await loadYear();
+}
+
+/* 저장 — 콘텐츠 memo 구조: 제목|콘텐츠유형|피부타입|메모 */
+async function saveContent(){
+  const title=$('ctTitle').value.trim();
+  const note=$('ctMemo').value.trim();
+  const date=$('ctDate').value;
+  if(!title) return toast('콘텐츠 제목을 입력해주세요');
+  if(!date) return toast('날짜를 선택해주세요');
+  const memoStr=`${title}|${curCtype}|${curCtSkin}|${note}`;
+  const payload={ user_id:userId, metric_id:metricMap[curChan], status:'content',
+    value:'1', memo:memoStr, recorded_at:date };
+  let error;
+  if(editingContentId){ ({error}=await sb.from('records').update(payload).eq('id',editingContentId)); }
+  else { ({error}=await sb.from('records').insert(payload)); }
+  if(error){ toast('저장 실패: '+error.message); return; }
+  toast(editingContentId?'수정되었습니다':'콘텐츠가 저장되었습니다');
+  closeContent(); await loadYear();
+}
+
 window.editReview=function(r){
   editingId=r.id; $('rvModalTitle').textContent='리뷰 수정';
   setPlat(midName(r.metric_id)||'화해');
-  setBuy(part(r.memo,1)||'직접구매'); setStar(Number(r.value));
-  $('rvProd').value=part(r.memo,0); $('rvMemo').value=part(r.memo,2);
+  setBuy(part(r.memo,1)||'직접구매');
+  setSkin(part(r.memo,3)||'건성');
+  setStar(Number(r.value));
+  $('rvProd').value=part(r.memo,0);
+  $('rvCat').value=part(r.memo,4)||'';
+  $('rvMemo').value=part(r.memo,2);
   $('rvDate').value=(r.recorded_at||'').slice(0,10);
   $('reviewModal').classList.add('on');
 };
 window.editContent=function(r){
   editingContentId=r.id; $('ctModalTitle').textContent='콘텐츠 수정';
   setChan(midName(r.metric_id)||'instagram');
-  $('ctTitle').value=part(r.memo,0); $('ctMemo').value=part(r.memo,1);
+  setCtype(part(r.memo,1)||'단독리뷰');
+  setCtSkin(part(r.memo,2)||'건성');
+  $('ctTitle').value=part(r.memo,0);
+  $('ctMemo').value=part(r.memo,3);
   $('ctDate').value=(r.recorded_at||'').slice(0,10);
   $('contentModal').classList.add('on');
 };
 window.delRec=async function(id){
   if(!confirm('이 기록을 삭제할까요?')) return;
-  const { error }=await sb.from('records').delete().eq('id',id);
-  if(error){ toast('삭제 실패'); return; }
+  const {error}=await sb.from('records').delete().eq('id',id);
+  if(error){toast('삭제 실패');return;}
   toast('삭제되었습니다'); await loadYear();
 };
+
+/* 검색 + 정렬 */
+$('searchInput').addEventListener('input',e=>{searchText=e.target.value.trim().toLowerCase();renderBoard();});
+function toggleSort(kind){
+  sortDir[kind]=sortDir[kind]==='desc'?'asc':'desc';
+  const btn=kind==='review'?$('sortReview'):$('sortContent');
+  if(btn) btn.textContent=sortDir[kind]==='desc'?'↓':'↑';
+  renderBoard();
+}
+function sortArr(arr,dir){
+  const d=dir==='asc'?1:-1;
+  return arr.sort((a,b)=>{
+    const da=a.recorded_at||'', db=b.recorded_at||'';
+    if(da!==db) return da<db?-1*d:1*d;
+    return (a.created_at||'')<(b.created_at||'')?-1*d:1*d;
+  });
+}
+function stars(n){ let s=''; for(let i=1;i<=5;i++) s+=i<=n?'★':'<span class="off">★</span>'; return s; }
+
+/* ESC + 모달 바깥 클릭 닫기 */
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeReview(); closeContent(); } });
+document.getElementById('reviewModal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeReview(); });
+document.getElementById('contentModal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeContent(); });
 
 async function doLogout(){ await sb.auth.signOut(); location.href='index.html'; }
 let tT;
