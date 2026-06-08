@@ -258,13 +258,27 @@
       .item-right { align-items:flex-start; }
       .badges { justify-content:flex-start; }
     }
+  
+    /* ── 모바일 햄버거 ── */
+    .hamburger { display:none; width:38px; height:38px; border-radius:9px; border:1px solid var(--border);
+      background:var(--card); color:var(--text); font-size:18px; cursor:pointer; align-items:center;
+      justify-content:center; flex-shrink:0; margin-right:4px; }
+    .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55);
+      backdrop-filter:blur(2px); z-index:140; opacity:0; transition:opacity 0.22s; }
+    .sidebar-overlay.on { display:block; opacity:1; }
+    @media (max-width:768px){
+      .hamburger { display:flex; }
+      .sidebar { position:fixed; left:0; top:0; bottom:0; transform:translateX(-100%);
+        transition:transform 0.26s cubic-bezier(0.4,0,0.2,1); display:flex; }
+      .sidebar.open { transform:translateX(0); }
+    }
   </style>
 </head>
 <body>
 <div class="app">
 
   <!-- SIDEBAR -->
-  <nav class="sidebar">
+  <nav class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <div class="logo-lam">LAM</div>
       <div class="logo-full">Life Architecture Map</div>
@@ -281,7 +295,6 @@
       <a class="nav-item" href="skin.html"><span class="nav-icon">✨</span> 피부</a>
       <a class="nav-item" href="health.html"><span class="nav-icon">💪</span> 건강</a>
       <a class="nav-item active" href="music.html"><span class="nav-icon">🎵</span> 음악</a>
-      <a class="nav-item" href="study.html"><span class="nav-icon">📚</span> 공부</a>
       <a class="nav-item" href="business.html"><span class="nav-icon">💼</span> 사업</a>
     </div>
     <div class="sidebar-section" style="margin-top:10px;">
@@ -303,10 +316,10 @@
   <!-- MAIN -->
   <div class="main">
     <div class="topbar">
-      <div class="topbar-left">
+      <div style="display:flex;align-items:center;min-width:0;"><button class="hamburger" onclick="toggleSidebar()" aria-label="메뉴">☰</button><div class="topbar-left">
         <h1>🎵 음악</h1>
         <p id="todayDate"></p>
-      </div>
+      </div></div>
       <div class="topbar-right">
         <div class="month-badge" id="monthBadge"></div>
         <button class="btn-record" onclick="openPractice(false)">+ 연습 기록</button>
@@ -795,6 +808,15 @@ async function doLogout(){ await sb.auth.signOut(); location.href='index.html'; 
 let tT;
 function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on');
   clearTimeout(tT); tT=setTimeout(()=>t.classList.remove('on'),2200); }
+
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar'), ov=document.getElementById('sidebarOverlay');
+  if(!sb) return;
+  const open=sb.classList.toggle('open');
+  if(ov) ov.classList.toggle('on', open);
+}
+window.toggleSidebar=toggleSidebar;
 </script>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 </body>
 </html>
