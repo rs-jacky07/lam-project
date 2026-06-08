@@ -245,17 +245,20 @@
     .cal-wrap { display:grid; grid-template-columns:1.4fr 1fr; gap:18px; align-items:start; }
     .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
     .cal-head { font-size:11px; color:var(--text3); text-align:center; font-weight:700; padding-bottom:4px; }
-    .cal-cell { aspect-ratio:1; border:1px solid var(--border); border-radius:9px; background:var(--bg2);
-      padding:6px; cursor:pointer; display:flex; flex-direction:column; gap:4px; transition:all 0.14s; position:relative; }
+    .cal-cell { min-height:96px; border:1px solid var(--border); border-radius:9px; background:var(--bg2);
+      padding:7px 7px 6px; cursor:pointer; display:flex; flex-direction:column; gap:4px; transition:all 0.14s; position:relative; overflow:hidden; }
     .cal-cell.empty { background:transparent; border:none; cursor:default; }
     .cal-cell:not(.empty):hover { border-color:var(--accent); background:rgba(79,142,247,0.08); }
     .cal-cell.today { border-color:var(--accent); }
     .cal-cell.active { border-color:rgba(79,142,247,0.5); }
     .cal-cell.selected { border-color:var(--accent); background:rgba(79,142,247,0.14); }
-    .cal-day { font-size:12px; color:var(--text2); font-weight:700; }
+    .cal-day { font-size:12px; color:var(--text2); font-weight:700; flex-shrink:0; }
     .cal-cell.today .cal-day { color:var(--accent); }
-    .cal-dots { display:flex; flex-wrap:wrap; gap:3px; margin-top:auto; }
-    .cal-dots .d { width:6px; height:6px; border-radius:50%; }
+    .cal-chips { display:flex; flex-direction:column; gap:3px; margin-top:2px; }
+    .cal-chip { display:flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700;
+      padding:2px 6px; border-radius:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      border-left:3px solid var(--chip-c,#888); background:rgba(255,255,255,0.05); color:var(--text2); }
+    .cal-more { font-size:10px; color:var(--text3); font-weight:700; padding-left:2px; }
     .cal-detail { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:16px; min-height:180px; }
     .cal-detail-empty { font-size:12px; color:var(--text3); text-align:center; padding:48px 0; line-height:1.6; }
     .cal-detail-title { font-size:13px; font-weight:800; color:var(--text); margin-bottom:12px; }
@@ -753,11 +756,27 @@ function renderCalendar(records, catId){
   for(let i=0;i<first;i++) html+='<div class="cal-cell empty"></div>';
   for(let d=1;d<=dim;d++){
     const recs=byDay[d]||[];
-    const cats=[...new Set(recs.map(r=>idCat[r.category_id]))].filter(Boolean);
-    const dots=cats.slice(0,5).map(c=>`<span class="d" style="background:${(CAT_META_CAL[c]||{}).color||'#888'}"></span>`).join('');
+    // 활동 종류별로 묶기 (라벨+카테고리색), 같은 종류는 건수 합산
+    const groups={}; const order=[];
+    recs.forEach(r=>{
+      const label=STATUS_LABEL_CAL[r.status]||r.status;
+      const cat=idCat[r.category_id]||'기타';
+      const key=label;
+      if(!groups[key]){ groups[key]={label, cat, n:0}; order.push(key); }
+      groups[key].n++;
+    });
+    const MAXROWS=2;
+    const shown=order.slice(0,MAXROWS);
+    const chips=shown.map(k=>{
+      const g=groups[k]; const col=(CAT_META_CAL[g.cat]||{}).color||'#888';
+      return `<span class="cal-chip" style="--chip-c:${col}">${g.label}${g.n>1?' '+g.n:''}</span>`;
+    }).join('');
+    const restGroups=order.length-shown.length;
+    const more= restGroups>0? `<span class="cal-more">+${restGroups}개</span>` : '';
     const cls=['cal-cell']; if(d===todayD) cls.push('today'); if(recs.length) cls.push('active');
     html+=`<div class="${cls.join(' ')}" data-day="${d}" onclick="selectDay(${d})">
-      <span class="cal-day">${d}</span><span class="cal-dots">${dots}</span></div>`;
+      <span class="cal-day">${d}</span>
+      <span class="cal-chips">${chips}${more}</span></div>`;
   }
   document.getElementById('calGrid').innerHTML=html;
   window.__calData={ byDay, idCat };
