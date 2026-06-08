@@ -160,17 +160,16 @@
       padding-top:8px; border-top:1px solid var(--border);
       display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
     .item-right { display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
-    .item-main-ib { display:flex !important; flex-direction:column; gap:12px; }
-    .item-main-ib .ib-head { display:flex; align-items:center; justify-content:space-between; }
-    .item-metrics { display:flex; gap:10px; align-items:stretch; width:100%; }
-    .item-metric { flex:1; background:var(--bg2); border:1px solid var(--border); border-radius:10px;
-      padding:12px 10px; text-align:center; display:flex; flex-direction:column; gap:4px; }
-    .item-metric .mlabel { font-size:11px; color:var(--text3); font-weight:700; }
-    .item-metric .mval { font-size:20px; font-weight:800; color:var(--text); letter-spacing:-0.02em; line-height:1.1; }
-    .item-metric .munit { font-size:11px; color:var(--text3); font-weight:600; }
-    .item-metric.weight .mval { color:var(--accent2); }
-    .item-metric.fat .mval { color:var(--warning); }
-    .item-metric.muscle .mval { color:var(--success); }
+    /* 인바디 수치: 운동 카드와 동일 뎁스 (오른쪽에 우측정렬 나열) */
+    .ib-metrics { display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
+    .ib-metric { display:flex; align-items:baseline; gap:7px; }
+    .ib-metric .ib-label { font-size:12px; color:var(--text3); font-weight:700; }
+    .ib-metric .ib-val { font-size:17px; font-weight:800; color:var(--text); letter-spacing:-0.01em; }
+    .ib-metric .ib-val i { font-size:11px; color:var(--text3); font-weight:600; font-style:normal; margin-left:2px; }
+    .ib-metric.weight .ib-val { color:var(--accent2); }
+    .ib-metric.fat .ib-val { color:var(--warning); }
+    .ib-metric.muscle .ib-val { color:var(--success); }
+    .item-sublabel { font-size:12px; color:var(--text3); font-weight:600; }
     .badges { display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end; }
     .badge { font-size:11px; font-weight:800; padding:4px 10px; border-radius:100px; letter-spacing:0.02em; white-space:nowrap; }
     .badge.part-chest    { background:rgba(255,122,122,0.16); color:var(--error); }
@@ -701,13 +700,12 @@ function workoutCard(r){
   const partBadges=parts.length
     ? parts.map(pt=>`<span class="badge ${PART_CLASS[pt]||'part-etc'}">${pt}</span>`).join('')
     : '<span class="badge part-etc">기타</span>';
-  const title=parts.length? (parts.length>1? `${parts[0]} 외 ${parts.length-1}` : parts[0]) : '운동';
+  const dateFull=(r.recorded_at||'').slice(0,10).replace(/-/g,'.');
   return `<div class="item">
     <div class="item-main" onclick='editWorkout(${rj})'>
       <div class="item-left">
-        <span class="item-title">${title}</span>
+        <span class="item-title">${dateFull}</span>
         <div class="item-stars">${stars(Number(r.value))}</div>
-        <div class="item-date-row"><span class="item-date">${d}</span></div>
       </div>
       <div class="item-right">
         <div class="badges">${partBadges}</div>
@@ -721,17 +719,22 @@ function workoutCard(r){
 }
 function inbodyCard(r){
   const w=part(r.memo,0), f=part(r.memo,1), m=part(r.memo,2);
-  const d=(r.recorded_at||'').slice(5).replace('-','.');
+  const dateFull=(r.recorded_at||'').slice(0,10).replace(/-/g,'.');
   const rj=JSON.stringify(r).replace(/'/g,"&#39;");
-  const cell=(cls,label,val,unit)=> (val&&val!=='0')
-    ? `<div class="item-metric ${cls}"><span class="mlabel">${label}</span><span class="mval">${val}</span><span class="munit">${unit}</span></div>` : '';
+  const metric=(cls,label,val,unit)=> (val&&val!=='0')
+    ? `<span class="ib-metric ${cls}"><span class="ib-label">${label}</span><span class="ib-val">${val}<i>${unit}</i></span></span>` : '';
   return `<div class="item">
-    <div class="item-main item-main-ib" onclick='editInbody(${rj})'>
-      <div class="ib-head"><span class="item-title">측정 기록</span><span class="item-date">${d}</span></div>
-      <div class="item-metrics">
-        ${cell('weight','체중',w,'kg')}
-        ${cell('fat','체지방률',f,'%')}
-        ${cell('muscle','골격근량',m,'kg')}
+    <div class="item-main" onclick='editInbody(${rj})'>
+      <div class="item-left">
+        <span class="item-title">${dateFull}</span>
+        <span class="item-sublabel">인바디 측정</span>
+      </div>
+      <div class="item-right">
+        <div class="ib-metrics">
+          ${metric('weight','체중',w,'kg')}
+          ${metric('fat','체지방',f,'%')}
+          ${metric('muscle','골격근',m,'kg')}
+        </div>
       </div>
     </div>
     <div class="item-ops">
