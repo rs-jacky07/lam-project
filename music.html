@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LAM — 음악</title>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#07070f; --bg2:#0d0d1a; --card:#15151f; --card2:#1c1c2b;
+      --border:rgba(255,255,255,0.10);
+      --accent:#5b9bff; --accent2:#9cc6ff;
+      --text:#f4f4fb; --text2:#b8b8d4; --text3:#7e7ea4;
+      --success:#56d99a; --warning:#ffb338; --error:#ff7a7a; --gold:#ffc14d;
+      --pink:#ff8fc7; --purple:#b18cff; --teal:#4fd5d5; --orange:#ff9b5b;
+      --sidebar:232px; --radius:14px;
+    }
+    html, body { height:100%; font-family:'Pretendard',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; font-size:15px; }
+    .app { display:flex; height:100vh; overflow:hidden; }
+
+    /* SIDEBAR */
+    .sidebar { width:var(--sidebar); min-width:var(--sidebar); background:var(--bg2);
+      border-right:1px solid var(--border); display:flex; flex-direction:column;
+      padding:24px 0 0; overflow-y:auto; overflow-x:hidden; z-index:100; }
+    .sidebar::-webkit-scrollbar { width:0; }
+    .sidebar-logo { padding:0 20px 22px; border-bottom:1px solid var(--border); margin-bottom:18px; }
+    .logo-lam { font-size:20px; font-weight:800; letter-spacing:0.06em;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .logo-full { font-size:11px; color:var(--text3); letter-spacing:0.05em; margin-top:3px; }
+    .sidebar-section { padding:0 10px; margin-bottom:6px; }
+    .sidebar-label { font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+      color:var(--text3); padding:0 8px; margin-bottom:6px; }
+    .nav-item { display:flex; align-items:center; gap:9px; padding:10px 11px; border-radius:10px;
+      font-size:14px; font-weight:600; color:var(--text2); cursor:pointer; text-decoration:none;
+      transition:background 0.16s,color 0.16s; margin-bottom:2px; }
+    .nav-item:hover { background:rgba(255,255,255,0.07); color:var(--text); }
+    .nav-item.active { background:rgba(91,155,255,0.18); color:var(--accent2); font-weight:700; }
+    .nav-icon { font-size:15px; width:20px; text-align:center; flex-shrink:0; }
+    .sidebar-bottom { margin-top:auto; padding:14px 10px 20px; border-top:1px solid var(--border); }
+    .profile-card { display:flex; align-items:center; gap:9px; padding:10px 11px; border-radius:10px;
+      background:rgba(255,255,255,0.05); border:1px solid var(--border); margin-bottom:8px; }
+    .profile-avatar { width:32px; height:32px; border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0; }
+    .profile-name { font-size:14px; font-weight:700; color:var(--text); }
+    .profile-email { font-size:11px; color:var(--text3); margin-top:1px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; }
+    .btn-logout { width:100%; padding:9px; border-radius:8px; background:transparent;
+      border:1px solid var(--border); color:var(--text2); font-family:'Pretendard',sans-serif;
+      font-size:13px; font-weight:600; cursor:pointer; transition:all 0.16s; }
+    .btn-logout:hover { background:rgba(255,122,122,0.12); color:var(--error); border-color:rgba(255,122,122,0.35); }
+
+    /* MAIN */
+    .main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 28px;
+      border-bottom:1px solid var(--border); background:var(--bg); flex-shrink:0; }
+    .topbar-left h1 { font-size:20px; font-weight:800; letter-spacing:-0.01em; }
+    .topbar-left p { font-size:13px; color:var(--text2); margin-top:3px; }
+    .topbar-right { display:flex; align-items:center; gap:10px; }
+    .month-badge { padding:8px 15px; border-radius:9px; background:var(--card);
+      border:1px solid var(--border); font-size:14px; font-weight:700; color:var(--text); }
+    .btn-record { display:flex; align-items:center; gap:7px; padding:10px 20px; border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),#82b4ff); border:none; color:#fff;
+      font-family:'Pretendard',sans-serif; font-size:14px; font-weight:700; cursor:pointer;
+      transition:box-shadow 0.2s,scale 0.15s; }
+    .btn-record:hover { box-shadow:0 6px 22px rgba(91,155,255,0.5); scale:1.02; }
+    .btn-record:active { scale:0.98; }
+    .content { flex:1; overflow-y:auto; overflow-x:hidden; padding:24px 28px 48px;
+      display:flex; flex-direction:column; gap:18px; }
+    .content::-webkit-scrollbar { width:5px; }
+    .content::-webkit-scrollbar-track { background:transparent; }
+    .content::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+
+    .section-title { font-size:15px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px; margin-bottom:-4px; }
+    .section-title .tag { font-size:11px; font-weight:700; color:var(--text3); }
+
+    /* 요약 카드 */
+    .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .summary-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      padding:18px 20px; position:relative; overflow:hidden; transition:border-color 0.2s, transform 0.2s; }
+    .summary-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px;
+      background:var(--card-accent,var(--accent)); opacity:0.85; }
+    .summary-card:hover { border-color:rgba(255,255,255,0.16); transform:translateY(-2px); }
+    .sc-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .sc-icon { font-size:18px; }
+    .sc-value { font-size:23px; font-weight:800; letter-spacing:-0.02em; margin-bottom:3px; }
+    .sc-value.cnt { color:var(--accent2); }
+    .sc-value.time { color:var(--teal); }
+    .sc-value.star { color:var(--gold); }
+    .sc-value.upload { color:var(--pink); }
+    .sc-label { font-size:12px; color:var(--text2); font-weight:600; }
+    .sc-sub { font-size:11px; color:var(--text3); margin-top:8px; }
+    /* 악기 분석 랭킹 */
+    .inst-rank { margin-top:8px; display:flex; flex-direction:column; gap:3px; }
+    .inst-rank .r { font-size:11px; color:var(--text2); }
+    .inst-rank .r b { color:var(--text); font-weight:700; }
+    .inst-rank .r .medal { margin-right:3px; }
+
+    /* 툴바 */
+    .toolbar { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      padding:14px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+    .toolbar-search { display:flex; align-items:center; gap:8px; background:var(--bg2);
+      border:1px solid var(--border); border-radius:10px; padding:10px 13px;
+      width:240px; flex-shrink:0; transition:border-color 0.16s; }
+    .toolbar-search:focus-within { border-color:var(--accent); }
+    .toolbar-search span { font-size:13px; color:var(--text2); }
+    .toolbar-search input { flex:1; min-width:0; background:transparent; border:none; outline:none;
+      color:var(--text); font-family:'Pretendard',sans-serif; font-size:14px; }
+    .toolbar-search input::placeholder { color:var(--text3); }
+    .month-row { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+    .month-chip { padding:7px 13px; border-radius:100px; font-size:13px; font-weight:700;
+      background:transparent; border:1px solid var(--border); color:var(--text2); cursor:pointer;
+      font-family:'Pretendard',sans-serif; transition:all 0.16s; }
+    .month-chip:hover { background:rgba(255,255,255,0.07); color:var(--text); }
+    .month-chip.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+    /* 2열 보드 */
+    .board { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; align-items:start; }
+    .board-col { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      padding:18px; display:flex; flex-direction:column; gap:11px; min-height:200px; }
+    .col-head { display:flex; align-items:center; justify-content:space-between; }
+    .col-head-left { display:flex; align-items:center; gap:9px; }
+    .col-title { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:800; }
+    .col-dot { width:9px; height:9px; border-radius:50%; }
+    .col-sub { font-size:12px; color:var(--text2); font-weight:600; }
+    .col-tools { display:flex; gap:5px; }
+    .col-btn { width:28px; height:28px; border-radius:8px; border:1px solid var(--border);
+      background:var(--bg2); color:var(--text2); cursor:pointer; font-size:14px; font-weight:800;
+      display:flex; align-items:center; justify-content:center; font-family:'Pretendard',sans-serif;
+      transition:all 0.14s; line-height:1; }
+    .col-btn:hover { border-color:var(--accent); color:var(--accent2); background:rgba(91,155,255,0.1); }
+    .col-btn.sort { font-size:13px; }
+    .col-body { display:flex; flex-direction:column; gap:9px; }
+
+    /* 카드 아이템 — 2열 레이아웃 (좌우 동일 뎁스) */
+    .item { display:flex; align-items:stretch; background:var(--card2); border:1px solid var(--border);
+      border-radius:11px; overflow:hidden; transition:border-color 0.16s; }
+    .item:hover { border-color:rgba(91,155,255,0.4); }
+    .item-main { flex:1; min-width:0; padding:16px 18px; cursor:pointer;
+      display:grid; grid-template-columns:1.1fr 1fr; gap:4px 18px; align-items:center; min-height:74px; }
+    .item-left { display:flex; flex-direction:column; gap:8px; min-width:0; }
+    .item-title { font-size:16px; font-weight:800; color:var(--text);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .item-sublabel { font-size:12px; color:var(--text3); font-weight:600; }
+    .item-date-row { display:flex; align-items:center; gap:8px; }
+    .item-date { font-size:12px; color:var(--text3); flex-shrink:0; }
+    .item-stars { font-size:17px; color:var(--gold); letter-spacing:2px; }
+    .item-stars .off { color:var(--text3); }
+    .item-memo { font-size:12.5px; color:var(--text2); grid-column:1/-1; margin-top:8px;
+      padding-top:8px; border-top:1px solid var(--border);
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .item-right { display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
+    .badges { display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end; }
+    .badge { font-size:11px; font-weight:800; padding:4px 10px; border-radius:100px; letter-spacing:0.02em; white-space:nowrap; }
+    .badge.inst-egtr  { background:rgba(255,122,122,0.16); color:var(--error); }
+    .badge.inst-bass  { background:rgba(177,140,255,0.16); color:var(--purple); }
+    .badge.inst-drum  { background:rgba(255,155,91,0.16);  color:var(--orange); }
+    .badge.inst-piano { background:rgba(91,155,255,0.16);  color:var(--accent2); }
+    .badge.inst-vocal { background:rgba(255,143,199,0.16); color:var(--pink); }
+    .badge.inst-etc   { background:rgba(255,255,255,0.1);  color:var(--text2); }
+    .badge.ig { background:rgba(225,86,138,0.18); color:#ff8fb6; }
+    .badge.yt { background:rgba(255,91,91,0.18);  color:#ff9a9a; }
+    .item-time { font-size:13px; color:var(--text2); font-weight:700; }
+    .item-time b { color:var(--teal); font-size:15px; font-weight:800; }
+    .item-ops { display:flex; flex-direction:column; border-left:1px solid var(--border); }
+    .item-ops button { flex:1; width:48px; border:none; background:transparent; cursor:pointer;
+      color:var(--text2); font-size:12px; font-weight:700; font-family:'Pretendard',sans-serif;
+      transition:background 0.14s,color 0.14s; }
+    .item-ops button:hover { background:rgba(91,155,255,0.16); color:var(--accent2); }
+    .item-ops button.del:hover { background:rgba(255,122,122,0.16); color:var(--error); }
+    .item-ops button + button { border-top:1px solid var(--border); }
+    .col-empty { font-size:13px; color:var(--text3); text-align:center; padding:30px 0; }
+
+    /* MODAL */
+    .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.66); backdrop-filter:blur(4px);
+      display:none; align-items:center; justify-content:center; z-index:200; opacity:0; transition:opacity 0.22s; }
+    .modal-bg.on { display:flex; opacity:1; }
+    .modal { background:var(--card); border:1px solid var(--border); border-radius:18px;
+      padding:28px; width:460px; max-width:92vw; transform:scale(0.96); transition:transform 0.22s;
+      max-height:90vh; overflow-y:auto; }
+    .modal-bg.on .modal { transform:scale(1); }
+    .modal h3 { font-size:19px; font-weight:800; margin-bottom:22px; }
+    .field { margin-bottom:16px; }
+    .field label { display:block; font-size:13px; color:var(--text2); margin-bottom:8px; font-weight:700; }
+    .field input, .field select, .field textarea { width:100%; background:var(--bg2); border:1px solid var(--border);
+      border-radius:10px; padding:12px 14px; color:var(--text); font-size:15px;
+      font-family:'Pretendard',sans-serif; outline:none; transition:border-color 0.16s; resize:vertical; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--accent); }
+    .field input[type=date] { cursor:pointer; }
+    .field input[type=date]::-webkit-calendar-picker-indicator { filter:invert(0.7) brightness(1.4); cursor:pointer; opacity:0.9; }
+    .type-tabs { display:flex; gap:7px; }
+    .type-tabs button { flex:1; padding:11px; border-radius:10px; border:1px solid var(--border);
+      background:var(--bg2); color:var(--text2); font-size:14px; cursor:pointer;
+      font-family:'Pretendard',sans-serif; transition:all 0.16s; font-weight:700; }
+    .type-tabs button.on { background:rgba(91,155,255,0.18); color:var(--accent2); border-color:var(--accent); }
+    /* 악기 3x2 그리드 (다중 선택) */
+    .inst-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .inst-grid button { padding:12px 4px; border-radius:10px; border:1px solid var(--border);
+      background:var(--bg2); color:var(--text2); font-size:13.5px; cursor:pointer;
+      font-family:'Pretendard',sans-serif; transition:all 0.16s; font-weight:700; text-align:center; white-space:nowrap; }
+    .inst-grid button:hover { border-color:var(--accent); color:var(--text); }
+    .inst-grid button.on { background:rgba(91,155,255,0.18); color:var(--accent2); border-color:var(--accent); }
+    .star-input { display:flex; gap:6px; font-size:30px; line-height:1; }
+    .star-input span { cursor:pointer; color:var(--text3); transition:color 0.12s,transform 0.12s; }
+    .star-input span:hover { transform:scale(1.15); }
+    .star-input span.on { color:var(--gold); }
+    .modal-foot { display:flex; gap:9px; margin-top:24px; }
+    .modal-foot button { flex:1; padding:13px; border-radius:10px; font-size:14px; font-weight:700;
+      cursor:pointer; border:none; font-family:'Pretendard',sans-serif; transition:all 0.16s; }
+    .btn-cancel { background:var(--card2); color:var(--text2); border:1px solid var(--border); }
+    .btn-cancel:hover { background:rgba(255,255,255,0.07); color:var(--text); }
+    .btn-save { background:linear-gradient(135deg,var(--accent),#82b4ff); color:#fff; }
+    .btn-save:hover { box-shadow:0 6px 22px rgba(91,155,255,0.5); }
+
+    .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(18px);
+      background:var(--accent); color:#fff; padding:13px 24px; border-radius:10px; font-size:14px;
+      font-weight:700; opacity:0; pointer-events:none; transition:all 0.28s; z-index:300; }
+    .toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+    .fade-up { opacity:0; transform:translateY(14px); animation:fadeUp 0.5s ease forwards; }
+    @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+
+    @media (max-width:900px) { .board { grid-template-columns:1fr; } .summary-grid { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:768px) {
+      .sidebar { display:none; }
+      .topbar { padding:14px 16px; }
+      .content { padding:18px 14px 80px; }
+      .toolbar-search { width:100%; }
+      .summary-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
+      .sc-value { font-size:19px; }
+      .item-main { grid-template-columns:1fr; gap:10px; }
+      .item-right { align-items:flex-start; }
+      .badges { justify-content:flex-start; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-lam">LAM</div>
+      <div class="logo-full">Life Architecture Map</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">메뉴</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon">⊞</span> 대시보드</a>
+      <a class="nav-item" href="history.html"><span class="nav-icon">◷</span> 히스토리</a>
+      <a class="nav-item" href="compare.html"><span class="nav-icon">⟳</span> 월간 비교</a>
+    </div>
+    <div class="sidebar-section" style="margin-top:10px;">
+      <div class="sidebar-label">카테고리</div>
+      <a class="nav-item" href="finance.html"><span class="nav-icon">💰</span> 금융</a>
+      <a class="nav-item" href="skin.html"><span class="nav-icon">✨</span> 피부</a>
+      <a class="nav-item" href="health.html"><span class="nav-icon">💪</span> 건강</a>
+      <a class="nav-item active" href="music.html"><span class="nav-icon">🎵</span> 음악</a>
+      <a class="nav-item" href="study.html"><span class="nav-icon">📚</span> 공부</a>
+      <a class="nav-item" href="business.html"><span class="nav-icon">💼</span> 사업</a>
+    </div>
+    <div class="sidebar-section" style="margin-top:10px;">
+      <div class="sidebar-label">설정</div>
+      <a class="nav-item" href="settings.html"><span class="nav-icon">⚙</span> 설정</a>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="profile-card">
+        <div class="profile-avatar" id="profileAvatar">?</div>
+        <div style="min-width:0;">
+          <div class="profile-name" id="profileName">로딩 중...</div>
+          <div class="profile-email" id="profileEmail"></div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">로그아웃</button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>🎵 음악</h1>
+        <p id="todayDate"></p>
+      </div>
+      <div class="topbar-right">
+        <div class="month-badge" id="monthBadge"></div>
+        <button class="btn-record" onclick="openPractice(false)">+ 연습 기록</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- 요약 -->
+      <div class="section-title fade-up">📊 이번 달 요약 <span class="tag">· 악기 연습 & 콘텐츠 업로드</span></div>
+      <div class="summary-grid fade-up">
+        <div class="summary-card" style="--card-accent:var(--accent)">
+          <div class="sc-top"><span class="sc-icon">🎸</span></div>
+          <div class="sc-value cnt" id="practiceCount">0회</div>
+          <div class="sc-label">이번 달 연습</div>
+          <div class="inst-rank" id="instRank"></div>
+        </div>
+        <div class="summary-card" style="--card-accent:var(--teal)">
+          <div class="sc-top"><span class="sc-icon">⏱️</span></div>
+          <div class="sc-value time" id="totalTime">0분</div>
+          <div class="sc-label">총 연습 시간</div>
+          <div class="sc-sub" id="avgTime">평균 — / 회</div>
+        </div>
+        <div class="summary-card" style="--card-accent:var(--gold)">
+          <div class="sc-top"><span class="sc-icon">⭐</span></div>
+          <div class="sc-value star" id="avgStar">—</div>
+          <div class="sc-label">평균 만족도</div>
+          <div class="sc-sub">이번 달 연습 기준</div>
+        </div>
+        <div class="summary-card" style="--card-accent:var(--pink)">
+          <div class="sc-top"><span class="sc-icon">🎬</span></div>
+          <div class="sc-value upload" id="contentCount">0개</div>
+          <div class="sc-label">이번 달 콘텐츠 업로드</div>
+          <div class="sc-sub" id="contentSplit">인스타 0 · 유튜브 0</div>
+        </div>
+      </div>
+
+      <!-- 툴바 -->
+      <div class="toolbar fade-up" style="animation-delay:0.06s">
+        <div class="toolbar-search">
+          <span>🔍</span>
+          <input id="searchInput" type="text" placeholder="악기 · 곡 · 메모 검색..." />
+        </div>
+        <div class="month-row" id="monthRow"></div>
+      </div>
+
+      <!-- 2열 보드 -->
+      <div class="board fade-up" style="animation-delay:0.12s">
+        <!-- 악기 연습 -->
+        <div class="board-col">
+          <div class="col-head">
+            <div class="col-head-left">
+              <div class="col-title"><span class="col-dot" style="background:var(--accent)"></span> 악기 연습</div>
+              <div class="col-tools">
+                <button class="col-btn" title="연습 추가" onclick="openPractice(false)">+</button>
+                <button class="col-btn sort" id="sortPractice" title="날짜 정렬" onclick="toggleSort('practice')">↓</button>
+              </div>
+            </div>
+            <div class="col-sub" id="practiceSub">0회 · 평균 ★ —</div>
+          </div>
+          <div class="col-body" id="colPractice"></div>
+        </div>
+        <!-- 콘텐츠 업로드 -->
+        <div class="board-col">
+          <div class="col-head">
+            <div class="col-head-left">
+              <div class="col-title"><span class="col-dot" style="background:var(--pink)"></span> 콘텐츠 업로드</div>
+              <div class="col-tools">
+                <button class="col-btn" title="콘텐츠 추가" onclick="openContent(false)">+</button>
+                <button class="col-btn sort" id="sortContent" title="날짜 정렬" onclick="toggleSort('content')">↓</button>
+              </div>
+            </div>
+            <div class="col-sub" id="contentSub">0개</div>
+          </div>
+          <div class="col-body" id="colContent"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 연습 모달 -->
+<div class="modal-bg" id="practiceModal">
+  <div class="modal">
+    <h3 id="prModalTitle">연습 기록</h3>
+    <div class="field">
+      <label>악기 / 파트 <span style="color:var(--text3);font-weight:500;">(여러 개 선택 가능)</span></label>
+      <div class="inst-grid" id="instTabs">
+        <button data-inst="일렉기타">일렉기타</button>
+        <button data-inst="베이스">베이스</button>
+        <button data-inst="드럼">드럼</button>
+        <button data-inst="피아노">피아노</button>
+        <button data-inst="보컬">보컬</button>
+        <button data-inst="기타">기타</button>
+      </div>
+    </div>
+    <div class="field"><label>연습 시간 (분)</label><input id="prTime" type="text" inputmode="numeric" placeholder="예: 60" /></div>
+    <div class="field"><label>연습 곡 / 내용</label><input id="prSong" type="text" placeholder="예: Autumn Leaves 코드 진행" /></div>
+    <div class="field">
+      <label>만족도</label>
+      <div class="star-input" id="starInput">
+        <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+      </div>
+    </div>
+    <div class="field"><label>연습 날짜</label><input id="prDate" type="date" /></div>
+    <div class="field"><label>메모 (선택)</label><textarea id="prMemo" rows="3" placeholder="잘된 점, 아쉬운 점 등"></textarea></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closePractice()">취소</button>
+      <button class="btn-save" onclick="savePractice()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 콘텐츠 모달 -->
+<div class="modal-bg" id="contentModal">
+  <div class="modal">
+    <h3 id="ctModalTitle">콘텐츠 업로드 기록</h3>
+    <div class="field">
+      <label>채널</label>
+      <div class="type-tabs" id="chanTabs">
+        <button data-chan="youtube" class="on">유튜브</button>
+        <button data-chan="instagram">인스타그램</button>
+      </div>
+    </div>
+    <div class="field"><label>콘텐츠 제목 / 주제</label><input id="ctTitle" type="text" placeholder="예: 베이스 커버 - OOO" /></div>
+    <div class="field"><label>업로드 날짜</label><input id="ctDate" type="date" /></div>
+    <div class="field"><label>메모 (선택)</label><textarea id="ctMemo" rows="3" placeholder="기획 의도, 반응 등"></textarea></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeContent()">취소</button>
+      <button class="btn-save" onclick="saveContent()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://jmumomvxylxbkagjnmxc.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptdW1vbXZ4eWx4YmthZ2pubXhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODc5NzksImV4cCI6MjA5NTg2Mzk3OX0.OQBcCmA7ULgZ28zujvuB_FH0WbUmlHqks_TY97FB7E8';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let user=null, categoryId=null, metricMap={};
+let editingPr=null, editingCt=null, curInsts=[], curStar=0, curChan='youtube';
+let yearRecords=[];
+let selMonth=new Date().getMonth()+1;
+let searchText='';
+let sortDir={ practice:'desc', content:'desc' };
+const YEAR=new Date().getFullYear();
+const INSTS=['일렉기타','베이스','드럼','피아노','보컬','기타'];
+const INST_CLASS={'일렉기타':'inst-egtr','베이스':'inst-bass','드럼':'inst-drum','피아노':'inst-piano','보컬':'inst-vocal','기타':'inst-etc'};
+const MEDALS=['🥇','🥈','🥉'];
+
+const $=id=>document.getElementById(id);
+const days=['일','월','화','수','목','금','토'];
+const fmtMin=m=>{ m=Number(m)||0; const h=Math.floor(m/60), mm=m%60; return h? `${h}시간 ${mm}분` : `${mm}분`; };
+
+(async function init(){
+  const now=new Date();
+  $('todayDate').textContent=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}요일`;
+  $('monthBadge').textContent=`${now.getMonth()+1}월`;
+  const { data:{ session } }=await sb.auth.getSession();
+  if(!session){ location.href='index.html'; return; }
+  user=session.user;
+  const { data:p }=await sb.from('profiles').select('name,email').eq('id',user.id).single();
+  const name=p?.name||user.email.split('@')[0];
+  $('profileName').textContent=name;
+  $('profileEmail').textContent=p?.email||user.email;
+  $('profileAvatar').textContent=name.charAt(0).toUpperCase();
+  categoryId=await ensureCategory();
+  await ensureMetrics();
+  buildMonthChips();
+  const today=new Date().toISOString().slice(0,10);
+  $('prDate').value=today; $('ctDate').value=today;
+  document.querySelectorAll('input[type=date]').forEach(inp=>{
+    inp.addEventListener('click', ()=>{ try{ inp.showPicker(); }catch(e){} });
+    inp.addEventListener('focus', ()=>{ try{ inp.showPicker(); }catch(e){} });
+  });
+  await loadYear();
+})();
+
+async function ensureCategory(){
+  const { data }=await sb.from('categories').select('id')
+    .eq('user_id',user.id).eq('name','음악').maybeSingle();
+  if(data) return data.id;
+  const { data:ins }=await sb.from('categories')
+    .insert({ user_id:user.id, name:'음악', icon:'🎵', color:'#5b9bff', sort_order:4 })
+    .select('id').single();
+  return ins.id;
+}
+async function ensureMetrics(){
+  const defs=[
+    { name:'연습', unit:'분', type:'practice' },
+    { name:'instagram', unit:'개', type:'content' },
+    { name:'youtube', unit:'개', type:'content' },
+  ];
+  const { data:exist }=await sb.from('metrics').select('id,name')
+    .eq('user_id',user.id).eq('category_id',categoryId);
+  const have=(exist||[]).reduce((m,x)=>{ m[x.name]=x.id; return m; },{});
+  for(const d of defs){
+    if(have[d.name]){ metricMap[d.name]=have[d.name]; continue; }
+    const { data:ins }=await sb.from('metrics')
+      .insert({ user_id:user.id, category_id:categoryId, name:d.name, unit:d.unit, type:d.type })
+      .select('id').single();
+    if(ins) metricMap[d.name]=ins.id;
+  }
+}
+function buildMonthChips(){
+  $('monthRow').innerHTML=Array.from({length:12},(_,i)=>i+1).map(m=>
+    `<button class="month-chip ${m===selMonth?'active':''}" data-m="${m}">${m}월</button>`).join('');
+  document.querySelectorAll('.month-chip').forEach(b=>{
+    b.onclick=()=>{ selMonth=Number(b.dataset.m);
+      document.querySelectorAll('.month-chip').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active'); renderAll(); };
+  });
+}
+
+/* 별점 / 악기 다중선택 / 채널 */
+function setStar(v){ curStar=v; [...$('starInput').children].forEach(s=> s.classList.toggle('on', Number(s.dataset.v)<=v)); }
+[...document.querySelectorAll('#starInput span')].forEach(s=> s.onclick=()=>setStar(Number(s.dataset.v)));
+function renderInsts(){ document.querySelectorAll('#instTabs button').forEach(b=> b.classList.toggle('on', curInsts.includes(b.dataset.inst))); }
+function toggleInst(i){ curInsts = curInsts.includes(i) ? curInsts.filter(x=>x!==i) : [...curInsts, i]; renderInsts(); }
+function setInsts(arr){ curInsts=Array.isArray(arr)?arr.slice():[]; renderInsts(); }
+document.querySelectorAll('#instTabs button').forEach(b=> b.onclick=()=>toggleInst(b.dataset.inst));
+function setChan(c){ curChan=c; document.querySelectorAll('#chanTabs button').forEach(b=>b.classList.toggle('on', b.dataset.chan===c)); }
+document.querySelectorAll('#chanTabs button').forEach(b=> b.onclick=()=>setChan(b.dataset.chan));
+
+/* 연습 모달 */
+function openPractice(edit){
+  if(!edit){ editingPr=null; $('prModalTitle').textContent='연습 기록';
+    setInsts([]); setStar(0); $('prTime').value=''; $('prSong').value=''; $('prMemo').value='';
+    const d=new Date(YEAR, selMonth-1, Math.min(new Date().getDate(),28));
+    $('prDate').value=d.toISOString().slice(0,10);
+  }
+  $('practiceModal').classList.add('on');
+}
+function closePractice(){ $('practiceModal').classList.remove('on'); }
+$('practiceModal').addEventListener('click', e=>{ if(e.target.id==='practiceModal') closePractice(); });
+$('prTime').addEventListener('input', e=>{ e.target.value=e.target.value.replace(/[^0-9]/g,''); });
+async function savePractice(){
+  if(!curInsts.length){ toast('악기/파트를 1개 이상 선택하세요'); return; }
+  if(!curStar){ toast('만족도를 선택하세요'); return; }
+  const time=Number($('prTime').value.replace(/[^0-9]/g,''))||0;
+  // memo: 악기들(,)|연습시간|곡내용|메모
+  const memo=`${curInsts.join(',')}|${time}|${$('prSong').value.trim()}|${$('prMemo').value.trim()}`;
+  const payload={ user_id:user.id, category_id:categoryId, metric_id:metricMap['연습'],
+    value:curStar, memo, status:'practice', recorded_at:$('prDate').value };
+  let err;
+  if(editingPr){ ({error:err}=await sb.from('records').update(payload).eq('id',editingPr)); }
+  else { ({error:err}=await sb.from('records').insert(payload)); }
+  if(err){ toast('저장 실패: '+err.message); return; }
+  closePractice(); toast(editingPr?'수정되었습니다':'저장되었습니다'); await loadYear();
+}
+
+/* 콘텐츠 모달 */
+function openContent(edit){
+  if(!edit){ editingCt=null; $('ctModalTitle').textContent='콘텐츠 업로드 기록';
+    setChan('youtube'); $('ctTitle').value=''; $('ctMemo').value='';
+    const d=new Date(YEAR, selMonth-1, Math.min(new Date().getDate(),28));
+    $('ctDate').value=d.toISOString().slice(0,10);
+  }
+  $('contentModal').classList.add('on');
+}
+function closeContent(){ $('contentModal').classList.remove('on'); }
+$('contentModal').addEventListener('click', e=>{ if(e.target.id==='contentModal') closeContent(); });
+async function saveContent(){
+  const title=$('ctTitle').value.trim();
+  if(!title){ toast('콘텐츠 제목을 입력하세요'); return; }
+  const memo=`${title}|${$('ctMemo').value.trim()}`;
+  const payload={ user_id:user.id, category_id:categoryId, metric_id:metricMap[curChan],
+    value:1, memo, status:'content', recorded_at:$('ctDate').value };
+  let err;
+  if(editingCt){ ({error:err}=await sb.from('records').update(payload).eq('id',editingCt)); }
+  else { ({error:err}=await sb.from('records').insert(payload)); }
+  if(err){ toast('저장 실패: '+err.message); return; }
+  closeContent(); toast(editingCt?'수정되었습니다':'저장되었습니다'); await loadYear();
+}
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closePractice(); closeContent(); } });
+
+async function loadYear(){
+  const { data:recs, error }=await sb.from('records').select('*')
+    .eq('user_id',user.id).eq('category_id',categoryId)
+    .gte('recorded_at',`${YEAR}-01-01`).lte('recorded_at',`${YEAR}-12-31`)
+    .order('recorded_at',{ascending:false}).order('created_at',{ascending:false});
+  if(error){ toast('불러오기 실패'); return; }
+  yearRecords=recs||[]; renderAll();
+}
+
+function monthOf(r){ return Number((r.recorded_at||'').slice(5,7)); }
+function midName(id){ return Object.keys(metricMap).find(k=>metricMap[k]===id); }
+function part(memo,i){ return (memo||'').split('|')[i]||''; }
+
+function renderAll(){ renderSummary(); renderBoard(); }
+
+function renderSummary(){
+  const prs=yearRecords.filter(r=>r.status==='practice' && monthOf(r)===selMonth);
+  $('practiceCount').textContent=prs.length+'회';
+  // 총 연습시간
+  const totMin=prs.reduce((s,r)=>s+(Number(part(r.memo,1))||0),0);
+  $('totalTime').textContent=fmtMin(totMin);
+  $('avgTime').textContent= prs.length? `평균 ${Math.round(totMin/prs.length)}분 / 회` : '평균 — / 회';
+  // 평균 만족도
+  $('avgStar').textContent= prs.length? '★ '+(prs.reduce((s,r)=>s+Number(r.value),0)/prs.length).toFixed(1) : '—';
+  // 악기 TOP3
+  const cnt={}; INSTS.forEach(i=>cnt[i]=0);
+  prs.forEach(r=>{ (part(r.memo,0)||'').split(',').filter(Boolean).forEach(i=>{ if(cnt[i]!=null) cnt[i]++; }); });
+  const top=INSTS.filter(i=>cnt[i]>0).sort((a,b)=>cnt[b]-cnt[a]).slice(0,3);
+  $('instRank').innerHTML= top.length
+    ? top.map((i,k)=>`<span class="r"><span class="medal">${MEDALS[k]}</span><b>${i}</b> ${cnt[i]}회</span>`).join('')
+    : '<span class="r" style="color:var(--text3)">연습 기록 없음</span>';
+  // 콘텐츠
+  const conts=yearRecords.filter(r=>r.status==='content' && monthOf(r)===selMonth);
+  $('contentCount').textContent=conts.length+'개';
+  const ig=conts.filter(r=>midName(r.metric_id)==='instagram').length;
+  const yt=conts.filter(r=>midName(r.metric_id)==='youtube').length;
+  $('contentSplit').textContent=`인스타 ${ig} · 유튜브 ${yt}`;
+}
+
+$('searchInput').addEventListener('input', e=>{ searchText=e.target.value.trim().toLowerCase(); renderBoard(); });
+function toggleSort(kind){
+  sortDir[kind]= sortDir[kind]==='desc'?'asc':'desc';
+  const btn= kind==='practice'?$('sortPractice'):$('sortContent');
+  if(btn) btn.textContent= sortDir[kind]==='desc'?'↓':'↑';
+  renderBoard();
+}
+function sortArr(arr, dir){
+  const d= dir==='asc'?1:-1;
+  return arr.sort((a,b)=>{ const da=a.recorded_at||'', db=b.recorded_at||'';
+    if(da!==db) return da<db?-1*d:1*d;
+    return (a.created_at||'')<(b.created_at||'')?-1*d:1*d; });
+}
+function stars(n){ let s=''; for(let i=1;i<=5;i++) s+= i<=n?'★':'<span class="off">★</span>'; return s; }
+
+function renderBoard(){
+  // 연습
+  let prs=yearRecords.filter(r=>r.status==='practice' && monthOf(r)===selMonth);
+  const prAll=prs.slice();
+  if(searchText) prs=prs.filter(r=>`${part(r.memo,0)} ${part(r.memo,2)} ${part(r.memo,3)}`.toLowerCase().includes(searchText));
+  prs=sortArr(prs, sortDir.practice);
+  const avg= prAll.length? (prAll.reduce((s,r)=>s+Number(r.value),0)/prAll.length).toFixed(1):null;
+  $('practiceSub').textContent=`${prAll.length}회 · 평균 ${avg?('★'+avg):'—'}`;
+  $('colPractice').innerHTML= prs.length? prs.map(practiceCard).join('') : '<div class="col-empty">기록 없음</div>';
+  // 콘텐츠
+  let conts=yearRecords.filter(r=>r.status==='content' && monthOf(r)===selMonth);
+  const ctAll=conts.slice();
+  if(searchText) conts=conts.filter(r=>`${part(r.memo,0)} ${part(r.memo,1)}`.toLowerCase().includes(searchText));
+  conts=sortArr(conts, sortDir.content);
+  $('contentSub').textContent=`${ctAll.length}개`;
+  $('colContent').innerHTML= conts.length? conts.map(contentCard).join('') : '<div class="col-empty">기록 없음</div>';
+}
+
+function practiceCard(r){
+  const instStr=part(r.memo,0), time=part(r.memo,1), song=part(r.memo,2), note=part(r.memo,3);
+  const insts=(instStr||'').split(',').filter(Boolean);
+  const dateFull=(r.recorded_at||'').slice(0,10).replace(/-/g,'.');
+  const rj=JSON.stringify(r).replace(/'/g,"&#39;");
+  const instBadges=insts.length
+    ? insts.map(i=>`<span class="badge ${INST_CLASS[i]||'inst-etc'}">${i}</span>`).join('')
+    : '<span class="badge inst-etc">기타</span>';
+  const timeTxt= time&&time!=='0'? `<span class="item-time"><b>${fmtMin(time)}</b></span>` : '';
+  return `<div class="item">
+    <div class="item-main" onclick='editPractice(${rj})'>
+      <div class="item-left">
+        <span class="item-title">${dateFull}</span>
+        <div class="item-stars">${stars(Number(r.value))}</div>
+        ${song?`<span class="item-sublabel">${song}</span>`:''}
+      </div>
+      <div class="item-right">
+        <div class="badges">${instBadges}</div>
+        ${timeTxt}
+      </div>
+      ${note?`<div class="item-memo">${note}</div>`:''}
+    </div>
+    <div class="item-ops">
+      <button onclick='editPractice(${rj})'>수정</button>
+      <button class="del" onclick="delRec('${r.id}')">삭제</button>
+    </div></div>`;
+}
+function contentCard(r){
+  const title=part(r.memo,0), note=part(r.memo,1);
+  const chan=midName(r.metric_id);
+  const dateFull=(r.recorded_at||'').slice(0,10).replace(/-/g,'.');
+  const rj=JSON.stringify(r).replace(/'/g,"&#39;");
+  const chBadge= chan==='instagram'?'<span class="badge ig">인스타그램</span>':'<span class="badge yt">유튜브</span>';
+  return `<div class="item">
+    <div class="item-main" onclick='editContent(${rj})'>
+      <div class="item-left">
+        <span class="item-title">${title||'(제목 없음)'}</span>
+        <span class="item-sublabel">${dateFull}</span>
+      </div>
+      <div class="item-right">
+        <div class="badges">${chBadge}</div>
+      </div>
+      ${note?`<div class="item-memo">${note}</div>`:''}
+    </div>
+    <div class="item-ops">
+      <button onclick='editContent(${rj})'>수정</button>
+      <button class="del" onclick="delRec('${r.id}')">삭제</button>
+    </div></div>`;
+}
+
+window.editPractice=function(r){
+  editingPr=r.id; $('prModalTitle').textContent='연습 수정';
+  setInsts((part(r.memo,0)||'').split(',').filter(Boolean)); setStar(Number(r.value));
+  $('prTime').value= part(r.memo,1)&&part(r.memo,1)!=='0'? part(r.memo,1):'';
+  $('prSong').value=part(r.memo,2); $('prMemo').value=part(r.memo,3);
+  $('prDate').value=(r.recorded_at||'').slice(0,10);
+  $('practiceModal').classList.add('on');
+};
+window.editContent=function(r){
+  editingCt=r.id; $('ctModalTitle').textContent='콘텐츠 수정';
+  setChan(midName(r.metric_id)||'youtube');
+  $('ctTitle').value=part(r.memo,0); $('ctMemo').value=part(r.memo,1);
+  $('ctDate').value=(r.recorded_at||'').slice(0,10);
+  $('contentModal').classList.add('on');
+};
+window.delRec=async function(id){
+  if(!confirm('이 기록을 삭제할까요?')) return;
+  const { error }=await sb.from('records').delete().eq('id',id);
+  if(error){ toast('삭제 실패'); return; }
+  toast('삭제되었습니다'); await loadYear();
+};
+
+async function doLogout(){ await sb.auth.signOut(); location.href='index.html'; }
+let tT;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on');
+  clearTimeout(tT); tT=setTimeout(()=>t.classList.remove('on'),2200); }
+</script>
+</body>
+</html>
