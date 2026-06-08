@@ -175,6 +175,9 @@
 
     .sc-value { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 3px; }
     .sc-label { font-size: 12px; color: var(--text2); }
+    .sc-title { font-size: 12px; color: var(--text2); font-weight: 700; }
+    .summary-card.clickable { cursor:pointer; }
+    .summary-card.clickable:hover { border-color: rgba(255,255,255,0.22); }
     .sc-sub   { font-size: 11px; color: var(--text3); margin-top: 8px; }
 
     /* ══ MIDDLE ROW ══ */
@@ -232,6 +235,36 @@
 
     /* ══ FOCUS AREA ══ */
     .focus-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    /* 하단 2열 (집중영역 / 최근활동) */
+    .bottom-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:stretch; }
+    .focus-col { display:flex; flex-direction:column; gap:10px; }
+    /* 활동 캘린더 */
+    .cal-legend { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .cal-legend .lg { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text2); font-weight:600; }
+    .cal-legend .dot { width:8px; height:8px; border-radius:50%; }
+    .cal-wrap { display:grid; grid-template-columns:1.4fr 1fr; gap:18px; align-items:start; }
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+    .cal-head { font-size:11px; color:var(--text3); text-align:center; font-weight:700; padding-bottom:4px; }
+    .cal-cell { aspect-ratio:1; border:1px solid var(--border); border-radius:9px; background:var(--bg2);
+      padding:6px; cursor:pointer; display:flex; flex-direction:column; gap:4px; transition:all 0.14s; position:relative; }
+    .cal-cell.empty { background:transparent; border:none; cursor:default; }
+    .cal-cell:not(.empty):hover { border-color:var(--accent); background:rgba(79,142,247,0.08); }
+    .cal-cell.today { border-color:var(--accent); }
+    .cal-cell.active { border-color:rgba(79,142,247,0.5); }
+    .cal-cell.selected { border-color:var(--accent); background:rgba(79,142,247,0.14); }
+    .cal-day { font-size:12px; color:var(--text2); font-weight:700; }
+    .cal-cell.today .cal-day { color:var(--accent); }
+    .cal-dots { display:flex; flex-wrap:wrap; gap:3px; margin-top:auto; }
+    .cal-dots .d { width:6px; height:6px; border-radius:50%; }
+    .cal-detail { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:16px; min-height:180px; }
+    .cal-detail-empty { font-size:12px; color:var(--text3); text-align:center; padding:48px 0; line-height:1.6; }
+    .cal-detail-title { font-size:13px; font-weight:800; color:var(--text); margin-bottom:12px; }
+    .cal-detail-item { display:flex; align-items:center; gap:9px; padding:9px 0; border-bottom:1px solid var(--border); }
+    .cal-detail-item:last-child { border-bottom:none; }
+    .cal-detail-item .ci { width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+    .cal-detail-item .cinfo { min-width:0; }
+    .cal-detail-item .ctitle { font-size:13px; font-weight:700; color:var(--text); }
+    .cal-detail-item .ccat { font-size:11px; color:var(--text3); margin-top:1px; }
     .focus-card {
       padding: 14px 15px; border-radius: 11px;
       border: 1px solid var(--border); background: var(--card2);
@@ -295,6 +328,8 @@
     }
     @media (max-width: 480px) {
       .focus-grid { grid-template-columns: 1fr; }
+      .bottom-row { grid-template-columns: 1fr; }
+      .cal-wrap { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -367,41 +402,37 @@
 
         <div class="summary-card" style="--card-accent:#4f8ef7">
           <div class="sc-header">
-            <span class="sc-icon">🎯</span>
+            <span class="sc-icon">🎯 <span class="sc-title">전체 평균 달성률</span></span>
             <span class="sc-badge badge-up" id="sc1Badge">—</span>
           </div>
           <div class="sc-value" id="sc1Value">0%</div>
-          <div class="sc-label">전체 평균 달성률</div>
           <div class="sc-sub" id="sc1Sub">이번 달 카테고리 평균</div>
         </div>
 
         <div class="summary-card" style="--card-accent:#4ecb8d">
           <div class="sc-header">
-            <span class="sc-icon">📝</span>
+            <span class="sc-icon">📝 <span class="sc-title">이번 달 기록 수</span></span>
             <span class="sc-badge badge-up" id="sc2Badge">—</span>
           </div>
           <div class="sc-value" id="sc2Value">0</div>
-          <div class="sc-label">이번 달 기록 수</div>
           <div class="sc-sub" id="sc2Sub">전체 카테고리 합계</div>
         </div>
 
-        <div class="summary-card" style="--card-accent:#f5a623">
+        <div class="summary-card clickable" style="--card-accent:#f5a623" id="sc3Card">
           <div class="sc-header">
-            <span class="sc-icon">🔥</span>
+            <span class="sc-icon">🔥 <span class="sc-title">가장 활발한 카테고리</span></span>
             <span class="sc-badge badge-up" id="sc3Badge">—</span>
           </div>
           <div class="sc-value" id="sc3Value">—</div>
-          <div class="sc-label">가장 활발한 카테고리</div>
           <div class="sc-sub" id="sc3Sub">이번 달 달성률 1위</div>
         </div>
 
-        <div class="summary-card" style="--card-accent:#f06a6a">
+        <div class="summary-card clickable" style="--card-accent:#f06a6a" id="sc4Card">
           <div class="sc-header">
-            <span class="sc-icon">⚡</span>
+            <span class="sc-icon">⚡ <span class="sc-title">집중이 필요한 영역</span></span>
             <span class="sc-badge badge-dn" id="sc4Badge">—</span>
           </div>
           <div class="sc-value" id="sc4Value">—</div>
-          <div class="sc-label">집중이 필요한 영역</div>
           <div class="sc-sub" id="sc4Sub">이번 달 활동 부족</div>
         </div>
 
@@ -439,27 +470,45 @@
       </div>
 
       <!-- ③ 집중 영역 -->
-      <div class="panel fade-up" style="animation-delay:0.14s">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">이번 달 집중 영역</div>
-            <div class="panel-sub">개선이 필요하거나 잘 되고 있는 영역을 확인하세요</div>
+      <div class="bottom-row fade-up" style="animation-delay:0.14s">
+        <!-- 집중 영역 -->
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">이번 달 집중 영역</div>
+              <div class="panel-sub">개선이 필요하거나 잘 되고 있는 영역</div>
+            </div>
           </div>
+          <div class="focus-col" id="focusGrid"></div>
         </div>
-        <div class="focus-grid" id="focusGrid"></div>
+        <!-- 최근 활동 -->
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">최근 활동 내역</div>
+              <div class="panel-sub">최근 기록</div>
+            </div>
+          </div>
+          <div class="activity-list" id="activityList"></div>
+          <button class="more-btn" onclick="location.href='history.html'">전체 히스토리 보기 →</button>
         </div>
       </div>
 
-      <!-- ④ 최근 활동 -->
-      <div class="panel fade-up" style="animation-delay:0.2s">
+      <!-- ⑤ 활동 캘린더 -->
+      <div class="panel fade-up" style="animation-delay:0.24s">
         <div class="panel-header">
           <div>
-            <div class="panel-title">최근 활동 내역</div>
-            <div class="panel-sub">최근 7일간 기록</div>
+            <div class="panel-title">활동 캘린더</div>
+            <div class="panel-sub" id="calMonthLabel">이번 달 활동 한눈에 보기</div>
+          </div>
+          <div class="cal-legend" id="calLegend"></div>
+        </div>
+        <div class="cal-wrap">
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="cal-detail" id="calDetail">
+            <div class="cal-detail-empty">날짜를 클릭하면 그날의 기록이 표시됩니다.</div>
           </div>
         </div>
-        <div class="activity-list" id="activityList"></div>
-        <button class="more-btn">전체 히스토리 보기 →</button>
       </div>
 
     </div>
@@ -573,6 +622,7 @@ async function loadDashboard(){
   renderFocus();
   buildChartData(records, catId, countFor, bizPct);
   buildChart('bar');
+  renderCalendar(records, catId);
 }
 
 /* 카테고리 진행률 렌더 */
@@ -583,7 +633,7 @@ function renderCats(){
     const chColor = c.up===true?'var(--success)': c.up===false?'var(--error)':'var(--text3)';
     const chTxt = c.name==='사업'? '진행률' : (diff>0?`+${diff}%`: diff<0?`${diff}%`:'0%');
     catList.innerHTML += `
-      <div>
+      <div style="cursor:pointer" onclick="location.href='${c.file}'">
         <div class="cat-info">
           <div class="cat-name">
             <div class="cat-dot" style="background:${c.color}"></div>
@@ -606,9 +656,9 @@ function renderCats(){
 function renderActivities(records, catId){
   const idCat={}; Object.keys(catId).forEach(n=> idCat[catId[n]]=n);
   const meta={
-    '금융':{icon:'💰',bg:'rgba(78,203,141,0.12)'}, '피부':{icon:'✨',bg:'rgba(201,126,247,0.12)'},
-    '건강':{icon:'💪',bg:'rgba(245,166,35,0.12)'}, '음악':{icon:'🎵',bg:'rgba(240,106,154,0.12)'},
-    '사업':{icon:'💼',bg:'rgba(79,142,247,0.12)'},
+    '금융':{icon:'💰',bg:'rgba(78,203,141,0.12)',file:'finance.html'}, '피부':{icon:'✨',bg:'rgba(201,126,247,0.12)',file:'skin.html'},
+    '건강':{icon:'💪',bg:'rgba(245,166,35,0.12)',file:'health.html'}, '음악':{icon:'🎵',bg:'rgba(240,106,154,0.12)',file:'music.html'},
+    '사업':{icon:'💼',bg:'rgba(79,142,247,0.12)',file:'business.html'},
   };
   const label={ income:'수입 기록',expense:'지출 기록',save:'저축 기록',review:'리뷰 작성',
     content:'콘텐츠 업로드',channel:'채널 수치',workout:'운동 기록',inbody:'인바디 측정',
@@ -624,7 +674,7 @@ function renderActivities(records, catId){
     const d=(r.recorded_at||'').slice(0,10);
     const dateTxt= d===today?'오늘': d.slice(5).replace('-','.');
     actList.innerHTML += `
-      <div class="activity-item">
+      <div class="activity-item" style="cursor:pointer" onclick="location.href='${m.file||'#'}'">
         <div class="act-dot" style="background:${m.bg}">${m.icon}</div>
         <div class="act-body">
           <div class="act-title">${label[r.status]||r.status}</div>
@@ -656,6 +706,8 @@ function renderSummary(){
   document.getElementById('sc4Value').textContent=low.name;
   document.getElementById('sc4Badge').textContent=low.pct+'%';
   document.getElementById('sc4Badge').className='sc-badge badge-dn';
+  const c3=document.getElementById('sc3Card'); if(c3&&top.pct>0) c3.onclick=()=>location.href=top.file;
+  const c4=document.getElementById('sc4Card'); if(c4) c4.onclick=()=>location.href=low.file;
 }
 
 /* 집중 영역 카드 */
@@ -672,6 +724,64 @@ function renderFocus(){
   });
   grid.innerHTML=cards.join('');
 }
+
+/* ── 활동 캘린더 ── */
+const CAT_META_CAL={
+  '금융':{icon:'💰',color:'#4ecb8d',file:'finance.html'}, '피부':{icon:'✨',color:'#c97ef7',file:'skin.html'},
+  '건강':{icon:'💪',color:'#f5a623',file:'health.html'}, '음악':{icon:'🎵',color:'#f06a9a',file:'music.html'},
+  '사업':{icon:'💼',color:'#4f8ef7',file:'business.html'},
+};
+const STATUS_LABEL_CAL={ income:'수입 기록',expense:'지출 기록',save:'저축 기록',review:'리뷰 작성',
+  content:'콘텐츠 업로드',channel:'채널 수치',workout:'운동 기록',inbody:'인바디 측정',
+  practice:'악기 연습',learn:'배움 기록' };
+
+function renderCalendar(records, catId){
+  const idCat={}; Object.keys(catId).forEach(n=> idCat[catId[n]]=n);
+  const byDay={};
+  records.filter(r=>r.status!=='progress' && Number((r.recorded_at||'').slice(5,7))===MONTH).forEach(r=>{
+    const day=Number((r.recorded_at||'').slice(8,10));
+    (byDay[day]=byDay[day]||[]).push(r);
+  });
+  document.getElementById('calLegend').innerHTML=Object.keys(CAT_META_CAL).map(n=>
+    `<span class="lg"><span class="dot" style="background:${CAT_META_CAL[n].color}"></span>${n}</span>`).join('');
+  document.getElementById('calMonthLabel').textContent=`${YEAR}년 ${MONTH}월 활동`;
+  const first=new Date(YEAR, MONTH-1, 1).getDay();
+  const dim=new Date(YEAR, MONTH, 0).getDate();
+  const todayD=(new Date().getMonth()+1===MONTH)? new Date().getDate(): -1;
+  const heads=['일','월','화','수','목','금','토'];
+  let html=heads.map(h=>`<div class="cal-head">${h}</div>`).join('');
+  for(let i=0;i<first;i++) html+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=dim;d++){
+    const recs=byDay[d]||[];
+    const cats=[...new Set(recs.map(r=>idCat[r.category_id]))].filter(Boolean);
+    const dots=cats.slice(0,5).map(c=>`<span class="d" style="background:${(CAT_META_CAL[c]||{}).color||'#888'}"></span>`).join('');
+    const cls=['cal-cell']; if(d===todayD) cls.push('today'); if(recs.length) cls.push('active');
+    html+=`<div class="${cls.join(' ')}" data-day="${d}" onclick="selectDay(${d})">
+      <span class="cal-day">${d}</span><span class="cal-dots">${dots}</span></div>`;
+  }
+  document.getElementById('calGrid').innerHTML=html;
+  window.__calData={ byDay, idCat };
+  if(todayD>0 && byDay[todayD]) selectDay(todayD); else clearDaySel();
+}
+function clearDaySel(){
+  document.getElementById('calDetail').innerHTML='<div class="cal-detail-empty">날짜를 클릭하면 그날의 기록이 표시됩니다.</div>';
+}
+window.selectDay=function(d){
+  const data=window.__calData; if(!data) return;
+  document.querySelectorAll('.cal-cell').forEach(c=>c.classList.remove('selected'));
+  const cell=document.querySelector(`.cal-cell[data-day="${d}"]`); if(cell) cell.classList.add('selected');
+  const recs=data.byDay[d]||[];
+  const det=document.getElementById('calDetail');
+  if(!recs.length){ det.innerHTML=`<div class="cal-detail-title">${MONTH}월 ${d}일</div><div class="cal-detail-empty">이 날은 기록이 없습니다.</div>`; return; }
+  const items=recs.map(r=>{
+    const cat=data.idCat[r.category_id]||'기타'; const m=CAT_META_CAL[cat]||{icon:'•',color:'#888'};
+    return `<div class="cal-detail-item">
+      <div class="ci" style="background:${m.color}22;color:${m.color}">${m.icon}</div>
+      <div class="cinfo"><div class="ctitle">${STATUS_LABEL_CAL[r.status]||r.status}</div><div class="ccat">${cat}</div></div>
+    </div>`;
+  }).join('');
+  det.innerHTML=`<div class="cal-detail-title">${MONTH}월 ${d}일 · ${recs.length}건</div>${items}`;
+};
 
 /* 차트: 최근 3개월 카테고리별 진행률 */
 function buildChartData(records, catId, countFor, bizPct){
