@@ -252,12 +252,15 @@
     .cal-cell.today { border-color:var(--accent); }
     .cal-cell.active { border-color:rgba(79,142,247,0.5); }
     .cal-cell.selected { border-color:var(--accent); background:rgba(79,142,247,0.14); }
-    .cal-day { font-size:12px; color:var(--text2); font-weight:700; flex-shrink:0; }
+    .cal-day { font-size:13px; color:var(--text); font-weight:800; flex-shrink:0; }
     .cal-cell.today .cal-day { color:var(--accent); }
+    .cal-cell.active .cal-day { color:var(--accent2); }
     .cal-chips { display:flex; flex-direction:column; gap:3px; margin-top:2px; }
-    .cal-chip { display:flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700;
-      padding:2px 6px; border-radius:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      border-left:3px solid var(--chip-c,#888); background:rgba(255,255,255,0.05); color:var(--text2); }
+    .cal-chip { display:block; font-size:10.5px; font-weight:700;
+      padding:3px 7px; border-radius:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      border-left:3px solid var(--chip-c,#888);
+      background:var(--chip-bg,rgba(255,255,255,0.05));
+      color:var(--chip-c,#ddd); }
     .cal-more { font-size:10px; color:var(--text3); font-weight:700; padding-left:2px; }
     .cal-detail { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:16px; min-height:180px; }
     .cal-detail-empty { font-size:12px; color:var(--text3); text-align:center; padding:48px 0; line-height:1.6; }
@@ -280,7 +283,8 @@
     .focus-text strong { color: var(--text); font-weight: 600; }
 
     /* ══ ACTIVITY ══ */
-    .activity-list { display: flex; flex-direction: column; gap: 8px; }
+    .activity-list { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+    @media (max-width:1100px){ .activity-list { grid-template-columns:1fr; } }
     .activity-item {
       display: flex; align-items: center; gap: 12px;
       padding: 12px 15px; border-radius: 11px;
@@ -734,6 +738,9 @@ const CAT_META_CAL={
   '건강':{icon:'💪',color:'#f5a623',file:'health.html'}, '음악':{icon:'🎵',color:'#f06a9a',file:'music.html'},
   '사업':{icon:'💼',color:'#4f8ef7',file:'business.html'},
 };
+function hexA(hex,a){ const h=hex.replace('#',''); const n=h.length===3? h.split('').map(c=>c+c).join('') : h;
+  const r=parseInt(n.slice(0,2),16), g=parseInt(n.slice(2,4),16), b=parseInt(n.slice(4,6),16);
+  return `rgba(${r},${g},${b},${a})`; }
 const STATUS_LABEL_CAL={ income:'수입 기록',expense:'지출 기록',save:'저축 기록',review:'리뷰 작성',
   content:'콘텐츠 업로드',channel:'채널 수치',workout:'운동 기록',inbody:'인바디 측정',
   practice:'악기 연습',learn:'배움 기록' };
@@ -769,7 +776,7 @@ function renderCalendar(records, catId){
     const shown=order.slice(0,MAXROWS);
     const chips=shown.map(k=>{
       const g=groups[k]; const col=(CAT_META_CAL[g.cat]||{}).color||'#888';
-      return `<span class="cal-chip" style="--chip-c:${col}">${g.label}${g.n>1?' '+g.n:''}</span>`;
+      return `<span class="cal-chip" style="--chip-c:${col};--chip-bg:${hexA(col,0.16)}">${g.label}${g.n>1?' '+g.n:''}</span>`;
     }).join('');
     const restGroups=order.length-shown.length;
     const more= restGroups>0? `<span class="cal-more">+${restGroups}개</span>` : '';
