@@ -160,9 +160,17 @@
       padding-top:8px; border-top:1px solid var(--border);
       display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
     .item-right { display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
-    .item-metrics { display:flex; flex-direction:column; gap:5px; align-items:flex-end; }
-    .item-metric { font-size:13px; color:var(--text2); font-weight:600; }
-    .item-metric b { color:var(--text); font-weight:800; font-size:15px; }
+    .item-main-ib { display:flex !important; flex-direction:column; gap:12px; }
+    .item-main-ib .ib-head { display:flex; align-items:center; justify-content:space-between; }
+    .item-metrics { display:flex; gap:10px; align-items:stretch; width:100%; }
+    .item-metric { flex:1; background:var(--bg2); border:1px solid var(--border); border-radius:10px;
+      padding:12px 10px; text-align:center; display:flex; flex-direction:column; gap:4px; }
+    .item-metric .mlabel { font-size:11px; color:var(--text3); font-weight:700; }
+    .item-metric .mval { font-size:20px; font-weight:800; color:var(--text); letter-spacing:-0.02em; line-height:1.1; }
+    .item-metric .munit { font-size:11px; color:var(--text3); font-weight:600; }
+    .item-metric.weight .mval { color:var(--accent2); }
+    .item-metric.fat .mval { color:var(--warning); }
+    .item-metric.muscle .mval { color:var(--success); }
     .badges { display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end; }
     .badge { font-size:11px; font-weight:800; padding:4px 10px; border-radius:100px; letter-spacing:0.02em; white-space:nowrap; }
     .badge.part-chest    { background:rgba(255,122,122,0.16); color:var(--error); }
@@ -197,6 +205,9 @@
       border-radius:10px; padding:12px 14px; color:var(--text); font-size:15px;
       font-family:'Pretendard',sans-serif; outline:none; transition:border-color 0.16s; resize:vertical; }
     .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--accent); }
+    .field input[type=date] { cursor:pointer; }
+    .field input[type=date]::-webkit-calendar-picker-indicator {
+      filter:invert(0.7) brightness(1.4); cursor:pointer; opacity:0.9; }
     .field-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
     .type-tabs { display:flex; gap:7px; }
     .type-tabs button { flex:1; padding:11px; border-radius:10px; border:1px solid var(--border);
@@ -445,7 +456,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let user=null, categoryId=null, metricMap={};
-let editingWk=null, editingIb=null, curPart='가슴', curStar=0;
+let editingWk=null, editingIb=null, curParts=[], curStar=0;
 let yearRecords=[];
 let selMonth=new Date().getMonth()+1;
 let searchText='';
@@ -476,6 +487,10 @@ const dec=v=>{ const n=parseFloat(String(v).replace(/[^0-9.]/g,'')); return isNa
   buildMonthChips();
   const today=new Date().toISOString().slice(0,10);
   $('wkDate').value=today; $('ibDate').value=today;
+  document.querySelectorAll('input[type=date]').forEach(inp=>{
+    inp.addEventListener('click', ()=>{ try{ inp.showPicker(); }catch(e){} });
+    inp.addEventListener('focus', ()=>{ try{ inp.showPicker(); }catch(e){} });
+  });
   await loadYear();
 })();
 
@@ -517,13 +532,19 @@ function buildMonthChips(){
 /* 별점 / 부위 탭 */
 function setStar(v){ curStar=v; [...$('starInput').children].forEach(s=> s.classList.toggle('on', Number(s.dataset.v)<=v)); }
 [...document.querySelectorAll('#starInput span')].forEach(s=> s.onclick=()=>setStar(Number(s.dataset.v)));
-function setPart(p){ curPart=p; document.querySelectorAll('#partTabs button').forEach(b=>b.classList.toggle('on', b.dataset.part===p)); }
-document.querySelectorAll('#partTabs button').forEach(b=> b.onclick=()=>setPart(b.dataset.part));
+function renderParts(){ document.querySelectorAll('#partTabs button').forEach(b=> b.classList.toggle('on', curParts.includes(b.dataset.part))); }
+function togglePart(p){
+  if(curParts.includes(p)) curParts=curParts.filter(x=>x!==p);
+  else curParts=[...curParts, p];
+  renderParts();
+}
+function setParts(arr){ curParts=Array.isArray(arr)?arr.slice():[]; renderParts(); }
+document.querySelectorAll('#partTabs button').forEach(b=> b.onclick=()=>togglePart(b.dataset.part));
 
 /* 운동 모달 */
 function openWorkout(edit){
   if(!edit){ editingWk=null; $('wkModalTitle').textContent='운동 기록';
-    setPart('가슴'); setStar(0); $('wkMemo').value='';
+    setParts([]); setStar(0); $('wkMemo').value='';
     const d=new Date(YEAR, selMonth-1, Math.min(new Date().getDate(),28));
     $('wkDate').value=d.toISOString().slice(0,10);
   }
@@ -532,8 +553,9 @@ function openWorkout(edit){
 function closeWorkout(){ $('workoutModal').classList.remove('on'); }
 $('workoutModal').addEventListener('click', e=>{ if(e.target.id==='workoutModal') closeWorkout(); });
 async function saveWorkout(){
+  if(!curParts.length){ toast('운동 부위를 1개 이상 선택하세요'); return; }
   if(!curStar){ toast('오늘의 컨디션을 선택하세요'); return; }
-  const memo=`${curPart}|${$('wkMemo').value.trim()}`;
+  const memo=`${curParts.join(',')}|${$('wkMemo').value.trim()}`;
   const payload={ user_id:user.id, category_id:categoryId, metric_id:metricMap['운동'],
     value:curStar, memo, status:'workout', recorded_at:$('wkDate').value };
   let err;
@@ -622,7 +644,7 @@ function renderSummary(){
   $('daysValue').textContent=uniqueDays.size+'일';
   // 부위 집계
   const cnt={}; PARTS.forEach(p=>cnt[p]=0);
-  wks.forEach(r=>{ const pt=part(r.memo,0); if(cnt[pt]!=null) cnt[pt]++; });
+  wks.forEach(r=>{ (part(r.memo,0)||'').split(',').filter(Boolean).forEach(pt=>{ if(cnt[pt]!=null) cnt[pt]++; }); });
   const done=PARTS.filter(p=>cnt[p]>0).sort((a,b)=>cnt[b]-cnt[a]);
   const top=done.slice(0,3);
   // 유산소·기타 제외하고 안 한 주요 부위
@@ -672,19 +694,23 @@ function renderBoard(){
 }
 
 function workoutCard(r){
-  const pt=part(r.memo,0), note=part(r.memo,1);
+  const partsStr=part(r.memo,0), note=part(r.memo,1);
+  const parts=(partsStr||'').split(',').filter(Boolean);
   const d=(r.recorded_at||'').slice(5).replace('-','.');
   const rj=JSON.stringify(r).replace(/'/g,"&#39;");
-  const partBadge=`<span class="badge ${PART_CLASS[pt]||'part-etc'}">${pt||'기타'}</span>`;
+  const partBadges=parts.length
+    ? parts.map(pt=>`<span class="badge ${PART_CLASS[pt]||'part-etc'}">${pt}</span>`).join('')
+    : '<span class="badge part-etc">기타</span>';
+  const title=parts.length? (parts.length>1? `${parts[0]} 외 ${parts.length-1}` : parts[0]) : '운동';
   return `<div class="item">
     <div class="item-main" onclick='editWorkout(${rj})'>
       <div class="item-left">
-        <span class="item-title">${pt||'운동'}</span>
+        <span class="item-title">${title}</span>
         <div class="item-stars">${stars(Number(r.value))}</div>
         <div class="item-date-row"><span class="item-date">${d}</span></div>
       </div>
       <div class="item-right">
-        <div class="badges">${partBadge}</div>
+        <div class="badges">${partBadges}</div>
       </div>
       ${note?`<div class="item-memo">${note}</div>`:''}
     </div>
@@ -697,18 +723,15 @@ function inbodyCard(r){
   const w=part(r.memo,0), f=part(r.memo,1), m=part(r.memo,2);
   const d=(r.recorded_at||'').slice(5).replace('-','.');
   const rj=JSON.stringify(r).replace(/'/g,"&#39;");
+  const cell=(cls,label,val,unit)=> (val&&val!=='0')
+    ? `<div class="item-metric ${cls}"><span class="mlabel">${label}</span><span class="mval">${val}</span><span class="munit">${unit}</span></div>` : '';
   return `<div class="item">
-    <div class="item-main" onclick='editInbody(${rj})'>
-      <div class="item-left">
-        <span class="item-title">측정 기록</span>
-        <div class="item-date-row"><span class="item-date">${d}</span></div>
-      </div>
-      <div class="item-right">
-        <div class="item-metrics">
-          ${w&&w!=='0'?`<span class="item-metric">체중 <b>${w}</b>kg</span>`:''}
-          ${f&&f!=='0'?`<span class="item-metric">체지방 <b>${f}</b>%</span>`:''}
-          ${m&&m!=='0'?`<span class="item-metric">골격근 <b>${m}</b>kg</span>`:''}
-        </div>
+    <div class="item-main item-main-ib" onclick='editInbody(${rj})'>
+      <div class="ib-head"><span class="item-title">측정 기록</span><span class="item-date">${d}</span></div>
+      <div class="item-metrics">
+        ${cell('weight','체중',w,'kg')}
+        ${cell('fat','체지방률',f,'%')}
+        ${cell('muscle','골격근량',m,'kg')}
       </div>
     </div>
     <div class="item-ops">
@@ -719,7 +742,7 @@ function inbodyCard(r){
 
 window.editWorkout=function(r){
   editingWk=r.id; $('wkModalTitle').textContent='운동 수정';
-  setPart(part(r.memo,0)||'가슴'); setStar(Number(r.value));
+  setParts((part(r.memo,0)||'').split(',').filter(Boolean)); setStar(Number(r.value));
   $('wkMemo').value=part(r.memo,1);
   $('wkDate').value=(r.recorded_at||'').slice(0,10);
   $('workoutModal').classList.add('on');
