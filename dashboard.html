@@ -313,10 +313,10 @@
       <a class="nav-item active" href="dashboard.html">
         <span class="nav-icon">⊞</span> 대시보드
       </a>
-      <a class="nav-item" href="#">
+      <a class="nav-item" href="history.html">
         <span class="nav-icon">◷</span> 히스토리
       </a>
-      <a class="nav-item" href="#">
+      <a class="nav-item" href="compare.html">
         <span class="nav-icon">⟳</span> 월간 비교
       </a>
     </div>
@@ -324,16 +324,15 @@
     <div class="sidebar-section" style="margin-top:10px;">
       <div class="sidebar-label">카테고리</div>
       <a class="nav-item" href="finance.html"><span class="nav-icon">💰</span> 금융</a>
-      <a class="nav-item" href="#"><span class="nav-icon">✨</span> 피부</a>
-      <a class="nav-item" href="#"><span class="nav-icon">💪</span> 건강</a>
-      <a class="nav-item" href="#"><span class="nav-icon">🎵</span> 음악</a>
-      <a class="nav-item" href="#"><span class="nav-icon">📚</span> 공부</a>
-      <a class="nav-item" href="#"><span class="nav-icon">💼</span> 사업</a>
+      <a class="nav-item" href="skin.html"><span class="nav-icon">✨</span> 피부</a>
+      <a class="nav-item" href="health.html"><span class="nav-icon">💪</span> 건강</a>
+      <a class="nav-item" href="music.html"><span class="nav-icon">🎵</span> 음악</a>
+      <a class="nav-item" href="business.html"><span class="nav-icon">💼</span> 사업</a>
     </div>
 
     <div class="sidebar-section" style="margin-top:10px;">
       <div class="sidebar-label">설정</div>
-      <a class="nav-item" href="#"><span class="nav-icon">⚙</span> 설정</a>
+      <a class="nav-item" href="settings.html"><span class="nav-icon">⚙</span> 설정</a>
     </div>
 
     <div class="sidebar-bottom">
@@ -369,41 +368,41 @@
         <div class="summary-card" style="--card-accent:#4f8ef7">
           <div class="sc-header">
             <span class="sc-icon">🎯</span>
-            <span class="sc-badge badge-up">▲ +8%</span>
+            <span class="sc-badge badge-up" id="sc1Badge">—</span>
           </div>
-          <div class="sc-value">72%</div>
-          <div class="sc-label">전체 목표 달성률</div>
-          <div class="sc-sub">전월 64% → 이번 달 72%</div>
+          <div class="sc-value" id="sc1Value">0%</div>
+          <div class="sc-label">전체 평균 달성률</div>
+          <div class="sc-sub" id="sc1Sub">이번 달 카테고리 평균</div>
         </div>
 
         <div class="summary-card" style="--card-accent:#4ecb8d">
           <div class="sc-header">
             <span class="sc-icon">📝</span>
-            <span class="sc-badge badge-up">▲ +12</span>
+            <span class="sc-badge badge-up" id="sc2Badge">—</span>
           </div>
-          <div class="sc-value">38</div>
+          <div class="sc-value" id="sc2Value">0</div>
           <div class="sc-label">이번 달 기록 수</div>
-          <div class="sc-sub">지난달 26건 대비 증가</div>
+          <div class="sc-sub" id="sc2Sub">전체 카테고리 합계</div>
         </div>
 
         <div class="summary-card" style="--card-accent:#f5a623">
           <div class="sc-header">
             <span class="sc-icon">🔥</span>
-            <span class="sc-badge badge-up">88%</span>
+            <span class="sc-badge badge-up" id="sc3Badge">—</span>
           </div>
-          <div class="sc-value">건강</div>
+          <div class="sc-value" id="sc3Value">—</div>
           <div class="sc-label">가장 활발한 카테고리</div>
-          <div class="sc-sub">이번 달 달성률 1위</div>
+          <div class="sc-sub" id="sc3Sub">이번 달 달성률 1위</div>
         </div>
 
         <div class="summary-card" style="--card-accent:#f06a6a">
           <div class="sc-header">
             <span class="sc-icon">⚡</span>
-            <span class="sc-badge badge-dn">38%</span>
+            <span class="sc-badge badge-dn" id="sc4Badge">—</span>
           </div>
-          <div class="sc-value">공부</div>
+          <div class="sc-value" id="sc4Value">—</div>
           <div class="sc-label">집중이 필요한 영역</div>
-          <div class="sc-sub">목표 대비 활동 부족</div>
+          <div class="sc-sub" id="sc4Sub">이번 달 활동 부족</div>
         </div>
 
       </div>
@@ -447,31 +446,7 @@
             <div class="panel-sub">개선이 필요하거나 잘 되고 있는 영역을 확인하세요</div>
           </div>
         </div>
-        <div class="focus-grid">
-          <div class="focus-card warn">
-            <div class="focus-icon">📚</div>
-            <div class="focus-text"><strong>공부</strong> 카테고리의 활동 기록이 적습니다. 목표 대비 38% 수준이에요.</div>
-          </div>
-          <div class="focus-card warn">
-            <div class="focus-icon">✨</div>
-            <div class="focus-text"><strong>피부</strong> 카테고리가 목표 대비 60% 수준입니다. 루틴 점검이 필요해요.</div>
-          </div>
-          <div class="focus-card good">
-            <div class="focus-icon">💪</div>
-            <div class="focus-text"><strong>건강</strong> 카테고리가 전월 대비 안정적으로 개선되고 있습니다.</div>
-          </div>
-          <div class="focus-card good">
-            <div class="focus-icon">💰</div>
-            <div class="focus-text"><strong>금융</strong> 카테고리가 꾸준히 성장 중입니다. 좋은 흐름이에요.</div>
-          </div>
-          <div class="focus-card info">
-            <div class="focus-icon">🎵</div>
-            <div class="focus-text"><strong>음악</strong> 카테고리는 지난달과 비슷한 수준으로 꾸준히 유지 중이에요.</div>
-          </div>
-          <div class="focus-card info">
-            <div class="focus-icon">💼</div>
-            <div class="focus-text"><strong>사업</strong> 기획 단계입니다. 아이디어와 메모를 꾸준히 쌓아가세요.</div>
-          </div>
+        <div class="focus-grid" id="focusGrid"></div>
         </div>
       </div>
 
@@ -521,93 +496,201 @@ async function doLogout() {
   location.href = 'index.html';
 }
 
-/* ── 카테고리 샘플 데이터 (변경된 순서) ── */
-const categories = [
-  { name:'금융', icon:'💰', color:'#4ecb8d', pct:82, change:'+11%', up:true },
-  { name:'피부', icon:'✨', color:'#c97ef7', pct:60, change:'-3%',  up:false },
-  { name:'건강', icon:'💪', color:'#f5a623', pct:88, change:'+14%', up:true },
-  { name:'음악', icon:'🎵', color:'#f06a9a', pct:55, change:'0%',   up:null },
-  { name:'공부', icon:'📚', color:'#f06a6a', pct:38, change:'-8%',  up:false },
-  { name:'사업', icon:'💼', color:'#4f8ef7', pct:45, change:'+5%',  up:true },
+/* ════════════════ 실데이터 로딩 ════════════════ */
+const now2 = new Date();
+const YEAR = now2.getFullYear();
+const MONTH = now2.getMonth()+1;
+
+/* 카테고리 정의 (대시보드 표시 순서/색/아이콘 + 월간 100% 기준치) */
+const CATS = [
+  { name:'금융', icon:'💰', color:'#4ecb8d', file:'finance.html',  base:20 },  // 월 거래기록 20건=100%
+  { name:'피부', icon:'✨', color:'#c97ef7', file:'skin.html',     base:15 },  // 리뷰+콘텐츠 15건
+  { name:'건강', icon:'💪', color:'#f5a623', file:'health.html',   base:15 },  // 운동한 날 15일
+  { name:'음악', icon:'🎵', color:'#f06a9a', file:'music.html',    base:12 },  // 연습+콘텐츠 12건
+  { name:'사업', icon:'💼', color:'#4f8ef7', file:'business.html', base:null },// 영역 진행률 평균
 ];
+
+let CAT_STATE = [];   // {name,icon,color,file,pct,prevPct,count,up}
+let monthsLabels = [];
+let chartDatasets = [];
+
+const catList = document.getElementById('catList');
+const actList = document.getElementById('activityList');
+
+function pctFromCount(cnt, base){ if(!base) return 0; return Math.min(100, Math.round(cnt/base*100)); }
+
+/* 카테고리별 이번달/지난달 활동량 → 진행률 */
+async function loadDashboard(){
+  const uid = (await sb.auth.getSession()).data.session.user.id;
+  // 카테고리 id 매핑
+  const { data:cats } = await sb.from('categories').select('id,name').eq('user_id',uid);
+  const catId = {}; (cats||[]).forEach(c=> catId[c.name]=c.id);
+
+  // 올해 전체 records 로드 (한 번에)
+  const { data:recs } = await sb.from('records').select('*')
+    .eq('user_id',uid)
+    .gte('recorded_at',`${YEAR}-01-01`).lte('recorded_at',`${YEAR}-12-31`);
+  const records = recs || [];
+  const mOf = r => Number((r.recorded_at||'').slice(5,7));
+  const inCat = (r,name) => r.category_id===catId[name];
+
+  // 카테고리별 활동량 카운트 함수 (status 기준)
+  function countFor(name, month){
+    const rs = records.filter(r=> inCat(r,name) && mOf(r)===month);
+    if(name==='금융')  return rs.filter(r=>['income','expense','save'].includes(r.status)).length;
+    if(name==='피부')  return rs.filter(r=>['review','content'].includes(r.status)).length;
+    if(name==='건강')  return new Set(rs.filter(r=>r.status==='workout').map(r=>(r.recorded_at||'').slice(0,10))).size;
+    if(name==='음악')  return rs.filter(r=>['practice','content'].includes(r.status)).length;
+    if(name==='사업')  return rs.filter(r=>r.status==='learn').length;
+    return rs.length;
+  }
+  // 사업 진행률 = progress 영역 평균 (연도 무관)
+  async function bizProgress(){
+    const { data:pg } = await sb.from('records').select('value,memo,status')
+      .eq('user_id',uid).eq('category_id',catId['사업']).eq('status','progress');
+    const AREAS=['구조 설계','인력 채용','자금·투자','제품·서비스','마케팅·영업','법무·행정','운영·시스템','기타'];
+    const map={}; (pg||[]).forEach(r=> map[r.memo]=Number(r.value)||0);
+    const sum=AREAS.reduce((a,n)=>a+(map[n]||0),0);
+    return Math.round(sum/AREAS.length);
+  }
+
+  const bizPct = catId['사업'] ? await bizProgress() : 0;
+
+  CAT_STATE = [];
+  for(const c of CATS){
+    const cnt = catId[c.name] ? countFor(c.name, MONTH) : 0;
+    const prevCnt = catId[c.name] ? countFor(c.name, MONTH-1) : 0;
+    let pct, prevPct;
+    if(c.name==='사업'){ pct=bizPct; prevPct=bizPct; }   // 진행률은 누적값이라 전월비교 생략
+    else { pct=pctFromCount(cnt,c.base); prevPct=pctFromCount(prevCnt,c.base); }
+    const up = c.name==='사업'? null : (pct>prevPct?true: pct<prevPct?false:null);
+    CAT_STATE.push({ ...c, pct, prevPct, count:cnt, up });
+  }
+
+  renderCats();
+  renderActivities(records, catId);
+  renderSummary();
+  renderFocus();
+  buildChartData(records, catId, countFor, bizPct);
+  buildChart('bar');
+}
 
 /* 카테고리 진행률 렌더 */
-const catList = document.getElementById('catList');
-categories.forEach(c => {
-  const chColor = c.up === true ? 'var(--success)' : c.up === false ? 'var(--error)' : 'var(--text3)';
-  catList.innerHTML += `
-    <div>
-      <div class="cat-info">
-        <div class="cat-name">
-          <div class="cat-dot" style="background:${c.color}"></div>
-          ${c.icon} ${c.name}
+function renderCats(){
+  catList.innerHTML='';
+  CAT_STATE.forEach(c=>{
+    const diff = c.pct - c.prevPct;
+    const chColor = c.up===true?'var(--success)': c.up===false?'var(--error)':'var(--text3)';
+    const chTxt = c.name==='사업'? '진행률' : (diff>0?`+${diff}%`: diff<0?`${diff}%`:'0%');
+    catList.innerHTML += `
+      <div>
+        <div class="cat-info">
+          <div class="cat-name">
+            <div class="cat-dot" style="background:${c.color}"></div>
+            ${c.icon} ${c.name}
+          </div>
+          <div class="cat-right">
+            <span class="cat-change" style="color:${chColor}">${chTxt}</span>
+            <span class="cat-pct" style="color:${c.color}">${c.pct}%</span>
+          </div>
         </div>
-        <div class="cat-right">
-          <span class="cat-change" style="color:${chColor}">${c.change}</span>
-          <span class="cat-pct" style="color:${c.color}">${c.pct}%</span>
+        <div class="progress-track">
+          <div class="progress-fill" style="background:${c.color}" data-target="${c.pct}"></div>
         </div>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill" style="background:${c.color}" data-target="${c.pct}"></div>
-      </div>
-    </div>`;
-});
-setTimeout(() => {
-  document.querySelectorAll('.progress-fill').forEach(el => {
-    el.style.width = el.dataset.target + '%';
+      </div>`;
   });
-}, 300);
+  setTimeout(()=>{ document.querySelectorAll('.progress-fill').forEach(el=>{ el.style.width=el.dataset.target+'%'; }); },300);
+}
 
-/* ── 최근 활동 샘플 ── */
-const activities = [
-  { icon:'💪', bg:'rgba(245,166,35,0.12)',  cat:'건강', title:'운동 횟수 기록',    value:'3회',    date:'오늘',   status:'완료',   cls:'tag-done' },
-  { icon:'💰', bg:'rgba(78,203,141,0.12)',   cat:'금융', title:'저축액 업데이트',  value:'120만원', date:'어제',   status:'진행 중',cls:'tag-ongoing' },
-  { icon:'💼', bg:'rgba(79,142,247,0.12)',   cat:'사업', title:'아이디어 메모',    value:'3건',    date:'2일 전', status:'완료',   cls:'tag-done' },
-  { icon:'📚', bg:'rgba(240,106,106,0.12)',  cat:'공부', title:'강의 수강',        value:'1개',    date:'3일 전', status:'진행 중',cls:'tag-ongoing' },
-  { icon:'✨', bg:'rgba(201,126,247,0.12)',  cat:'피부', title:'관리 루틴 수행',   value:'완료',   date:'4일 전', status:'완료',   cls:'tag-done' },
-  { icon:'🎵', bg:'rgba(240,106,154,0.12)', cat:'음악', title:'연습 시간 기록',   value:'1.5시간', date:'5일 전', status:'완료',   cls:'tag-done' },
-];
-const actList = document.getElementById('activityList');
-activities.forEach(a => {
-  actList.innerHTML += `
-    <div class="activity-item">
-      <div class="act-dot" style="background:${a.bg}">${a.icon}</div>
-      <div class="act-body">
-        <div class="act-title">${a.title}</div>
-        <div class="act-meta">${a.cat}</div>
-      </div>
-      <span class="status-tag ${a.cls}">${a.status}</span>
-      <div class="act-value">${a.value}</div>
-      <div class="act-date">${a.date}</div>
-    </div>`;
-});
+/* 최근 활동: 모든 카테고리 records를 최신순 6개 */
+function renderActivities(records, catId){
+  const idCat={}; Object.keys(catId).forEach(n=> idCat[catId[n]]=n);
+  const meta={
+    '금융':{icon:'💰',bg:'rgba(78,203,141,0.12)'}, '피부':{icon:'✨',bg:'rgba(201,126,247,0.12)'},
+    '건강':{icon:'💪',bg:'rgba(245,166,35,0.12)'}, '음악':{icon:'🎵',bg:'rgba(240,106,154,0.12)'},
+    '사업':{icon:'💼',bg:'rgba(79,142,247,0.12)'},
+  };
+  const label={ income:'수입 기록',expense:'지출 기록',save:'저축 기록',review:'리뷰 작성',
+    content:'콘텐츠 업로드',channel:'채널 수치',workout:'운동 기록',inbody:'인바디 측정',
+    practice:'악기 연습',learn:'배움 기록',progress:'진행률 설정' };
+  const sorted=[...records].filter(r=>r.status!=='progress')
+    .sort((a,b)=>{ const da=(a.recorded_at||'')+(a.created_at||''), db=(b.recorded_at||'')+(b.created_at||''); return da<db?1:-1; })
+    .slice(0,6);
+  actList.innerHTML='';
+  if(!sorted.length){ actList.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px;">아직 기록이 없습니다. 카테고리에서 기록을 남겨보세요.</div>'; return; }
+  const today=new Date().toISOString().slice(0,10);
+  sorted.forEach(r=>{
+    const cat=idCat[r.category_id]||'기타'; const m=meta[cat]||{icon:'•',bg:'rgba(255,255,255,0.08)'};
+    const d=(r.recorded_at||'').slice(0,10);
+    const dateTxt= d===today?'오늘': d.slice(5).replace('-','.');
+    actList.innerHTML += `
+      <div class="activity-item">
+        <div class="act-dot" style="background:${m.bg}">${m.icon}</div>
+        <div class="act-body">
+          <div class="act-title">${label[r.status]||r.status}</div>
+          <div class="act-meta">${cat}</div>
+        </div>
+        <div class="act-date" style="margin-left:auto">${dateTxt}</div>
+      </div>`;
+  });
+}
 
-/* ── 차트 ── */
-const months = (() => {
-  const result = [];
-  for (let i = 2; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    result.push(`${d.getMonth()+1}월`);
-  }
-  return result;
-})();
+/* 요약 카드 4개 */
+function renderSummary(){
+  const avg=Math.round(CAT_STATE.reduce((s,c)=>s+c.pct,0)/CAT_STATE.length);
+  document.getElementById('sc1Value').textContent=avg+'%';
+  const prevAvg=Math.round(CAT_STATE.reduce((s,c)=>s+c.prevPct,0)/CAT_STATE.length);
+  const d1=avg-prevAvg; const b1=document.getElementById('sc1Badge');
+  b1.textContent=(d1>=0?'▲ +':'▼ ')+d1+'%'; b1.className='sc-badge '+(d1>=0?'badge-up':'badge-dn');
+  document.getElementById('sc1Sub').textContent=`전월 ${prevAvg}% → 이번 달 ${avg}%`;
 
-const chartDatasets = categories.map(c => ({
-  label: c.name,
-  data: [
-    Math.max(10, c.pct - 15 + Math.floor(Math.random()*8)),
-    Math.max(10, c.pct - 7  + Math.floor(Math.random()*6)),
-    c.pct
-  ],
-  backgroundColor: c.color + 'aa',
-  borderColor: c.color,
-  borderWidth: 2,
-  borderRadius: 5,
-  tension: 0.4,
-  pointBackgroundColor: c.color,
-  pointRadius: 4,
-  pointHoverRadius: 6,
-}));
+  const totalCnt=CAT_STATE.reduce((s,c)=>s+c.count,0);
+  document.getElementById('sc2Value').textContent=totalCnt;
+  document.getElementById('sc2Badge').textContent='이번 달';
+  document.getElementById('sc2Badge').className='sc-badge badge-up';
+
+  const sorted=[...CAT_STATE].sort((a,b)=>b.pct-a.pct);
+  const top=sorted[0], low=sorted[sorted.length-1];
+  document.getElementById('sc3Value').textContent=top.pct>0?top.name:'—';
+  document.getElementById('sc3Badge').textContent=top.pct+'%';
+  document.getElementById('sc4Value').textContent=low.name;
+  document.getElementById('sc4Badge').textContent=low.pct+'%';
+  document.getElementById('sc4Badge').className='sc-badge badge-dn';
+}
+
+/* 집중 영역 카드 */
+function renderFocus(){
+  const grid=document.getElementById('focusGrid');
+  const sorted=[...CAT_STATE].sort((a,b)=>a.pct-b.pct);
+  const cards=[];
+  sorted.forEach(c=>{
+    let cls,txt;
+    if(c.pct<40){ cls='warn'; txt=`<strong>${c.name}</strong> 카테고리 활동이 적어요. 이번 달 ${c.pct}% 수준입니다.`; }
+    else if(c.pct>=70){ cls='good'; txt=`<strong>${c.name}</strong> 카테고리가 잘 진행되고 있어요. (${c.pct}%)`; }
+    else { cls='info'; txt=`<strong>${c.name}</strong> 카테고리는 꾸준히 유지 중이에요. (${c.pct}%)`; }
+    cards.push(`<div class="focus-card ${cls}"><div class="focus-icon">${c.icon}</div><div class="focus-text">${txt}</div></div>`);
+  });
+  grid.innerHTML=cards.join('');
+}
+
+/* 차트: 최근 3개월 카테고리별 진행률 */
+function buildChartData(records, catId, countFor, bizPct){
+  monthsLabels=[];
+  const monthNums=[];
+  for(let i=2;i>=0;i--){ const mm=MONTH-i; monthsLabels.push(`${((mm-1+12)%12)+1}월`); monthNums.push(mm); }
+  chartDatasets = CATS.map(c=>{
+    const data = monthNums.map(mn=>{
+      if(mn<1) return 0;
+      if(c.name==='사업') return bizPct;
+      return pctFromCount(catId[c.name]?countFor(c.name,mn):0, c.base);
+    });
+    return { label:c.name, data,
+      backgroundColor:c.color+'aa', borderColor:c.color, borderWidth:2, borderRadius:5,
+      tension:0.4, pointBackgroundColor:c.color, pointRadius:4, pointHoverRadius:6 };
+  });
+}
+
+const months = null; // (구버전 참조 방지)
 
 let myChart;
 function buildChart(type) {
@@ -615,7 +698,7 @@ function buildChart(type) {
   const ctx = document.getElementById('mainChart').getContext('2d');
   myChart = new Chart(ctx, {
     type,
-    data: { labels: months, datasets: chartDatasets },
+    data: { labels: monthsLabels, datasets: chartDatasets },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
@@ -648,7 +731,7 @@ function switchChart(type, btn) {
   buildChart(type);
 }
 
-buildChart('bar');
+loadDashboard();
 </script>
 </body>
 </html>
