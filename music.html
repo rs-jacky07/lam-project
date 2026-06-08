@@ -98,6 +98,24 @@
     .inst-rank .r { font-size:11px; color:var(--text2); }
     .inst-rank .r b { color:var(--text); font-weight:700; }
     .inst-rank .r .medal { margin-right:3px; }
+    /* 분포 진행바 (악기 분포) */
+    .sc-dist { display:flex; flex-direction:column; gap:4px; margin-top:8px; }
+    .sc-dist-row { display:flex; align-items:center; gap:6px; font-size:11px; }
+    .sc-dist-label { color:var(--text2); min-width:54px; font-weight:600; white-space:nowrap; }
+    .sc-dist-bar-wrap { flex:1; height:4px; background:rgba(255,255,255,0.07); border-radius:100px; overflow:hidden; }
+    .sc-dist-bar { height:100%; border-radius:100px; transition:width 0.8s ease; }
+    .sc-dist-val { color:var(--text3); min-width:24px; text-align:right; }
+    /* 평균 대비 배지 */
+    .sc-delta { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700;
+      margin-top:8px; padding:3px 9px; border-radius:100px; }
+    .sc-delta.up   { color:var(--success); background:rgba(86,217,154,0.15); }
+    .sc-delta.dn   { color:var(--error);   background:rgba(255,122,122,0.15); }
+    .sc-delta.flat { color:var(--text3);   background:rgba(255,255,255,0.06); }
+    /* 보완 필요 카드 */
+    .suggest-list { display:flex; flex-direction:column; gap:7px; margin-top:4px; }
+    .suggest-item { font-size:12px; color:var(--text2); line-height:1.5; }
+    .suggest-item strong { color:var(--warning); }
+    .suggest-none { font-size:12px; color:var(--success); font-weight:600; line-height:1.5; }
 
     /* 툴바 */
     .toolbar { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
@@ -294,29 +312,35 @@
       <!-- 요약 -->
       <div class="section-title fade-up">📊 이번 달 요약 <span class="tag">· 악기 연습 & 콘텐츠 업로드</span></div>
       <div class="summary-grid fade-up">
+        <!-- 카드1: 연습 (월평균 대비 + 악기 분포바) -->
         <div class="summary-card" style="--card-accent:var(--accent)">
           <div class="sc-top"><span class="sc-icon">🎸</span></div>
           <div class="sc-value cnt" id="practiceCount">0회</div>
           <div class="sc-label">이번 달 연습</div>
-          <div class="inst-rank" id="instRank"></div>
+          <div class="sc-delta flat" id="practiceDelta">월평균 — 회</div>
+          <div class="sc-dist" id="instDist"></div>
         </div>
-        <div class="summary-card" style="--card-accent:var(--teal)">
-          <div class="sc-top"><span class="sc-icon">⏱️</span></div>
-          <div class="sc-value time" id="totalTime">0분</div>
-          <div class="sc-label">총 연습 시간</div>
-          <div class="sc-sub" id="avgTime">평균 — / 회</div>
-        </div>
-        <div class="summary-card" style="--card-accent:var(--gold)">
-          <div class="sc-top"><span class="sc-icon">⭐</span></div>
-          <div class="sc-value star" id="avgStar">—</div>
-          <div class="sc-label">평균 만족도</div>
-          <div class="sc-sub">이번 달 연습 기준</div>
-        </div>
+        <!-- 카드2: 콘텐츠 (월평균 대비) -->
         <div class="summary-card" style="--card-accent:var(--pink)">
           <div class="sc-top"><span class="sc-icon">🎬</span></div>
           <div class="sc-value upload" id="contentCount">0개</div>
           <div class="sc-label">이번 달 콘텐츠 업로드</div>
-          <div class="sc-sub" id="contentSplit">인스타 0 · 유튜브 0</div>
+          <div class="sc-delta flat" id="contentDelta">월평균 — 개</div>
+          <div class="sc-sub" id="contentSplit" style="margin-top:6px;">인스타 0 · 유튜브 0</div>
+        </div>
+        <!-- 카드3: 만족도 (전체 평균 대비) -->
+        <div class="summary-card" style="--card-accent:var(--gold)">
+          <div class="sc-top"><span class="sc-icon">⭐</span></div>
+          <div class="sc-value star" id="avgStar">—</div>
+          <div class="sc-label">이번 달 평균 만족도</div>
+          <div class="sc-delta flat" id="starDelta">전체 평균 —</div>
+          <div class="sc-sub" id="totalTimeSub" style="margin-top:6px;">총 0분 · 회당 —</div>
+        </div>
+        <!-- 카드4: 보완 필요 -->
+        <div class="summary-card" style="--card-accent:var(--warning)">
+          <div class="sc-top"><span class="sc-icon">💡</span></div>
+          <div class="sc-value" style="font-size:15px; color:var(--warning); margin-bottom:8px;">이번 달 보완 필요</div>
+          <div class="suggest-list" id="suggestList"></div>
         </div>
       </div>
 
@@ -578,28 +602,82 @@ function part(memo,i){ return (memo||'').split('|')[i]||''; }
 
 function renderAll(){ renderSummary(); renderBoard(); }
 
+/* 월평균 계산: 데이터가 있는 월들의 평균 */
+function monthlyAvg(filterFn){
+  const byMonth={};
+  yearRecords.filter(filterFn).forEach(r=>{ const m=monthOf(r); byMonth[m]=(byMonth[m]||0)+1; });
+  const months=Object.keys(byMonth);
+  if(!months.length) return null;
+  const total=months.reduce((s,m)=>s+byMonth[m],0);
+  return total/months.length;
+}
+
+const COLORS={'일렉기타':'var(--error)','베이스':'var(--purple)','드럼':'var(--orange)','피아노':'var(--accent2)','보컬':'var(--pink)','기타':'var(--text2)'};
+
 function renderSummary(){
   const prs=yearRecords.filter(r=>r.status==='practice' && monthOf(r)===selMonth);
+  const conts=yearRecords.filter(r=>r.status==='content' && monthOf(r)===selMonth);
+
+  // ── 카드1: 연습 횟수 + 월평균 대비 + 악기 분포바 ──
   $('practiceCount').textContent=prs.length+'회';
-  // 총 연습시간
-  const totMin=prs.reduce((s,r)=>s+(Number(part(r.memo,1))||0),0);
-  $('totalTime').textContent=fmtMin(totMin);
-  $('avgTime').textContent= prs.length? `평균 ${Math.round(totMin/prs.length)}분 / 회` : '평균 — / 회';
-  // 평균 만족도
-  $('avgStar').textContent= prs.length? '★ '+(prs.reduce((s,r)=>s+Number(r.value),0)/prs.length).toFixed(1) : '—';
-  // 악기 TOP3
+  const prAvg=monthlyAvg(r=>r.status==='practice');
+  const pd=$('practiceDelta');
+  if(prAvg!=null){
+    const diff=prs.length-prAvg;
+    pd.className='sc-delta '+(diff>=0?'up':'dn');
+    pd.textContent=`월평균 ${prAvg.toFixed(1)}회 대비 ${diff>=0?'+':''}${diff.toFixed(1)}`;
+  } else { pd.className='sc-delta flat'; pd.textContent='월평균 집계 중'; }
+  // 악기 분포바
   const cnt={}; INSTS.forEach(i=>cnt[i]=0);
   prs.forEach(r=>{ (part(r.memo,0)||'').split(',').filter(Boolean).forEach(i=>{ if(cnt[i]!=null) cnt[i]++; }); });
-  const top=INSTS.filter(i=>cnt[i]>0).sort((a,b)=>cnt[b]-cnt[a]).slice(0,3);
-  $('instRank').innerHTML= top.length
-    ? top.map((i,k)=>`<span class="r"><span class="medal">${MEDALS[k]}</span><b>${i}</b> ${cnt[i]}회</span>`).join('')
-    : '<span class="r" style="color:var(--text3)">연습 기록 없음</span>';
-  // 콘텐츠
-  const conts=yearRecords.filter(r=>r.status==='content' && monthOf(r)===selMonth);
+  const used=INSTS.filter(i=>cnt[i]>0).sort((a,b)=>cnt[b]-cnt[a]);
+  const maxC=Math.max(1,...used.map(i=>cnt[i]));
+  $('instDist').innerHTML= used.length
+    ? used.slice(0,3).map(i=>`<div class="sc-dist-row">
+        <span class="sc-dist-label">${i}</span>
+        <span class="sc-dist-bar-wrap"><span class="sc-dist-bar" style="width:${cnt[i]/maxC*100}%;background:${COLORS[i]||'var(--accent)'}"></span></span>
+        <span class="sc-dist-val">${cnt[i]}</span></div>`).join('')
+    : '<div class="sc-dist-row" style="color:var(--text3)">연습 기록 없음</div>';
+
+  // ── 카드2: 콘텐츠 + 월평균 대비 ──
   $('contentCount').textContent=conts.length+'개';
+  const ctAvg=monthlyAvg(r=>r.status==='content');
+  const cd=$('contentDelta');
+  if(ctAvg!=null){
+    const diff=conts.length-ctAvg;
+    cd.className='sc-delta '+(diff>=0?'up':'dn');
+    cd.textContent=`월평균 ${ctAvg.toFixed(1)}개 대비 ${diff>=0?'+':''}${diff.toFixed(1)}`;
+  } else { cd.className='sc-delta flat'; cd.textContent='월평균 집계 중'; }
   const ig=conts.filter(r=>midName(r.metric_id)==='instagram').length;
   const yt=conts.filter(r=>midName(r.metric_id)==='youtube').length;
   $('contentSplit').textContent=`인스타 ${ig} · 유튜브 ${yt}`;
+
+  // ── 카드3: 평균 만족도 + 전체 평균 대비 + 총 연습시간 ──
+  const monthAvgStar= prs.length? prs.reduce((s,r)=>s+Number(r.value),0)/prs.length : null;
+  $('avgStar').textContent= monthAvgStar!=null? '★ '+monthAvgStar.toFixed(1) : '—';
+  const allPr=yearRecords.filter(r=>r.status==='practice');
+  const sd=$('starDelta');
+  if(allPr.length && monthAvgStar!=null){
+    const allAvg=allPr.reduce((s,r)=>s+Number(r.value),0)/allPr.length;
+    const d=+(monthAvgStar-allAvg).toFixed(1);
+    sd.className='sc-delta '+(d>=0?'up':'dn');
+    sd.textContent=`전체 평균 ★${allAvg.toFixed(1)} (${d>=0?'+':''}${d})`;
+  } else { sd.className='sc-delta flat'; sd.textContent='연습 없음'; }
+  const totMin=prs.reduce((s,r)=>s+(Number(part(r.memo,1))||0),0);
+  $('totalTimeSub').textContent= prs.length? `총 ${fmtMin(totMin)} · 회당 ${Math.round(totMin/prs.length)}분` : '총 0분 · 회당 —';
+
+  // ── 카드4: 보완 필요 ──
+  const items=[];
+  // 안 한 악기 (이번 달)
+  const notUsed=INSTS.filter(i=>!cnt[i] && i!=='기타');
+  if(notUsed.length) items.push(`<div class="suggest-item"><strong>${notUsed.slice(0,3).join(', ')}</strong> 연습이 없어요</div>`);
+  // 콘텐츠 업로드 없음
+  if(!conts.length) items.push(`<div class="suggest-item"><strong>콘텐츠 업로드</strong>가 이번 달 없어요</div>`);
+  // 연습량 적음 (월평균보다 낮음)
+  if(prAvg!=null && prs.length<prAvg) items.push(`<div class="suggest-item">연습량이 <strong>월평균보다 적어요</strong></div>`);
+  // 연습 자체가 없음
+  if(!prs.length) items.length=0, items.push(`<div class="suggest-item"><strong>이번 달 연습 기록</strong>을 시작해보세요</div>`);
+  $('suggestList').innerHTML= items.length? items.join('') : '<div class="suggest-none">✅ 이번 달 균형있게 잘하고 있어요!</div>';
 }
 
 $('searchInput').addEventListener('input', e=>{ searchText=e.target.value.trim().toLowerCase(); renderBoard(); });
