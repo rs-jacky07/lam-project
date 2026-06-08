@@ -143,16 +143,27 @@
     .col-btn.sort { font-size:13px; }
     .col-body { display:flex; flex-direction:column; gap:9px; }
 
-    /* 카드 아이템 */
+    /* 카드 아이템 — 2열 레이아웃 */
     .item { display:flex; align-items:stretch; background:var(--card2); border:1px solid var(--border);
       border-radius:11px; overflow:hidden; transition:border-color 0.16s; }
     .item:hover { border-color:rgba(91,155,255,0.4); }
-    .item-main { flex:1; min-width:0; padding:13px 15px; cursor:pointer; }
-    .item-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-    .item-title { font-size:14px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .item-date { font-size:11px; color:var(--text3); flex-shrink:0; }
-    .badges { display:flex; gap:5px; margin-top:6px; flex-wrap:wrap; }
-    .badge { font-size:10px; font-weight:800; padding:3px 8px; border-radius:100px; letter-spacing:0.02em; }
+    .item-main { flex:1; min-width:0; padding:16px 18px; cursor:pointer;
+      display:grid; grid-template-columns:1.1fr 1fr; gap:4px 18px; align-items:center; }
+    /* 1열: 제품명 + 별점 + 날짜 */
+    .item-left { display:flex; flex-direction:column; gap:8px; min-width:0; }
+    .item-title { font-size:16px; font-weight:800; color:var(--text);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .item-date-row { display:flex; align-items:center; gap:8px; }
+    .item-date { font-size:12px; color:var(--text3); flex-shrink:0; }
+    .item-stars { font-size:17px; color:var(--gold); letter-spacing:2px; }
+    .item-stars .off { color:var(--text3); }
+    .item-memo { font-size:12.5px; color:var(--text2); grid-column:1/-1; margin-top:8px;
+      padding-top:8px; border-top:1px solid var(--border);
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    /* 2열: 배지 그룹 (우측 정렬, 2줄 묶음) */
+    .item-right { display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
+    .badges { display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end; }
+    .badge { font-size:11px; font-weight:800; padding:4px 10px; border-radius:100px; letter-spacing:0.02em; white-space:nowrap; }
     .badge.hwahae   { background:rgba(255,143,199,0.18); color:var(--pink); }
     .badge.glowpick { background:rgba(177,140,255,0.18); color:var(--purple); }
     .badge.buy      { background:rgba(86,217,154,0.16);  color:var(--success); }
@@ -165,12 +176,8 @@
     .badge.skin-sensitive { background:rgba(255,122,122,0.16); color:var(--error); }
     .badge.skin-all     { background:rgba(177,140,255,0.16);  color:var(--purple); }
     .badge.skin-normal  { background:rgba(255,255,255,0.1);   color:var(--text2); }
-    .badge.cat-item { background:rgba(91,155,255,0.12); color:var(--accent2); }
-    .badge.ctype-item { background:rgba(255,193,77,0.12); color:var(--gold); }
-    .item-stars { font-size:13px; color:var(--gold); margin-top:6px; letter-spacing:1px; }
-    .item-stars .off { color:var(--text3); }
-    .item-memo { font-size:12px; color:var(--text2); margin-top:6px;
-      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .badge.cat-item   { background:rgba(91,155,255,0.12);  color:var(--accent2); }
+    .badge.ctype-item { background:rgba(255,193,77,0.12);  color:var(--gold); }
     .item-ops { display:flex; flex-direction:column; border-left:1px solid var(--border); }
     .item-ops button { flex:1; width:48px; border:none; background:transparent; cursor:pointer;
       color:var(--text2); font-size:12px; font-weight:700; font-family:'Pretendard',sans-serif;
@@ -197,11 +204,19 @@
       font-family:'Pretendard',sans-serif; outline:none; transition:border-color 0.16s; resize:vertical; }
     .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--accent); }
     .field select option { background:var(--bg2); }
-    .type-tabs { display:flex; gap:7px; flex-wrap:wrap; }
-    .type-tabs button { flex:1; min-width:80px; padding:11px; border-radius:10px; border:1px solid var(--border);
+    .type-tabs { display:flex; gap:7px; }
+    .type-tabs button { flex:1; padding:11px; border-radius:10px; border:1px solid var(--border);
       background:var(--bg2); color:var(--text2); font-size:14px; cursor:pointer;
       font-family:'Pretendard',sans-serif; transition:all 0.16s; font-weight:700; }
     .type-tabs button.on { background:rgba(91,155,255,0.18); color:var(--accent2); border-color:var(--accent); }
+    /* 피부타입 3x2 균형 그리드 */
+    .skin-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .skin-grid button { padding:12px 4px; border-radius:10px; border:1px solid var(--border);
+      background:var(--bg2); color:var(--text2); font-size:13.5px; cursor:pointer;
+      font-family:'Pretendard',sans-serif; transition:all 0.16s; font-weight:700; text-align:center;
+      white-space:nowrap; }
+    .skin-grid button:hover { border-color:var(--accent); color:var(--text); }
+    .skin-grid button.on { background:rgba(91,155,255,0.18); color:var(--accent2); border-color:var(--accent); }
     .star-input { display:flex; gap:6px; font-size:30px; line-height:1; }
     .star-input span { cursor:pointer; color:var(--text3); transition:color 0.12s,transform 0.12s; }
     .star-input span:hover { transform:scale(1.15); }
@@ -229,6 +244,10 @@
       .toolbar-search { width:100%; }
       .summary-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
       .sc-value { font-size:19px; }
+      /* 카드: 모바일에선 세로 1열, 배지 좌측정렬 */
+      .item-main { grid-template-columns:1fr; gap:10px; }
+      .item-right { align-items:flex-start; }
+      .badges { justify-content:flex-start; }
     }
   </style>
 </head>
@@ -407,7 +426,7 @@
     </div>
     <div class="field">
       <label>적합 피부 타입</label>
-      <div class="type-tabs" id="skinTabs" style="flex-wrap:wrap;">
+      <div class="skin-grid" id="skinTabs">
         <button data-skin="건성" class="on">건성</button>
         <button data-skin="지성">지성</button>
         <button data-skin="수부지">수부지</button>
@@ -444,7 +463,7 @@
     </div>
     <div class="field">
       <label>콘텐츠 유형</label>
-      <div class="type-tabs" id="ctypeTabs" style="flex-wrap:wrap;">
+      <div class="skin-grid" id="ctypeTabs">
         <button data-ctype="단독리뷰" class="on">단독리뷰</button>
         <button data-ctype="비교리뷰">비교리뷰</button>
         <button data-ctype="루틴소개">루틴소개</button>
@@ -455,7 +474,7 @@
     </div>
     <div class="field">
       <label>적합 피부 타입</label>
-      <div class="type-tabs" id="ctSkinTabs" style="flex-wrap:wrap;">
+      <div class="skin-grid" id="ctSkinTabs">
         <button data-ctskin="건성" class="on">건성</button>
         <button data-ctskin="지성">지성</button>
         <button data-ctskin="수부지">수부지</button>
@@ -701,9 +720,15 @@ function reviewCard(r){
   const catBadge=cat?`<span class="badge cat-item">${cat}</span>`:'';
   return `<div class="item">
     <div class="item-main" onclick='editReview(${rj})'>
-      <div class="item-top"><span class="item-title">${prod||'(제품명 없음)'}</span><span class="item-date">${d}</span></div>
-      <div class="badges">${platBadge}${buyBadge}${skinBadge}${catBadge}</div>
-      <div class="item-stars">${stars(Number(r.value))}</div>
+      <div class="item-left">
+        <span class="item-title">${prod||'(제품명 없음)'}</span>
+        <div class="item-stars">${stars(Number(r.value))}</div>
+        <div class="item-date-row"><span class="item-date">${d}</span></div>
+      </div>
+      <div class="item-right">
+        <div class="badges">${platBadge}${buyBadge}</div>
+        <div class="badges">${catBadge}${skinBadge}</div>
+      </div>
       ${note?`<div class="item-memo">${note}</div>`:''}
     </div>
     <div class="item-ops">
@@ -723,8 +748,14 @@ function contentCard(r){
   const ctypeBadge=ctype?`<span class="badge ctype-item">${ctype}</span>`:'';
   return `<div class="item">
     <div class="item-main" onclick='editContent(${rj})'>
-      <div class="item-top"><span class="item-title">${title||'(제목 없음)'}</span><span class="item-date">${d}</span></div>
-      <div class="badges">${chBadge}${ctypeBadge}${skinBadge}</div>
+      <div class="item-left">
+        <span class="item-title">${title||'(제목 없음)'}</span>
+        <div class="item-date-row"><span class="item-date">${d}</span></div>
+      </div>
+      <div class="item-right">
+        <div class="badges">${chBadge}${ctypeBadge}</div>
+        <div class="badges">${skinBadge}</div>
+      </div>
       ${note?`<div class="item-memo">${note}</div>`:''}
     </div>
     <div class="item-ops">
