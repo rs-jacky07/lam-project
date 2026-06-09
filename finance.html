@@ -81,25 +81,25 @@
     .cmp-row { display:grid; grid-template-columns:130px 1fr 1fr 1fr; align-items:stretch; }
     .cmp-row + .cmp-row { border-top:1px solid var(--border); }
     .cmp-row.head { background:rgba(255,255,255,0.04); }
-    .cmp-row.data { min-height:150px; }   /* 두 데이터 행 높이 동일 고정 */
-    .cmp-label { display:flex; flex-direction:column; justify-content:center; gap:3px;
-      padding:16px 20px; border-right:1px solid var(--border); }
+    .cmp-row.data { min-height:92px; }   /* 두 데이터 행 높이 동일 고정 (압축) */
+    .cmp-label { display:flex; flex-direction:column; justify-content:center; gap:2px;
+      padding:12px 18px; border-right:1px solid var(--border); }
     .cmp-label .t { font-size:15px; font-weight:800; color:var(--text); }
     .cmp-label .s { font-size:11px; color:var(--text3); }
-    .cmp-cell { padding:16px 20px; border-right:1px solid var(--border); text-align:right;
+    .cmp-cell { padding:12px 18px; border-right:1px solid var(--border); text-align:right;
       display:flex; flex-direction:column; justify-content:center; align-items:flex-end; }
     .cmp-cell:last-child { border-right:none; }
-    .cmp-cell .ct { font-size:12px; color:var(--text2); margin-bottom:5px; font-weight:600; letter-spacing:0.03em; }
+    .cmp-cell .ct { font-size:11px; color:var(--text2); margin-bottom:3px; font-weight:600; letter-spacing:0.03em; }
     .cmp-head-cell { display:flex; align-items:center; justify-content:flex-end; gap:7px; }
     .cmp-head-cell .dot { width:9px; height:9px; border-radius:50%; }
     .cmp-head-cell .ht { font-size:13px; font-weight:700; }
-    .cmp-cell .cv { font-size:21px; font-weight:800; letter-spacing:-0.02em; }
+    .cmp-cell .cv { font-size:19px; font-weight:800; letter-spacing:-0.02em; }
     .cmp-cell.income .cv { color:var(--success); }
     .cmp-cell.expense .cv { color:var(--error); }
     .cmp-cell.save .cv { color:var(--gold); }
-    .cmp-cell .delta { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700;
-      margin-top:6px; padding:3px 9px; border-radius:100px; }
-    .cmp-bar { width:100%; height:7px; margin-top:9px; background:rgba(255,255,255,0.07);
+    .cmp-cell .delta { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700;
+      margin-top:5px; padding:2px 8px; border-radius:100px; }
+    .cmp-bar { width:100%; height:6px; margin-top:7px; background:rgba(255,255,255,0.07);
       border-radius:100px; overflow:hidden; }
     .cmp-bar i { display:block; height:100%; width:0; border-radius:100px;
       transition:width 0.9s cubic-bezier(0.4,0,0.2,1); }
