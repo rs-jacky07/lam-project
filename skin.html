@@ -6,6 +6,7 @@
   <title>LAM — 피부</title>
   <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     :root {
@@ -210,6 +211,8 @@
       border-radius:10px; padding:12px 14px; color:var(--text); font-size:15px;
       font-family:'Pretendard',sans-serif; outline:none; transition:border-color 0.16s; resize:vertical; }
     .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--accent); }
+    .field input[type=date] { cursor:pointer; }
+    .field input[type=date]::-webkit-calendar-picker-indicator { filter:invert(0.7) brightness(1.4); cursor:pointer; opacity:0.9; }
     .field select option { background:var(--bg2); }
     .type-tabs { display:flex; gap:7px; }
     .type-tabs button { flex:1; padding:11px; border-radius:10px; border:1px solid var(--border);
@@ -241,6 +244,24 @@
       font-weight:700; opacity:0; pointer-events:none; transition:all 0.28s; z-index:300; }
     .toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
     .fade-up { opacity:0; transform:translateY(14px); animation:fadeUp 0.5s ease forwards; }
+    /* ── 채널 현황 + 주차별 그래프 ── */
+    .channel-panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      padding:18px 20px; display:grid; grid-template-columns:240px 1fr; gap:22px; align-items:stretch; }
+    .ch-side { display:flex; flex-direction:column; gap:12px; }
+    .ch-head { display:flex; align-items:center; justify-content:space-between; }
+    .ch-head .t { font-size:15px; font-weight:800; }
+    .ch-rec-btn { font-size:12px; font-weight:700; padding:7px 12px; border-radius:9px; border:none;
+      background:linear-gradient(135deg,var(--accent),#82b4ff); color:#fff; cursor:pointer; transition:box-shadow 0.2s; }
+    .ch-rec-btn:hover { box-shadow:0 4px 16px rgba(91,155,255,0.45); }
+    .ch-stat { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px; }
+    .ch-stat .lab { font-size:12px; font-weight:700; color:var(--text2); display:flex; align-items:center; gap:6px; }
+    .ch-stat .num { font-size:24px; font-weight:800; letter-spacing:-0.02em; margin-top:6px; }
+    .ch-stat.ig .num { color:#ff8fb6; } .ch-stat.yt .num { color:#ff9a9a; }
+    .ch-stat .chg { font-size:11px; font-weight:700; margin-top:5px; display:inline-block; }
+    .ch-stat .chg.up { color:var(--success); } .ch-stat .chg.dn { color:var(--error); } .ch-stat .chg.flat { color:var(--text3); }
+    .ch-chart-wrap { position:relative; min-height:220px; }
+    .ch-chart-empty { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      color:var(--text3); font-size:13px; text-align:center; line-height:1.6; }
     @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
 
     @media (max-width:900px) { .board { grid-template-columns:1fr; } .summary-grid { grid-template-columns:repeat(2,1fr); } }
@@ -250,6 +271,7 @@
       .content { padding:18px 14px 80px; }
       .toolbar-search { width:100%; }
       .summary-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
+      .channel-panel { grid-template-columns:1fr; }
       .sc-value { font-size:19px; }
       /* 카드: 모바일에선 세로 1열, 배지 좌측정렬 */
       .item-main { grid-template-columns:1fr; gap:10px; }
@@ -363,6 +385,30 @@
           <div class="suggest-list" id="sc-suggest"></div>
         </div>
 
+      </div>
+
+      <!-- 채널 현황 + 주차별 그래프 -->
+      <div class="channel-panel fade-up" style="animation-delay:0.09s">
+        <div class="ch-side">
+          <div class="ch-head">
+            <span class="t">📈 채널 추이</span>
+            <button class="ch-rec-btn" onclick="openChannel()">주간 기록</button>
+          </div>
+          <div class="ch-stat ig">
+            <div class="lab">📷 인스타 팔로워</div>
+            <div class="num" id="igNum">—</div>
+            <span class="chg flat" id="igChg">기록 없음</span>
+          </div>
+          <div class="ch-stat yt">
+            <div class="lab">▶️ 유튜브 구독자</div>
+            <div class="num" id="ytNum">—</div>
+            <span class="chg flat" id="ytChg">기록 없음</span>
+          </div>
+        </div>
+        <div class="ch-chart-wrap">
+          <canvas id="channelChart"></canvas>
+          <div class="ch-chart-empty" id="chartEmpty">주간 기록 버튼으로 팔로워·구독자 수를<br>기록하면 추이가 그려집니다.</div>
+        </div>
       </div>
 
       <!-- 툴바 -->
@@ -513,6 +559,28 @@
   </div>
 </div>
 
+<!-- 채널 주간 기록 모달 -->
+<div class="modal-bg" id="channelModal">
+  <div class="modal">
+    <h3>채널 수치 주간 기록</h3>
+    <p style="font-size:13px;color:var(--text2);margin:-12px 0 20px;line-height:1.6;">
+      이번 주 팔로워·구독자 수를 입력하세요. 같은 날짜에 다시 입력하면 갱신됩니다.</p>
+    <div class="field">
+      <label>채널</label>
+      <div class="type-tabs" id="chTabs">
+        <button data-ch="instagram" class="on">📷 인스타</button>
+        <button data-ch="youtube">▶️ 유튜브</button>
+      </div>
+    </div>
+    <div class="field"><label>수치 (명)</label><input id="chNum" type="text" inputmode="numeric" placeholder="예: 1250" /></div>
+    <div class="field"><label>기록 날짜</label><input id="chDate" type="date" /></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeChannel()">취소</button>
+      <button class="btn-save" onclick="saveChannel()">저장</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -565,6 +633,10 @@ let userId=null;
   $('profileAvatar').textContent=name.charAt(0).toUpperCase();
   await ensureMetrics();
   await loadYear();
+  document.querySelectorAll('input[type=date]').forEach(inp=>{
+    inp.addEventListener('click', ()=>{ try{ inp.showPicker(); }catch(e){} });
+    inp.addEventListener('focus', ()=>{ try{ inp.showPicker(); }catch(e){} });
+  });
 })();
 
 async function ensureMetrics(){
@@ -593,7 +665,84 @@ async function loadYear(){
   renderAll();
 }
 
-function renderAll(){ renderSummary(); renderBoard(); }
+function renderAll(){ renderSummary(); renderBoard(); renderChannel(); }
+
+/* ── 채널 수치: 모달 ── */
+let curCh='instagram';
+function setCh(c){ curCh=c; document.querySelectorAll('#chTabs button').forEach(b=>b.classList.toggle('on', b.dataset.ch===c)); }
+document.querySelectorAll('#chTabs button').forEach(b=> b.onclick=()=>setCh(b.dataset.ch));
+function openChannel(){
+  setCh('instagram'); document.getElementById('chNum').value='';
+  document.getElementById('chDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('channelModal').classList.add('on');
+}
+function closeChannel(){ document.getElementById('channelModal').classList.remove('on'); }
+window.openChannel=openChannel; window.closeChannel=closeChannel;
+document.getElementById('channelModal').addEventListener('click',e=>{ if(e.target.id==='channelModal') closeChannel(); });
+document.getElementById('chNum').addEventListener('input',e=>{ e.target.value=e.target.value.replace(/[^0-9]/g,''); });
+async function saveChannel(){
+  const num=Number(document.getElementById('chNum').value.replace(/[^0-9]/g,''))||0;
+  const date=document.getElementById('chDate').value;
+  if(!num){ toast('수치를 입력하세요'); return; }
+  const mid=metricMap[curCh];
+  // 같은 채널+같은 날짜 기록이 있으면 갱신
+  const exist=yearRecords.find(r=>r.status==='channel' && r.metric_id===mid && (r.recorded_at||'').slice(0,10)===date);
+  let err;
+  if(exist){ ({error:err}=await sb.from('records').update({value:num}).eq('id',exist.id)); }
+  else { ({error:err}=await sb.from('records').insert({user_id:userId,metric_id:mid,value:num,memo:'',status:'channel',recorded_at:date})); }
+  if(err){ toast('저장 실패: '+err.message); return; }
+  closeChannel(); toast('저장되었습니다'); await loadYear();
+}
+window.saveChannel=saveChannel;
+
+/* ── 채널 현황 + 주차별 그래프 ── */
+let channelChart=null;
+function chRecs(chName){
+  const mid=metricMap[chName];
+  return yearRecords.filter(r=>r.status==='channel' && r.metric_id===mid)
+    .sort((a,b)=>(a.recorded_at||'')<(b.recorded_at||'')?-1:1); // 오래된→최신
+}
+function fmtNum(n){ return Number(n||0).toLocaleString('ko-KR'); }
+function setChStat(chName, numId, chgId){
+  const recs=chRecs(chName);
+  const numEl=document.getElementById(numId), chgEl=document.getElementById(chgId);
+  if(!recs.length){ numEl.textContent='—'; chgEl.className='chg flat'; chgEl.textContent='기록 없음'; return; }
+  const cur=Number(recs[recs.length-1].value);
+  numEl.textContent=fmtNum(cur);
+  if(recs.length<2){ chgEl.className='chg flat'; chgEl.textContent='첫 기록'; return; }
+  const prev=Number(recs[recs.length-2].value);
+  const diff=cur-prev;
+  chgEl.className='chg '+(diff>0?'up':diff<0?'dn':'flat');
+  chgEl.textContent=(diff>0?'▲ +':diff<0?'▼ ':'')+fmtNum(Math.abs(diff))+'명';
+}
+function renderChannel(){
+  setChStat('instagram','igNum','igChg');
+  setChStat('youtube','ytNum','ytChg');
+  // 그래프: 두 채널의 기록 날짜를 합쳐 라벨로
+  const ig=chRecs('instagram'), yt=chRecs('youtube');
+  const allDates=[...new Set([...ig,...yt].map(r=>(r.recorded_at||'').slice(0,10)))].sort();
+  const emptyEl=document.getElementById('chartEmpty');
+  if(!allDates.length){ if(emptyEl) emptyEl.style.display='flex'; if(channelChart){channelChart.destroy();channelChart=null;} return; }
+  if(emptyEl) emptyEl.style.display='none';
+  const mapVal=(recs)=>{ const m={}; recs.forEach(r=>m[(r.recorded_at||'').slice(0,10)]=Number(r.value)); 
+    // 날짜별 값, 없으면 직전 값 유지(선 끊김 방지) → null로 두면 Chart가 spanGaps 처리
+    return allDates.map(d=> d in m? m[d] : null); };
+  const labels=allDates.map(d=>d.slice(5).replace('-','.'));
+  const data={ labels, datasets:[
+    { label:'인스타 팔로워', data:mapVal(ig), borderColor:'#ff8fb6', backgroundColor:'rgba(255,143,182,0.12)',
+      borderWidth:2, tension:0.35, pointRadius:3, pointBackgroundColor:'#ff8fb6', spanGaps:true, fill:true },
+    { label:'유튜브 구독자', data:mapVal(yt), borderColor:'#ff9a9a', backgroundColor:'rgba(255,154,154,0.10)',
+      borderWidth:2, tension:0.35, pointRadius:3, pointBackgroundColor:'#ff9a9a', spanGaps:true, fill:true },
+  ]};
+  const opts={ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ labels:{ color:'#b8b8d4', font:{size:11}, boxWidth:12, padding:14 } } },
+    scales:{
+      x:{ ticks:{ color:'#7e7ea4', font:{size:10} }, grid:{ color:'rgba(255,255,255,0.05)' } },
+      y:{ ticks:{ color:'#7e7ea4', font:{size:10}, callback:v=>v>=1000?(v/1000)+'k':v }, grid:{ color:'rgba(255,255,255,0.05)' }, beginAtZero:false } }
+  };
+  if(channelChart) channelChart.destroy();
+  channelChart=new Chart(document.getElementById('channelChart'), { type:'line', data, options:opts });
+}
 
 /* ── 요약 카드 ── */
 function renderSummary(){
