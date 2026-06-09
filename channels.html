@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LAM — 채널 추이</title>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#07070f; --bg2:#0d0d1a; --card:#15151f; --card2:#1c1c2b;
+      --border:rgba(255,255,255,0.10);
+      --accent:#5b9bff; --accent2:#9cc6ff;
+      --text:#f4f4fb; --text2:#b8b8d4; --text3:#7e7ea4;
+      --success:#56d99a; --warning:#ffb338; --error:#ff7a7a; --gold:#ffc14d;
+      --pink:#ff8fc7; --purple:#b18cff; --teal:#4fd5d5; --orange:#ff9b5b;
+      --sidebar:232px; --radius:14px;
+    }
+    html, body { height:100%; font-family:'Pretendard',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; font-size:15px; }
+    .app { display:flex; height:100vh; overflow:hidden; }
+
+    .sidebar { width:var(--sidebar); min-width:var(--sidebar); background:var(--bg2);
+      border-right:1px solid var(--border); display:flex; flex-direction:column;
+      padding:24px 0 0; overflow-y:auto; overflow-x:hidden; z-index:100; }
+    .sidebar::-webkit-scrollbar { width:0; }
+    .sidebar-logo { padding:0 20px 22px; border-bottom:1px solid var(--border); margin-bottom:18px; }
+    .logo-lam { font-size:20px; font-weight:800; letter-spacing:0.06em;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .logo-full { font-size:11px; color:var(--text3); letter-spacing:0.05em; margin-top:3px; }
+    .sidebar-section { padding:0 10px; margin-bottom:6px; }
+    .sidebar-label { font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+      color:var(--text3); padding:0 8px; margin-bottom:6px; }
+    .nav-item { display:flex; align-items:center; gap:9px; padding:10px 11px; border-radius:10px;
+      font-size:14px; font-weight:600; color:var(--text2); cursor:pointer; text-decoration:none;
+      transition:background 0.16s,color 0.16s; margin-bottom:2px; }
+    .nav-item:hover { background:rgba(255,255,255,0.07); color:var(--text); }
+    .nav-item.active { background:rgba(91,155,255,0.18); color:var(--accent2); font-weight:700; }
+    .nav-icon { font-size:15px; width:20px; text-align:center; flex-shrink:0; }
+    .sidebar-bottom { margin-top:auto; padding:14px 10px 20px; border-top:1px solid var(--border); }
+    .profile-card { display:flex; align-items:center; gap:9px; padding:10px 11px; border-radius:10px;
+      background:rgba(255,255,255,0.05); border:1px solid var(--border); margin-bottom:8px; }
+    .profile-avatar { width:32px; height:32px; border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0; }
+    .profile-name { font-size:14px; font-weight:700; color:var(--text); }
+    .profile-email { font-size:11px; color:var(--text3); margin-top:1px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; }
+    .btn-logout { width:100%; padding:9px; border-radius:8px; background:transparent;
+      border:1px solid var(--border); color:var(--text2); font-family:'Pretendard',sans-serif;
+      font-size:13px; font-weight:600; cursor:pointer; transition:all 0.16s; }
+    .btn-logout:hover { background:rgba(255,122,122,0.12); color:var(--error); border-color:rgba(255,122,122,0.35); }
+
+    .main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 28px;
+      border-bottom:1px solid var(--border); background:var(--bg); flex-shrink:0; }
+    .topbar-left h1 { font-size:20px; font-weight:800; letter-spacing:-0.01em; }
+    .topbar-left p { font-size:13px; color:var(--text2); margin-top:3px; }
+    .topbar-right { display:flex; align-items:center; gap:10px; }
+    .btn-record { display:flex; align-items:center; gap:7px; padding:10px 18px; border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),#82b4ff); border:none; color:#fff;
+      font-family:'Pretendard',sans-serif; font-size:14px; font-weight:700; cursor:pointer;
+      transition:box-shadow 0.2s,scale 0.15s; }
+    .btn-record:hover { box-shadow:0 6px 22px rgba(91,155,255,0.5); scale:1.02; }
+    .btn-record:active { scale:0.98; }
+    .btn-ghost { padding:10px 16px; border-radius:10px; background:var(--card); border:1px solid var(--border);
+      color:var(--text2); font-family:'Pretendard',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:all 0.16s; }
+    .btn-ghost:hover { border-color:var(--accent); color:var(--accent2); }
+    .content { flex:1; overflow-y:auto; overflow-x:hidden; padding:24px 28px 48px;
+      display:flex; flex-direction:column; gap:18px; }
+    .content::-webkit-scrollbar { width:5px; }
+    .content::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+
+    .section-title { font-size:15px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .section-title .tag { font-size:11px; font-weight:700; color:var(--text3); }
+
+    /* 채널 카드 그리드 */
+    .ch-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; }
+    .ch-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      padding:18px; display:flex; flex-direction:column; gap:14px; transition:border-color 0.2s, transform 0.2s; position:relative; overflow:hidden; }
+    .ch-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--ch-c,var(--accent)); opacity:0.85; }
+    .ch-card:hover { border-color:rgba(255,255,255,0.16); transform:translateY(-2px); }
+    .ch-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+    .ch-id { display:flex; align-items:center; gap:10px; min-width:0; }
+    .ch-icon { width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center;
+      font-size:20px; flex-shrink:0; background:var(--ch-bg,rgba(91,155,255,0.15)); }
+    .ch-meta { min-width:0; }
+    .ch-name { font-size:16px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ch-type { font-size:12px; color:var(--text3); font-weight:600; margin-top:1px; }
+    .ch-ops { display:flex; gap:4px; flex-shrink:0; }
+    .ch-ops button { width:28px; height:28px; border-radius:8px; border:1px solid var(--border); background:var(--bg2);
+      color:var(--text2); cursor:pointer; font-size:12px; font-family:'Pretendard',sans-serif; transition:all 0.14s; }
+    .ch-ops button:hover { border-color:var(--accent); color:var(--accent2); }
+    .ch-ops button.del:hover { border-color:rgba(255,122,122,0.4); color:var(--error); }
+    .ch-current { display:flex; align-items:baseline; gap:10px; }
+    .ch-num { font-size:30px; font-weight:800; letter-spacing:-0.02em; color:var(--ch-c,var(--accent2)); }
+    .ch-chg { font-size:12px; font-weight:700; padding:3px 9px; border-radius:100px; }
+    .ch-chg.up { color:var(--success); background:rgba(86,217,154,0.15); }
+    .ch-chg.dn { color:var(--error); background:rgba(255,122,122,0.15); }
+    .ch-chg.flat { color:var(--text3); background:rgba(255,255,255,0.06); }
+    .ch-chart-box { height:120px; position:relative; }
+    .ch-chart-empty { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      color:var(--text3); font-size:12px; text-align:center; line-height:1.5; }
+    .ch-foot { display:flex; gap:8px; }
+    .ch-add-rec { flex:1; padding:9px; border-radius:9px; border:1px solid var(--border); background:var(--bg2);
+      color:var(--text2); font-family:'Pretendard',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.16s; }
+    .ch-add-rec:hover { border-color:var(--accent); color:var(--accent2); background:rgba(91,155,255,0.08); }
+    .ch-last { font-size:11px; color:var(--text3); align-self:center; }
+
+    .empty-state { background:var(--card); border:1px dashed var(--border); border-radius:var(--radius);
+      padding:48px 24px; text-align:center; }
+    .empty-state .ic { font-size:38px; margin-bottom:12px; }
+    .empty-state .t { font-size:16px; font-weight:800; margin-bottom:6px; }
+    .empty-state .d { font-size:13px; color:var(--text2); margin-bottom:20px; line-height:1.6; }
+
+    /* MODAL */
+    .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.66); backdrop-filter:blur(4px);
+      display:none; align-items:center; justify-content:center; z-index:200; opacity:0; transition:opacity 0.22s; }
+    .modal-bg.on { display:flex; opacity:1; }
+    .modal { background:var(--card); border:1px solid var(--border); border-radius:18px;
+      padding:28px; width:460px; max-width:92vw; transform:scale(0.96); transition:transform 0.22s; max-height:90vh; overflow-y:auto; }
+    .modal-bg.on .modal { transform:scale(1); }
+    .modal h3 { font-size:19px; font-weight:800; margin-bottom:22px; }
+    .field { margin-bottom:16px; }
+    .field label { display:block; font-size:13px; color:var(--text2); margin-bottom:8px; font-weight:700; }
+    .field input, .field select, .field textarea { width:100%; background:var(--bg2); border:1px solid var(--border);
+      border-radius:10px; padding:12px 14px; color:var(--text); font-size:15px;
+      font-family:'Pretendard',sans-serif; outline:none; transition:border-color 0.16s; }
+    .field input:focus, .field select:focus { border-color:var(--accent); }
+    .field input[type=date] { cursor:pointer; }
+    .field input[type=date]::-webkit-calendar-picker-indicator { filter:invert(0.7) brightness(1.4); cursor:pointer; opacity:0.9; }
+    .icon-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; }
+    .icon-grid button { aspect-ratio:1; border-radius:10px; border:1px solid var(--border); background:var(--bg2);
+      font-size:20px; cursor:pointer; transition:all 0.14s; display:flex; align-items:center; justify-content:center; }
+    .icon-grid button:hover { border-color:var(--accent); }
+    .icon-grid button.on { background:rgba(91,155,255,0.18); border-color:var(--accent); }
+    .modal-foot { display:flex; gap:9px; margin-top:24px; }
+    .modal-foot button { flex:1; padding:13px; border-radius:10px; font-size:14px; font-weight:700;
+      cursor:pointer; border:none; font-family:'Pretendard',sans-serif; transition:all 0.16s; }
+    .btn-cancel { background:var(--card2); color:var(--text2); border:1px solid var(--border); }
+    .btn-cancel:hover { background:rgba(255,255,255,0.07); color:var(--text); }
+    .btn-save { background:linear-gradient(135deg,var(--accent),#82b4ff); color:#fff; }
+    .btn-save:hover { box-shadow:0 6px 22px rgba(91,155,255,0.5); }
+
+    .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(18px);
+      background:var(--accent); color:#fff; padding:13px 24px; border-radius:10px; font-size:14px;
+      font-weight:700; opacity:0; pointer-events:none; transition:all 0.28s; z-index:300; }
+    .toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+    .fade-up { opacity:0; transform:translateY(14px); animation:fadeUp 0.5s ease forwards; }
+    @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+
+    .hamburger { display:none; width:38px; height:38px; border-radius:9px; border:1px solid var(--border);
+      background:var(--card); color:var(--text); font-size:18px; cursor:pointer; align-items:center; justify-content:center; flex-shrink:0; margin-right:4px; }
+    .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(2px); z-index:140; opacity:0; transition:opacity 0.22s; }
+    .sidebar-overlay.on { display:block; opacity:1; }
+    @media (max-width:768px){
+      .hamburger { display:flex; }
+      .sidebar { position:fixed; left:0; top:0; bottom:0; transform:translateX(-100%);
+        transition:transform 0.26s cubic-bezier(0.4,0,0.2,1); display:flex; z-index:160; }
+      .sidebar.open { transform:translateX(0); }
+      .topbar { padding:14px 16px; }
+      .content { padding:18px 14px 80px; }
+      .ch-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-lam">LAM</div>
+      <div class="logo-full">Life Architecture Map</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">메뉴</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon">⊞</span> 대시보드</a>
+      <a class="nav-item" href="history.html"><span class="nav-icon">◷</span> 히스토리</a>
+      <a class="nav-item" href="compare.html"><span class="nav-icon">⟳</span> 월간 비교</a>
+      <a class="nav-item active" href="channels.html"><span class="nav-icon">📈</span> 채널 추이</a>
+    </div>
+    <div class="sidebar-section" style="margin-top:10px;">
+      <div class="sidebar-label">카테고리</div>
+      <a class="nav-item" href="finance.html"><span class="nav-icon">💰</span> 금융</a>
+      <a class="nav-item" href="skin.html"><span class="nav-icon">✨</span> 피부</a>
+      <a class="nav-item" href="health.html"><span class="nav-icon">💪</span> 건강</a>
+      <a class="nav-item" href="music.html"><span class="nav-icon">🎵</span> 음악</a>
+      <a class="nav-item" href="business.html"><span class="nav-icon">💼</span> 사업</a>
+    </div>
+    <div class="sidebar-section" style="margin-top:10px;">
+      <div class="sidebar-label">설정</div>
+      <a class="nav-item" href="settings.html"><span class="nav-icon">⚙</span> 설정</a>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="profile-card">
+        <div class="profile-avatar" id="profileAvatar">?</div>
+        <div style="min-width:0;">
+          <div class="profile-name" id="profileName">로딩 중...</div>
+          <div class="profile-email" id="profileEmail"></div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">로그아웃</button>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;min-width:0;">
+        <button class="hamburger" onclick="toggleSidebar()" aria-label="메뉴">☰</button>
+        <div class="topbar-left">
+          <h1>📈 채널 추이</h1>
+          <p id="todayDate"></p>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-record" onclick="openChannelEdit(null)">+ 채널 추가</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="section-title fade-up">📡 내 채널 <span class="tag">· 보유한 채널의 성장 추이를 기록하세요</span></div>
+      <div class="ch-grid fade-up" id="chGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 채널 추가/수정 모달 -->
+<div class="modal-bg" id="channelEditModal">
+  <div class="modal">
+    <h3 id="ceTitle">채널 추가</h3>
+    <div class="field">
+      <label>플랫폼 아이콘</label>
+      <div class="icon-grid" id="iconGrid"></div>
+    </div>
+    <div class="field"><label>채널명</label><input id="ceName" type="text" placeholder="예: 내 인스타그램, OOO 유튜브" /></div>
+    <div class="field"><label>수치 종류</label>
+      <select id="ceType">
+        <option value="팔로워">팔로워</option>
+        <option value="구독자">구독자</option>
+        <option value="친구수">친구수</option>
+        <option value="이웃수">이웃수</option>
+        <option value="조회수">조회수</option>
+        <option value="기타">기타</option>
+      </select>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeChannelEdit()">취소</button>
+      <button class="btn-save" onclick="saveChannelDef()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 수치 기록 모달 -->
+<div class="modal-bg" id="recordModal">
+  <div class="modal">
+    <h3 id="rcTitle">수치 기록</h3>
+    <p style="font-size:13px;color:var(--text2);margin:-12px 0 20px;line-height:1.6;" id="rcDesc"></p>
+    <div class="field"><label id="rcLabel">수치</label><input id="rcNum" type="text" inputmode="numeric" placeholder="예: 1250" /></div>
+    <div class="field"><label>기록 날짜</label><input id="rcDate" type="date" /></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeRecord()">취소</button>
+      <button class="btn-save" onclick="saveRecord()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL='https://jmumomvxylxbkagjnmxc.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptdW1vbXZ4eWx4YmthZ2pubXhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODc5NzksImV4cCI6MjA5NTg2Mzk3OX0.OQBcCmA7ULgZ28zujvuB_FH0WbUmlHqks_TY97FB7E8';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let user=null, categoryId=null;
+let channels=[];   // metrics rows (type=플랫폼아이콘, name=채널명, unit=수치종류)
+let recordsByCh={}; // metric_id -> [{value, recorded_at}]
+let charts={};
+let editingCh=null, curIcon='📷', recCh=null;
+
+const ICONS=['📷','▶️','📘','🐦','🎵','💬','📺','🎮','📝','🌐','📌','🔗'];
+const ICON_COLOR={'📷':'#ff8fc7','▶️':'#ff7a7a','📘':'#5b9bff','🐦':'#4fd5d5','🎵':'#b18cff','💬':'#56d99a','📺':'#ff9b5b','🎮':'#9cc6ff','📝':'#ffc14d','🌐':'#4fd5d5','📌':'#ff7a7a','🔗':'#5b9bff'};
+
+const $=id=>document.getElementById(id);
+const days=['일','월','화','수','목','금','토'];
+const won=n=>Number(n||0).toLocaleString('ko-KR');
+
+(async function init(){
+  const now=new Date();
+  $('todayDate').textContent=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}요일`;
+  const { data:{ session } }=await sb.auth.getSession();
+  if(!session){ location.href='index.html'; return; }
+  user=session.user;
+  const { data:p }=await sb.from('profiles').select('name,email').eq('id',user.id).single();
+  const name=p?.name||user.email.split('@')[0];
+  $('profileName').textContent=name;
+  $('profileEmail').textContent=p?.email||user.email;
+  $('profileAvatar').textContent=name.charAt(0).toUpperCase();
+  categoryId=await ensureCategory();
+  buildIconGrid();
+  await loadChannels();
+})();
+
+async function ensureCategory(){
+  const { data }=await sb.from('categories').select('id').eq('user_id',user.id).eq('name','채널').maybeSingle();
+  if(data) return data.id;
+  const { data:ins }=await sb.from('categories')
+    .insert({ user_id:user.id, name:'채널', icon:'📈', color:'#5b9bff', sort_order:10 }).select('id').single();
+  return ins.id;
+}
+
+function buildIconGrid(){
+  $('iconGrid').innerHTML=ICONS.map(ic=>`<button data-ic="${ic}">${ic}</button>`).join('');
+  document.querySelectorAll('#iconGrid button').forEach(b=> b.onclick=()=>setIcon(b.dataset.ic));
+}
+function setIcon(ic){ curIcon=ic; document.querySelectorAll('#iconGrid button').forEach(b=>b.classList.toggle('on', b.dataset.ic===ic)); }
+
+async function loadChannels(){
+  const { data:mets }=await sb.from('metrics').select('*')
+    .eq('user_id',user.id).eq('category_id',categoryId).order('created_at',{ascending:true});
+  channels=mets||[];
+  // 모든 채널의 수치 기록 로드
+  recordsByCh={};
+  if(channels.length){
+    const ids=channels.map(c=>c.id);
+    const { data:recs }=await sb.from('records').select('*')
+      .eq('user_id',user.id).eq('category_id',categoryId).in('metric_id',ids)
+      .order('recorded_at',{ascending:true});
+    (recs||[]).forEach(r=>{ (recordsByCh[r.metric_id]=recordsByCh[r.metric_id]||[]).push(r); });
+  }
+  render();
+}
+
+function render(){
+  Object.values(charts).forEach(c=>c&&c.destroy()); charts={};
+  const grid=$('chGrid');
+  if(!channels.length){
+    grid.style.display='block';
+    grid.innerHTML=`<div class="empty-state">
+      <div class="ic">📡</div>
+      <div class="t">아직 등록된 채널이 없습니다</div>
+      <div class="d">인스타그램, 유튜브, 블로그 등 보유한 채널을 추가하고<br>팔로워·구독자 수의 변화를 기록해보세요.</div>
+      <button class="btn-record" style="margin:0 auto" onclick="openChannelEdit(null)">+ 첫 채널 추가하기</button>
+    </div>`;
+    return;
+  }
+  grid.style.display='grid';
+  grid.innerHTML=channels.map(chCard).join('');
+  // 차트 그리기
+  channels.forEach(c=>drawChart(c));
+}
+
+function chCard(c){
+  const ic=c.type||'🌐'; const col=ICON_COLOR[ic]||'#5b9bff';
+  const recs=recordsByCh[c.id]||[];
+  const cur=recs.length? Number(recs[recs.length-1].value):null;
+  let chg='<span class="ch-chg flat">기록 없음</span>';
+  if(recs.length>=2){
+    const diff=cur-Number(recs[recs.length-2].value);
+    chg=`<span class="ch-chg ${diff>0?'up':diff<0?'dn':'flat'}">${diff>0?'▲ +':diff<0?'▼ ':''}${won(Math.abs(diff))}</span>`;
+  } else if(recs.length===1){ chg='<span class="ch-chg flat">첫 기록</span>'; }
+  const last=recs.length? (recs[recs.length-1].recorded_at||'').slice(5).replace('-','.')+' 기준' : '';
+  const cj=JSON.stringify(c).replace(/'/g,"&#39;");
+  return `<div class="ch-card" style="--ch-c:${col};--ch-bg:${hexA(col,0.15)}">
+    <div class="ch-card-head">
+      <div class="ch-id">
+        <div class="ch-icon">${ic}</div>
+        <div class="ch-meta">
+          <div class="ch-name">${c.name}</div>
+          <div class="ch-type">${c.unit||'수치'}</div>
+        </div>
+      </div>
+      <div class="ch-ops">
+        <button title="채널 수정" onclick='openChannelEdit(${cj})'>✏️</button>
+        <button class="del" title="채널 삭제" onclick="delChannel('${c.id}','${(c.name||'').replace(/'/g,'')}')">🗑</button>
+      </div>
+    </div>
+    <div class="ch-current">
+      <span class="ch-num">${cur!=null?won(cur):'—'}</span>
+      ${chg}
+    </div>
+    <div class="ch-chart-box">
+      <canvas id="chart-${c.id}"></canvas>
+      ${recs.length<2?`<div class="ch-chart-empty">기록이 2개 이상 쌓이면<br>추이 그래프가 그려집니다.</div>`:''}
+    </div>
+    <div class="ch-foot">
+      <button class="ch-add-rec" onclick="openRecord('${c.id}')">+ 수치 기록</button>
+      <span class="ch-last">${last}</span>
+    </div>
+  </div>`;
+}
+
+function drawChart(c){
+  const recs=recordsByCh[c.id]||[];
+  if(recs.length<2) return;
+  const ic=c.type||'🌐'; const col=ICON_COLOR[ic]||'#5b9bff';
+  const labels=recs.map(r=>(r.recorded_at||'').slice(5).replace('-','.'));
+  const data=recs.map(r=>Number(r.value));
+  const ctx=$('chart-'+c.id); if(!ctx) return;
+  charts[c.id]=new Chart(ctx,{
+    type:'line',
+    data:{ labels, datasets:[{ data, borderColor:col, backgroundColor:hexA(col,0.12),
+      borderWidth:2, tension:0.35, pointRadius:2.5, pointBackgroundColor:col, fill:true }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:ctx=>won(ctx.parsed.y)+' '+(c.unit||'') } } },
+      scales:{ x:{ ticks:{ color:'#7e7ea4', font:{size:9}, maxRotation:0, autoSkip:true, maxTicksLimit:5 }, grid:{display:false} },
+        y:{ ticks:{ color:'#7e7ea4', font:{size:9}, callback:v=>v>=1000?(v/1000)+'k':v }, grid:{ color:'rgba(255,255,255,0.05)' } } } }
+  });
+}
+
+/* 채널 추가/수정 모달 */
+function openChannelEdit(c){
+  editingCh = c ? c.id : null;
+  $('ceTitle').textContent = c ? '채널 수정' : '채널 추가';
+  setIcon(c ? (c.type||'📷') : '📷');
+  $('ceName').value = c ? c.name : '';
+  $('ceType').value = c ? (c.unit||'팔로워') : '팔로워';
+  $('channelEditModal').classList.add('on');
+}
+function closeChannelEdit(){ $('channelEditModal').classList.remove('on'); }
+window.openChannelEdit=openChannelEdit; window.closeChannelEdit=closeChannelEdit;
+$('channelEditModal').addEventListener('click',e=>{ if(e.target.id==='channelEditModal') closeChannelEdit(); });
+async function saveChannelDef(){
+  const name=$('ceName').value.trim();
+  if(!name){ toast('채널명을 입력하세요'); return; }
+  const payload={ name, type:curIcon, unit:$('ceType').value };
+  let err;
+  if(editingCh){ ({error:err}=await sb.from('metrics').update(payload).eq('id',editingCh)); }
+  else { ({error:err}=await sb.from('metrics').insert({ ...payload, user_id:user.id, category_id:categoryId })); }
+  if(err){ toast('저장 실패: '+err.message); return; }
+  closeChannelEdit(); toast(editingCh?'수정되었습니다':'채널이 추가되었습니다'); await loadChannels();
+}
+window.saveChannelDef=saveChannelDef;
+window.delChannel=async function(id,name){
+  if(!confirm(`'${name}' 채널과 모든 기록을 삭제할까요?`)) return;
+  await sb.from('records').delete().eq('user_id',user.id).eq('metric_id',id);
+  const { error }=await sb.from('metrics').delete().eq('id',id);
+  if(error){ toast('삭제 실패'); return; }
+  toast('삭제되었습니다'); await loadChannels();
+};
+
+/* 수치 기록 모달 */
+function openRecord(chId){
+  recCh=channels.find(c=>c.id===chId); if(!recCh) return;
+  $('rcTitle').textContent=`${recCh.name} 수치 기록`;
+  $('rcDesc').textContent=`${recCh.unit||'수치'}를 기록하세요. 같은 날짜에 다시 기록하면 갱신됩니다.`;
+  $('rcLabel').textContent=recCh.unit||'수치';
+  $('rcNum').value=''; $('rcDate').value=new Date().toISOString().slice(0,10);
+  $('recordModal').classList.add('on');
+  setTimeout(()=>{ const d=$('rcDate'); }, 0);
+}
+function closeRecord(){ $('recordModal').classList.remove('on'); }
+window.openRecord=openRecord; window.closeRecord=closeRecord;
+$('recordModal').addEventListener('click',e=>{ if(e.target.id==='recordModal') closeRecord(); });
+$('rcNum').addEventListener('input',e=>{ e.target.value=e.target.value.replace(/[^0-9]/g,''); });
+async function saveRecord(){
+  if(!recCh) return;
+  const num=Number($('rcNum').value.replace(/[^0-9]/g,''))||0;
+  const date=$('rcDate').value;
+  if(!num){ toast('수치를 입력하세요'); return; }
+  const recs=recordsByCh[recCh.id]||[];
+  const exist=recs.find(r=>(r.recorded_at||'').slice(0,10)===date);
+  let err;
+  if(exist){ ({error:err}=await sb.from('records').update({value:num}).eq('id',exist.id)); }
+  else { ({error:err}=await sb.from('records').insert({ user_id:user.id, category_id:categoryId,
+    metric_id:recCh.id, value:num, memo:'', status:'channel', recorded_at:date })); }
+  if(err){ toast('저장 실패: '+err.message); return; }
+  closeRecord(); toast('저장되었습니다'); await loadChannels();
+}
+window.saveRecord=saveRecord;
+
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeChannelEdit(); closeRecord(); } });
+document.addEventListener('click',e=>{
+  const inp=e.target; if(inp.matches&&inp.matches('input[type=date]')){ try{ inp.showPicker(); }catch(_){} }
+},true);
+
+function toggleSidebar(){
+  const sb2=$('sidebar'), ov=$('sidebarOverlay');
+  const open=sb2.classList.toggle('open'); if(ov) ov.classList.toggle('on', open);
+}
+window.toggleSidebar=toggleSidebar;
+async function doLogout(){ await sb.auth.signOut(); location.href='index.html'; }
+function hexA(hex,a){ const h=hex.replace('#',''); const n=h.length===3?h.split('').map(c=>c+c).join(''):h;
+  return `rgba(${parseInt(n.slice(0,2),16)},${parseInt(n.slice(2,4),16)},${parseInt(n.slice(4,6),16)},${a})`; }
+let tT; function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(tT); tT=setTimeout(()=>t.classList.remove('on'),2200); }
+</script>
+</body>
+</html>
