@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <script>(function(){try{var t=localStorage.getItem('lam-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LAM — 설정</title>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root {
+      --bg:#07070f; --bg2:#0d0d1a; --card:#15151f; --card2:#1c1c2b;
+      --border:rgba(255,255,255,0.10);
+      --accent:#5b9bff; --accent2:#9cc6ff;
+      --text:#f4f4fb; --text2:#b8b8d4; --text3:#7e7ea4;
+      --success:#56d99a; --warning:#ffb338; --error:#ff7a7a; --gold:#ffc14d;
+      --pink:#ff8fc7; --purple:#b18cff; --teal:#4fd5d5; --orange:#ff9b5b;
+      --sidebar:232px; --radius:14px;
+    }
+    html[data-theme="light"] {
+      --bg:#f4f5fa; --bg2:#eceef5; --card:#ffffff; --card2:#f7f8fc;
+      --border:rgba(20,22,40,0.10);
+      --accent:#3b7ff5; --accent2:#2c66d6;
+      --text:#1a1c2e; --text2:#4a4d68; --text3:#8a8da8;
+      --success:#1f9e5e; --warning:#c77b12; --error:#d94646; --gold:#c79212;
+      --pink:#d65a96; --purple:#7d54d6; --teal:#1f9e9e; --orange:#d97b2e;
+    }
+    html[data-theme="light"] body { background:var(--bg); color:var(--text); }
+    html, body { height:100%; font-family:'Pretendard',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; font-size:15px; }
+    .app { display:flex; height:100vh; overflow:hidden; }
+
+    .sidebar { width:var(--sidebar); min-width:var(--sidebar); background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:24px 0 0; overflow-y:auto; overflow-x:hidden; z-index:100; }
+    .sidebar::-webkit-scrollbar { width:0; }
+    .sidebar-logo { padding:0 20px 22px; border-bottom:1px solid var(--border); margin-bottom:18px; }
+    .logo-lam { font-size:20px; font-weight:800; letter-spacing:0.06em; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .logo-full { font-size:11px; color:var(--text3); letter-spacing:0.05em; margin-top:3px; }
+    .sidebar-section { padding:0 10px; margin-bottom:6px; }
+    .sidebar-label { font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text3); padding:0 8px; margin-bottom:6px; }
+    .nav-item { display:flex; align-items:center; gap:9px; padding:10px 11px; border-radius:10px; font-size:14px; font-weight:600; color:var(--text2); cursor:pointer; text-decoration:none; transition:background 0.16s,color 0.16s; margin-bottom:2px; }
+    .nav-item:hover { background:rgba(255,255,255,0.07); color:var(--text); }
+    .nav-item.active { background:rgba(91,155,255,0.18); color:var(--accent2); font-weight:700; }
+    html[data-theme="light"] .nav-item:hover { background:rgba(20,22,40,0.06); }
+    html[data-theme="light"] .nav-item.active { background:rgba(59,127,245,0.14); }
+    .nav-icon { font-size:15px; width:20px; text-align:center; flex-shrink:0; }
+    .sidebar-bottom { margin-top:auto; padding:14px 10px 20px; border-top:1px solid var(--border); }
+    .theme-toggle { display:flex; align-items:center; justify-content:space-between; width:100%; padding:9px 11px; border-radius:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text2); font-family:'Pretendard',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.16s; margin-bottom:8px; }
+    .theme-toggle:hover { background:rgba(255,255,255,0.09); color:var(--text); }
+    html[data-theme="light"] .theme-toggle { background:rgba(20,22,40,0.04); }
+    .theme-toggle .tt-track { width:38px; height:20px; border-radius:100px; background:var(--card2); border:1px solid var(--border); position:relative; flex-shrink:0; }
+    html[data-theme="light"] .tt-track { background:rgba(20,22,40,0.08); }
+    .theme-toggle .tt-knob { position:absolute; top:1px; left:1px; width:16px; height:16px; border-radius:50%; background:var(--accent); transition:transform 0.22s cubic-bezier(0.4,0,0.2,1); }
+    html[data-theme="light"] .theme-toggle .tt-knob { transform:translateX(18px); }
+    .profile-card { display:flex; align-items:center; gap:9px; padding:10px 11px; border-radius:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); margin-bottom:8px; }
+    html[data-theme="light"] .profile-card { background:rgba(20,22,40,0.04); }
+    .profile-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0; }
+    .profile-name { font-size:14px; font-weight:700; color:var(--text); }
+    .profile-email { font-size:11px; color:var(--text3); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; }
+    .btn-logout { width:100%; padding:9px; border-radius:8px; background:transparent; border:1px solid var(--border); color:var(--text2); font-family:'Pretendard',sans-serif; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.16s; }
+    .btn-logout:hover { background:rgba(255,122,122,0.12); color:var(--error); border-color:rgba(255,122,122,0.35); }
+
+    .main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 28px; border-bottom:1px solid var(--border); background:var(--bg); flex-shrink:0; }
+    html[data-theme="light"] .topbar, html[data-theme="light"] .sidebar { background:var(--bg2); }
+    .topbar-left h1 { font-size:20px; font-weight:800; letter-spacing:-0.01em; }
+    .topbar-left p { font-size:13px; color:var(--text2); margin-top:3px; }
+    .content { flex:1; overflow-y:auto; overflow-x:hidden; padding:24px 28px 48px; display:flex; flex-direction:column; gap:18px; max-width:760px; }
+    .content::-webkit-scrollbar { width:5px; } .content::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+
+    .section-title { font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px; }
+    .panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:22px; }
+    html[data-theme="light"] .panel { box-shadow:0 1px 3px rgba(20,22,40,0.06); }
+    .set-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 0; border-bottom:1px solid var(--border); }
+    .set-row:first-child { padding-top:0; } .set-row:last-child { border-bottom:none; padding-bottom:0; }
+    .set-info .t { font-size:14px; font-weight:700; color:var(--text); }
+    .set-info .d { font-size:12px; color:var(--text3); margin-top:3px; }
+    .set-row input { background:var(--bg2); border:1px solid var(--border); border-radius:9px; padding:10px 13px; color:var(--text); font-family:'Pretendard',sans-serif; font-size:14px; outline:none; min-width:200px; transition:border-color 0.16s; }
+    .set-row input:focus { border-color:var(--accent); }
+    .btn { padding:10px 18px; border-radius:9px; font-family:'Pretendard',sans-serif; font-size:13px; font-weight:700; cursor:pointer; border:none; transition:all 0.16s; }
+    .btn-primary { background:linear-gradient(135deg,var(--accent),#82b4ff); color:#fff; }
+    .btn-primary:hover { box-shadow:0 4px 16px rgba(91,155,255,0.4); }
+    .btn-ghost { background:var(--bg2); border:1px solid var(--border); color:var(--text2); }
+    .btn-ghost:hover { border-color:var(--accent); color:var(--accent2); }
+    .btn-danger { background:var(--bg2); border:1px solid rgba(255,122,122,0.3); color:var(--error); }
+    .btn-danger:hover { background:rgba(255,122,122,0.12); }
+    .seg { display:flex; gap:6px; }
+    .seg button { padding:8px 16px; border-radius:8px; border:1px solid var(--border); background:var(--bg2); color:var(--text2); font-family:'Pretendard',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.16s; }
+    .seg button.on { background:rgba(91,155,255,0.18); border-color:var(--accent); color:var(--accent2); }
+    .avatar-lg { width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800; color:#fff; flex-shrink:0; }
+    .data-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .data-card { background:var(--bg2); border:1px solid var(--border); border-radius:11px; padding:16px; text-align:center; }
+    .data-card .n { font-size:22px; font-weight:800; color:var(--accent2); }
+    .data-card .l { font-size:12px; color:var(--text2); margin-top:4px; font-weight:600; }
+
+    .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(18px); background:var(--accent); color:#fff; padding:13px 24px; border-radius:10px; font-size:14px; font-weight:700; opacity:0; pointer-events:none; transition:all 0.28s; z-index:300; }
+    .toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+
+    .hamburger { display:none; width:38px; height:38px; border-radius:9px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:18px; cursor:pointer; align-items:center; justify-content:center; flex-shrink:0; margin-right:4px; }
+    .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(2px); z-index:140; opacity:0; transition:opacity 0.22s; }
+    .sidebar-overlay.on { display:block; opacity:1; }
+    @media (max-width:768px){
+      .hamburger { display:flex; }
+      .sidebar { position:fixed; left:0; top:0; bottom:0; transform:translateX(-100%); transition:transform 0.26s cubic-bezier(0.4,0,0.2,1); display:flex; z-index:160; }
+      .sidebar.open { transform:translateX(0); }
+      .topbar { padding:14px 16px; } .content { padding:18px 14px 80px; }
+      .set-row { flex-direction:column; align-items:flex-start; }
+      .set-row input { width:100%; } .data-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-lam">LAM</div><div class="logo-full">Life Architecture Map</div></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">메뉴</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon">⊞</span> 대시보드</a>
+      <a class="nav-item" href="history.html"><span class="nav-icon">◷</span> 히스토리</a>
+      <a class="nav-item" href="compare.html"><span class="nav-icon">⟳</span> 월간 비교</a>
+      <a class="nav-item" href="channels.html"><span class="nav-icon">📈</span> 채널 추이</a>
+    </div>
+    <div class="sidebar-section" style="margin-top:10px;">
+      <div class="sidebar-label">카테고리</div>
+      <a class="nav-item" href="finance.html"><span class="nav-icon">💰</span> 금융</a>
+      <a class="nav-item" href="skin.html"><span class="nav-icon">✨</span> 피부</a>
+      <a class="nav-item" href="health.html"><span class="nav-icon">💪</span> 건강</a>
+      <a class="nav-item" href="music.html"><span class="nav-icon">🎵</span> 음악</a>
+      <a class="nav-item" href="business.html"><span class="nav-icon">💼</span> 사업</a>
+    </div>
+    <div class="sidebar-section" style="margin-top:10px;">
+      <div class="sidebar-label">설정</div>
+      <a class="nav-item active" href="settings.html"><span class="nav-icon">⚙</span> 설정</a>
+    </div>
+    <div class="sidebar-bottom">
+      <button class="theme-toggle" onclick="toggleTheme()"><span id="themeLabel">다크 모드</span><span class="tt-track"><span class="tt-knob"></span></span></button>
+      <div class="profile-card">
+        <div class="profile-avatar" id="profileAvatar">?</div>
+        <div style="min-width:0;"><div class="profile-name" id="profileNameSide">로딩 중...</div><div class="profile-email" id="profileEmailSide"></div></div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">로그아웃</button>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;min-width:0;">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-left"><h1>⚙ 설정</h1><p id="todayDate"></p></div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="section-title">👤 프로필</div>
+      <div class="panel">
+        <div class="set-row">
+          <div style="display:flex;align-items:center;gap:16px;">
+            <div class="avatar-lg" id="avatarLg">?</div>
+            <div class="set-info"><div class="t" id="emailText">—</div><div class="d">가입 계정</div></div>
+          </div>
+        </div>
+        <div class="set-row">
+          <div class="set-info"><div class="t">이름</div><div class="d">대시보드와 사이드바에 표시됩니다</div></div>
+          <div style="display:flex;gap:8px;">
+            <input id="nameInput" type="text" placeholder="이름" />
+            <button class="btn btn-primary" onclick="saveName()">저장</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">🎨 화면</div>
+      <div class="panel">
+        <div class="set-row">
+          <div class="set-info"><div class="t">테마</div><div class="d">밝은 화면과 어두운 화면을 전환합니다</div></div>
+          <div class="seg" id="themeSeg">
+            <button data-t="dark">다크</button>
+            <button data-t="light">라이트</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">📊 내 데이터</div>
+      <div class="panel">
+        <div class="data-grid" id="dataGrid">
+          <div class="data-card"><div class="n" id="dTotal">—</div><div class="l">전체 기록</div></div>
+          <div class="data-card"><div class="n" id="dCats">—</div><div class="l">활성 카테고리</div></div>
+          <div class="data-card"><div class="n" id="dDays">—</div><div class="l">활동한 날</div></div>
+        </div>
+        <div class="set-row" style="margin-top:16px;">
+          <div class="set-info"><div class="t">데이터 백업</div><div class="d">모든 기록을 JSON 파일로 내려받습니다</div></div>
+          <button class="btn btn-ghost" onclick="exportData()">내보내기</button>
+        </div>
+      </div>
+
+      <div class="section-title">🔐 계정</div>
+      <div class="panel">
+        <div class="set-row">
+          <div class="set-info"><div class="t">비밀번호 변경</div><div class="d">재설정 메일을 받습니다</div></div>
+          <button class="btn btn-ghost" onclick="resetPw()">재설정 메일 보내기</button>
+        </div>
+        <div class="set-row">
+          <div class="set-info"><div class="t">로그아웃</div><div class="d">현재 기기에서 로그아웃합니다</div></div>
+          <button class="btn btn-danger" onclick="doLogout()">로그아웃</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL='https://jmumomvxylxbkagjnmxc.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptdW1vbXZ4eWx4YmthZ2pubXhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODc5NzksImV4cCI6MjA5NTg2Mzk3OX0.OQBcCmA7ULgZ28zujvuB_FH0WbUmlHqks_TY97FB7E8';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let user=null;
+const $=id=>document.getElementById(id);
+const days=['일','월','화','수','목','금','토'];
+
+(async function init(){
+  const now=new Date();
+  $('todayDate').textContent=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}요일`;
+  const { data:{ session } }=await sb.auth.getSession();
+  if(!session){ location.href='index.html'; return; }
+  user=session.user;
+  const { data:p }=await sb.from('profiles').select('name,email').eq('id',user.id).single();
+  const name=p?.name||user.email.split('@')[0];
+  const email=p?.email||user.email;
+  $('profileNameSide').textContent=name; $('profileEmailSide').textContent=email;
+  $('profileAvatar').textContent=name.charAt(0).toUpperCase();
+  $('avatarLg').textContent=name.charAt(0).toUpperCase();
+  $('emailText').textContent=email;
+  $('nameInput').value=name;
+  // 테마 세그먼트
+  const t=document.documentElement.getAttribute('data-theme')||'dark';
+  $('themeLabel').textContent=t==='light'?'라이트 모드':'다크 모드';
+  setSeg(t);
+  document.querySelectorAll('#themeSeg button').forEach(b=> b.onclick=()=>applyTheme(b.dataset.t));
+  // 데이터 현황
+  const { data:recs }=await sb.from('records').select('category_id,recorded_at,status').eq('user_id',user.id).neq('status','progress');
+  const r=recs||[];
+  $('dTotal').textContent=r.length;
+  $('dCats').textContent=new Set(r.map(x=>x.category_id)).size;
+  $('dDays').textContent=new Set(r.map(x=>(x.recorded_at||'').slice(0,10))).size;
+})();
+
+function setSeg(t){ document.querySelectorAll('#themeSeg button').forEach(b=>b.classList.toggle('on', b.dataset.t===t)); }
+function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); try{localStorage.setItem('lam-theme',t);}catch(e){}
+  $('themeLabel').textContent=t==='light'?'라이트 모드':'다크 모드'; setSeg(t); }
+function toggleTheme(){ const cur=document.documentElement.getAttribute('data-theme')||'dark'; applyTheme(cur==='light'?'dark':'light'); }
+window.toggleTheme=toggleTheme;
+
+async function saveName(){
+  const name=$('nameInput').value.trim(); if(!name){ toast('이름을 입력하세요'); return; }
+  const { error }=await sb.from('profiles').update({ name }).eq('id',user.id);
+  if(error){ toast('저장 실패'); return; }
+  $('profileNameSide').textContent=name; $('profileAvatar').textContent=name.charAt(0).toUpperCase();
+  $('avatarLg').textContent=name.charAt(0).toUpperCase(); toast('저장되었습니다');
+}
+window.saveName=saveName;
+
+async function resetPw(){
+  const email=$('emailText').textContent;
+  const { error }=await sb.auth.resetPasswordForEmail(email);
+  if(error){ toast('메일 전송 실패'); return; }
+  toast('재설정 메일을 보냈습니다');
+}
+window.resetPw=resetPw;
+
+async function exportData(){
+  const { data:recs }=await sb.from('records').select('*').eq('user_id',user.id);
+  const blob=new Blob([JSON.stringify(recs||[],null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download=`LAM_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
+  URL.revokeObjectURL(url); toast('백업 파일을 내려받았습니다');
+}
+window.exportData=exportData;
+
+function toggleSidebar(){ const s=$('sidebar'),o=$('sidebarOverlay'); const op=s.classList.toggle('open'); if(o)o.classList.toggle('on',op); }
+window.toggleSidebar=toggleSidebar;
+async function doLogout(){ await sb.auth.signOut(); location.href='index.html'; }
+let tT; function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(tT); tT=setTimeout(()=>t.classList.remove('on'),2200); }
+</script>
+</body>
+</html>
