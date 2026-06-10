@@ -87,6 +87,27 @@
     .seg button { padding:8px 16px; border-radius:8px; border:1px solid var(--border); background:var(--bg2); color:var(--text2); font-family:'Pretendard',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.16s; }
     .seg button.on { background:rgba(91,155,255,0.18); border-color:var(--accent); color:var(--accent2); }
     .avatar-lg { width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800; color:#fff; flex-shrink:0; }
+    .avatar-lg { background-size:cover; background-position:center; }
+    .prof-head { display:flex; align-items:center; gap:18px; padding-bottom:18px; margin-bottom:18px; border-bottom:1px solid var(--border); }
+    .prof-avatar-wrap { position:relative; flex-shrink:0; }
+    .avatar-edit { position:absolute; bottom:-2px; right:-2px; width:26px; height:26px; border-radius:50%;
+      border:2px solid var(--card); background:var(--accent); color:#fff; font-size:11px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .prof-head-info .t { font-size:15px; font-weight:700; color:var(--text); }
+    .prof-head-info .d { font-size:12px; color:var(--text3); margin-top:2px; }
+    .field-block { margin-bottom:18px; }
+    .field-block:last-of-type { margin-bottom:0; }
+    .field-block > label { display:block; font-size:13px; font-weight:700; color:var(--text2); margin-bottom:8px; }
+    .field-block .hint { font-size:11px; font-weight:500; color:var(--text3); margin-left:4px; }
+    .field-block input { width:100%; background:var(--bg2); border:1px solid var(--border); border-radius:9px;
+      padding:11px 13px; color:var(--text); font-family:'Pretendard',sans-serif; font-size:14px; outline:none; transition:border-color 0.16s; }
+    .field-block input:focus { border-color:var(--accent); }
+    .field-block input[type=date] { cursor:pointer; }
+    .field-block input[type=date]::-webkit-calendar-picker-indicator { filter:invert(0.7) brightness(1.4); cursor:pointer; }
+    html[data-theme="light"] .field-block input[type=date]::-webkit-calendar-picker-indicator { filter:none; }
+    .color-row { display:flex; gap:10px; flex-wrap:wrap; }
+    .color-dot { width:34px; height:34px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:transform 0.14s; }
+    .color-dot:hover { transform:scale(1.1); }
+    .color-dot.on { border-color:var(--text); }
     .data-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
     .data-card { background:var(--bg2); border:1px solid var(--border); border-radius:11px; padding:16px; text-align:center; }
     .data-card .n { font-size:22px; font-weight:800; color:var(--accent2); }
@@ -151,19 +172,35 @@
     <div class="content">
       <div class="section-title">👤 프로필</div>
       <div class="panel">
-        <div class="set-row">
-          <div style="display:flex;align-items:center;gap:16px;">
+        <div class="prof-head">
+          <div class="prof-avatar-wrap">
             <div class="avatar-lg" id="avatarLg">?</div>
-            <div class="set-info"><div class="t" id="emailText">—</div><div class="d">가입 계정</div></div>
+            <button class="avatar-edit" onclick="document.getElementById('avatarFile').click()" title="사진 변경">📷</button>
+            <input type="file" id="avatarFile" accept="image/*" style="display:none" />
+          </div>
+          <div class="prof-head-info">
+            <div class="t" id="emailText">—</div>
+            <div class="d">가입 계정</div>
+            <button class="btn btn-ghost" style="margin-top:10px;font-size:12px;padding:7px 12px;" id="removePhoto" onclick="removePhoto()">사진 제거</button>
           </div>
         </div>
-        <div class="set-row">
-          <div class="set-info"><div class="t">이름</div><div class="d">대시보드와 사이드바에 표시됩니다</div></div>
-          <div style="display:flex;gap:8px;">
-            <input id="nameInput" type="text" placeholder="이름" />
-            <button class="btn btn-primary" onclick="saveName()">저장</button>
-          </div>
+
+        <div class="field-block">
+          <label>아바타 색상 <span class="hint">사진이 없을 때 이니셜 배경색</span></label>
+          <div class="color-row" id="colorRow"></div>
         </div>
+
+        <div class="field-block">
+          <label>이름 <span class="hint">대시보드·사이드바에 표시됩니다</span></label>
+          <input id="nameInput" type="text" placeholder="이름" />
+        </div>
+
+        <div class="field-block">
+          <label>생년월일</label>
+          <input id="birthInput" type="date" />
+        </div>
+
+        <button class="btn btn-primary" style="width:100%;margin-top:4px;" onclick="saveProfile()">프로필 저장</button>
       </div>
 
       <div class="section-title">🎨 화면</div>
@@ -192,9 +229,11 @@
 
       <div class="section-title">🔐 계정</div>
       <div class="panel">
-        <div class="set-row">
-          <div class="set-info"><div class="t">비밀번호 변경</div><div class="d">재설정 메일을 받습니다</div></div>
-          <button class="btn btn-ghost" onclick="resetPw()">재설정 메일 보내기</button>
+        <div class="field-block">
+          <label>비밀번호 변경 <span class="hint">새 비밀번호를 입력하면 즉시 변경됩니다</span></label>
+          <input id="pw1" type="password" placeholder="새 비밀번호 (6자 이상)" style="margin-bottom:8px;" />
+          <input id="pw2" type="password" placeholder="새 비밀번호 확인" />
+          <button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="changePw()">비밀번호 변경</button>
         </div>
         <div class="set-row">
           <div class="set-info"><div class="t">로그아웃</div><div class="d">현재 기기에서 로그아웃합니다</div></div>
@@ -211,7 +250,8 @@
 const SUPABASE_URL='https://jmumomvxylxbkagjnmxc.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptdW1vbXZ4eWx4YmthZ2pubXhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODc5NzksImV4cCI6MjA5NTg2Mzk3OX0.OQBcCmA7ULgZ28zujvuB_FH0WbUmlHqks_TY97FB7E8';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-let user=null;
+let user=null, curColor="#5b9bff", curImage="";
+const COLORS=["#5b9bff","#56d99a","#ffb338","#ff7a7a","#ff8fc7","#b18cff","#4fd5d5","#ff9b5b"];
 const $=id=>document.getElementById(id);
 const days=['일','월','화','수','목','금','토'];
 
@@ -221,14 +261,17 @@ const days=['일','월','화','수','목','금','토'];
   const { data:{ session } }=await sb.auth.getSession();
   if(!session){ location.href='index.html'; return; }
   user=session.user;
-  const { data:p }=await sb.from('profiles').select('name,email').eq('id',user.id).single();
+  const { data:p }=await sb.from('profiles').select('*').eq('id',user.id).single();
   const name=p?.name||user.email.split('@')[0];
   const email=p?.email||user.email;
+  curColor=p?.avatar_color||'#5b9bff';
+  curImage=p?.avatar_image||'';
   $('profileNameSide').textContent=name; $('profileEmailSide').textContent=email;
-  $('profileAvatar').textContent=name.charAt(0).toUpperCase();
-  $('avatarLg').textContent=name.charAt(0).toUpperCase();
   $('emailText').textContent=email;
   $('nameInput').value=name;
+  $('birthInput').value=p?.birthdate||'';
+  buildColorRow();
+  applyAvatar(name);
   // 테마 세그먼트
   const t=document.documentElement.getAttribute('data-theme')||'dark';
   $('themeLabel').textContent=t==='light'?'라이트 모드':'다크 모드';
@@ -248,22 +291,61 @@ function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); t
 function toggleTheme(){ const cur=document.documentElement.getAttribute('data-theme')||'dark'; applyTheme(cur==='light'?'dark':'light'); }
 window.toggleTheme=toggleTheme;
 
-async function saveName(){
-  const name=$('nameInput').value.trim(); if(!name){ toast('이름을 입력하세요'); return; }
-  const { error }=await sb.from('profiles').update({ name }).eq('id',user.id);
-  if(error){ toast('저장 실패'); return; }
-  $('profileNameSide').textContent=name; $('profileAvatar').textContent=name.charAt(0).toUpperCase();
-  $('avatarLg').textContent=name.charAt(0).toUpperCase(); toast('저장되었습니다');
+/* 아바타 표시: 사진 있으면 사진, 없으면 색+이니셜 */
+function applyAvatar(name){
+  const ini=(name||'?').charAt(0).toUpperCase();
+  [$('avatarLg'),$('profileAvatar')].forEach(el=>{ if(!el) return;
+    if(curImage){ el.style.backgroundImage=`url(${curImage})`; el.textContent=''; el.style.background=`center/cover no-repeat url(${curImage})`; }
+    else { el.style.backgroundImage=''; el.style.background=`linear-gradient(135deg, ${curColor}, ${curColor})`; el.textContent=ini; }
+  });
+  $('removePhoto').style.display = curImage?'inline-flex':'none';
 }
-window.saveName=saveName;
+function buildColorRow(){
+  $('colorRow').innerHTML=COLORS.map(c=>`<div class="color-dot ${c===curColor?'on':''}" data-c="${c}" style="background:${c}"></div>`).join('');
+  document.querySelectorAll('#colorRow .color-dot').forEach(d=> d.onclick=()=>{ curColor=d.dataset.c; curImage='';
+    document.querySelectorAll('#colorRow .color-dot').forEach(x=>x.classList.remove('on')); d.classList.add('on');
+    applyAvatar($('nameInput').value); });
+}
+// 사진 업로드 → Base64 (리사이즈해서 용량 축소)
+$('avatarFile').addEventListener('change', e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const size=256; const cv=document.createElement('canvas'); cv.width=size; cv.height=size;
+      const ctx=cv.getContext('2d');
+      const m=Math.min(img.width,img.height); const sx=(img.width-m)/2, sy=(img.height-m)/2;
+      ctx.drawImage(img,sx,sy,m,m,0,0,size,size);
+      curImage=cv.toDataURL('image/jpeg',0.8);
+      applyAvatar($('nameInput').value); toast('사진이 적용되었습니다. 저장을 눌러주세요');
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+function removePhoto(){ curImage=''; applyAvatar($('nameInput').value); toast('사진을 제거했습니다. 저장을 눌러주세요'); }
+window.removePhoto=removePhoto;
 
-async function resetPw(){
-  const email=$('emailText').textContent;
-  const { error }=await sb.auth.resetPasswordForEmail(email);
-  if(error){ toast('메일 전송 실패'); return; }
-  toast('재설정 메일을 보냈습니다');
+async function saveProfile(){
+  const name=$('nameInput').value.trim(); if(!name){ toast('이름을 입력하세요'); return; }
+  const birth=$('birthInput').value||null;
+  const payload={ name, birthdate:birth, avatar_color:curColor, avatar_image:curImage||null };
+  const { error }=await sb.from('profiles').update(payload).eq('id',user.id);
+  if(error){ toast('저장 실패: '+error.message); return; }
+  $('profileNameSide').textContent=name; applyAvatar(name); toast('프로필이 저장되었습니다');
 }
-window.resetPw=resetPw;
+window.saveProfile=saveProfile;
+
+async function changePw(){
+  const p1=$('pw1').value, p2=$('pw2').value;
+  if(p1.length<6){ toast('비밀번호는 6자 이상이어야 합니다'); return; }
+  if(p1!==p2){ toast('새 비밀번호가 일치하지 않습니다'); return; }
+  const { error }=await sb.auth.updateUser({ password:p1 });
+  if(error){ toast('변경 실패: '+error.message); return; }
+  $('pw1').value=''; $('pw2').value=''; toast('비밀번호가 변경되었습니다');
+}
+window.changePw=changePw;
 
 async function exportData(){
   const { data:recs }=await sb.from('records').select('*').eq('user_id',user.id);
