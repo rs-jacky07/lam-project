@@ -28,6 +28,8 @@
       padding:24px 0 0; overflow-y:auto; overflow-x:hidden; z-index:100; }
     .sidebar::-webkit-scrollbar { width:0; }
     .sidebar-logo { padding:0 20px 22px; border-bottom:1px solid var(--border); margin-bottom:18px; }
+    .sidebar-top-profile { padding:0 10px; margin-bottom:16px; }
+    .sidebar-top-profile .profile-card { margin-bottom:0; }
     .logo-lam { font-size:20px; font-weight:800; letter-spacing:0.06em;
       background:linear-gradient(135deg,var(--accent),var(--accent2));
       -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
@@ -306,6 +308,15 @@
       <div class="logo-lam">LAM</div>
       <div class="logo-full">Life Architecture Map</div>
     </div>
+    <div class="sidebar-top-profile">
+      <div class="profile-card">
+        <div class="profile-avatar" id="profileAvatar">?</div>
+        <div style="min-width:0;">
+          <div class="profile-name" id="profileName">로딩 중...</div>
+          <div class="profile-email" id="profileEmail"></div>
+        </div>
+      </div>
+    </div>
     <div class="sidebar-section">
       <div class="sidebar-label">메뉴</div>
       <a class="nav-item" href="dashboard.html"><span class="nav-icon">⊞</span> 대시보드</a>
@@ -330,13 +341,6 @@
         <span id="themeLabel">다크 모드</span>
         <span class="tt-track"><span class="tt-knob"></span></span>
       </button>
-      <div class="profile-card">
-        <div class="profile-avatar" id="profileAvatar">?</div>
-        <div style="min-width:0;">
-          <div class="profile-name" id="profileName">로딩 중...</div>
-          <div class="profile-email" id="profileEmail"></div>
-        </div>
-      </div>
       <button class="btn-logout" onclick="doLogout()">로그아웃</button>
     </div>
   </nav>
