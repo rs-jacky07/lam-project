@@ -207,9 +207,9 @@ let trendChart=null;
   const { data:{ session } }=await sb.auth.getSession();
   if(!session){ location.href='index.html'; return; }
   user=session.user;
-  const { data:p }=await sb.from('profiles').select('name,email').eq('id',user.id).single();
+  const { data:p }=await sb.from('profiles').select('*').eq('id',user.id).single();
   const name=p?.name||user.email.split('@')[0];
-  $('profileName').textContent=name; $('profileEmail').textContent=p?.email||user.email; $('profileAvatar').textContent=name.charAt(0).toUpperCase();
+  $('profileName').textContent=name; $('profileEmail').textContent=p?.email||user.email; $('profileAvatar').textContent=name.charAt(0).toUpperCase(); applySidebarAvatar(p,name);
   const { data:cats }=await sb.from('categories').select('id,name').eq('user_id',user.id);
   (cats||[]).forEach(c=>{ catMap[c.name]=c.id; idCat[c.id]=c.name; });
   const { data:recs }=await sb.from('records').select('*').eq('user_id',user.id)
@@ -286,6 +286,15 @@ window.toggleTheme=toggleTheme;
 function toggleSidebar(){ const s=$('sidebar'),o=$('sidebarOverlay'); const op=s.classList.toggle('open'); if(o)o.classList.toggle('on',op); }
 window.toggleSidebar=toggleSidebar;
 async function doLogout(){ await sb.auth.signOut(); location.href='index.html'; }
+
+function applySidebarAvatar(p,name){
+  try{
+    var el=document.getElementById('profileAvatar'); if(!el) return;
+    var img=p&&p.avatar_image, col=(p&&p.avatar_color)||'#5b9bff';
+    if(img){ el.textContent=''; el.style.background='center/cover no-repeat url('+img+')'; }
+    else { el.style.backgroundImage=''; el.style.background='linear-gradient(135deg,'+col+','+col+')'; el.textContent=(name||'?').charAt(0).toUpperCase(); }
+  }catch(e){}
+}
 </script>
 </body>
 </html>

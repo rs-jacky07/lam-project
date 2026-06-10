@@ -606,11 +606,12 @@ document.getElementById('monthLabel').textContent = `${now.getFullYear()}년 ${n
 (async () => {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { location.href = 'index.html'; return; }
-  const { data: p } = await sb.from('profiles').select('name,email').eq('id', session.user.id).single();
+  const { data: p } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
   const name = p?.name || session.user.email.split('@')[0];
   document.getElementById('profileName').textContent = name;
   document.getElementById('profileEmail').textContent = p?.email || session.user.email;
   document.getElementById('profileAvatar').textContent = name.charAt(0).toUpperCase();
+  applySidebarAvatar(p,name);
 })();
 
 async function doLogout() {
@@ -948,6 +949,15 @@ function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); t
 function toggleTheme(){ var cur=document.documentElement.getAttribute('data-theme')||'dark'; applyTheme(cur==='light'?'dark':'light'); }
 window.toggleTheme=toggleTheme;
 (function(){ var t=document.documentElement.getAttribute('data-theme')||'dark'; var lbl=document.getElementById('themeLabel'); if(lbl) lbl.textContent=t==='light'?'라이트 모드':'다크 모드'; })();
+
+function applySidebarAvatar(p,name){
+  try{
+    var el=document.getElementById('profileAvatar'); if(!el) return;
+    var img=p&&p.avatar_image, col=(p&&p.avatar_color)||'#5b9bff';
+    if(img){ el.textContent=''; el.style.background='center/cover no-repeat url('+img+')'; }
+    else { el.style.backgroundImage=''; el.style.background='linear-gradient(135deg,'+col+','+col+')'; el.textContent=(name||'?').charAt(0).toUpperCase(); }
+  }catch(e){}
+}
 </script>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 </body>

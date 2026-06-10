@@ -68,6 +68,27 @@
     .content::-webkit-scrollbar { width:5px; } .content::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
 
     .section-title { font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px; }
+    /* 아코디언 토글 섹션 */
+    .acc { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    html[data-theme="light"] .acc { box-shadow:0 1px 3px rgba(20,22,40,0.06); }
+    .acc-head { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:18px 22px; cursor:pointer; user-select:none; transition:background 0.16s; }
+    .acc-head:hover { background:rgba(255,255,255,0.03); }
+    html[data-theme="light"] .acc-head:hover { background:rgba(20,22,40,0.03); }
+    .acc-head .ttl { font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px; }
+    .acc-head .arrow { font-size:13px; color:var(--text3); transition:transform 0.24s; }
+    .acc.open .acc-head .arrow { transform:rotate(180deg); }
+    .acc-body { max-height:0; overflow:hidden; transition:max-height 0.3s ease; }
+    .acc.open .acc-body { max-height:1200px; }
+    .acc-inner { padding:0 22px 22px; }
+    /* 저장 완료 인라인 표시 */
+    .save-ok { display:inline-flex; align-items:center; gap:5px; font-size:13px; font-weight:700; color:var(--success); opacity:0; transition:opacity 0.2s; margin-left:10px; }
+    .save-ok.on { opacity:1; }
+    .btn.saved { background:var(--success) !important; }
+    /* 비밀번호 보기 토글 */
+    .pw-wrap { position:relative; }
+    .pw-wrap input { padding-right:42px !important; }
+    .pw-eye { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:15px; opacity:0.7; }
+    .pw-eye:hover { opacity:1; }
     .panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:22px; }
     html[data-theme="light"] .panel { box-shadow:0 1px 3px rgba(20,22,40,0.06); }
     .set-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 0; border-bottom:1px solid var(--border); }
@@ -170,75 +191,103 @@
       </div>
     </div>
     <div class="content">
-      <div class="section-title">👤 프로필</div>
-      <div class="panel">
-        <div class="prof-head">
-          <div class="prof-avatar-wrap">
-            <div class="avatar-lg" id="avatarLg">?</div>
-            <button class="avatar-edit" onclick="document.getElementById('avatarFile').click()" title="사진 변경">📷</button>
-            <input type="file" id="avatarFile" accept="image/*" style="display:none" />
+      <!-- 프로필 (기본 열림) -->
+      <div class="acc open" id="accProfile">
+        <div class="acc-head" onclick="toggleAcc('accProfile')">
+          <span class="ttl">👤 프로필</span><span class="arrow">▼</span>
+        </div>
+        <div class="acc-body"><div class="acc-inner">
+          <div class="prof-head">
+            <div class="prof-avatar-wrap">
+              <div class="avatar-lg" id="avatarLg">?</div>
+              <button class="avatar-edit" onclick="document.getElementById('avatarFile').click()" title="사진 변경">📷</button>
+              <input type="file" id="avatarFile" accept="image/*" style="display:none" />
+            </div>
+            <div class="prof-head-info">
+              <div class="t" id="emailText">—</div>
+              <div class="d">가입 계정</div>
+              <button class="btn btn-ghost" style="margin-top:10px;font-size:12px;padding:7px 12px;" id="removePhoto" onclick="removePhoto()">사진 제거</button>
+            </div>
           </div>
-          <div class="prof-head-info">
-            <div class="t" id="emailText">—</div>
-            <div class="d">가입 계정</div>
-            <button class="btn btn-ghost" style="margin-top:10px;font-size:12px;padding:7px 12px;" id="removePhoto" onclick="removePhoto()">사진 제거</button>
+          <div class="field-block">
+            <label>아바타 색상 <span class="hint">사진이 없을 때 이니셜 배경색</span></label>
+            <div class="color-row" id="colorRow"></div>
           </div>
-        </div>
-
-        <div class="field-block">
-          <label>아바타 색상 <span class="hint">사진이 없을 때 이니셜 배경색</span></label>
-          <div class="color-row" id="colorRow"></div>
-        </div>
-
-        <div class="field-block">
-          <label>이름 <span class="hint">대시보드·사이드바에 표시됩니다</span></label>
-          <input id="nameInput" type="text" placeholder="이름" />
-        </div>
-
-        <div class="field-block">
-          <label>생년월일</label>
-          <input id="birthInput" type="date" />
-        </div>
-
-        <button class="btn btn-primary" style="width:100%;margin-top:4px;" onclick="saveProfile()">프로필 저장</button>
+          <div class="field-block">
+            <label>이름 <span class="hint">대시보드·사이드바에 표시됩니다</span></label>
+            <input id="nameInput" type="text" placeholder="이름" />
+          </div>
+          <div class="field-block">
+            <label>생년월일</label>
+            <input id="birthInput" type="date" />
+          </div>
+          <div style="display:flex;align-items:center;">
+            <button class="btn btn-primary" id="saveProfileBtn" style="flex:1;" onclick="saveProfile()">프로필 저장</button>
+            <span class="save-ok" id="profileOk">✓ 저장 완료</span>
+          </div>
+        </div></div>
       </div>
 
-      <div class="section-title">🎨 화면</div>
-      <div class="panel">
-        <div class="set-row">
-          <div class="set-info"><div class="t">테마</div><div class="d">밝은 화면과 어두운 화면을 전환합니다</div></div>
-          <div class="seg" id="themeSeg">
-            <button data-t="dark">다크</button>
-            <button data-t="light">라이트</button>
+      <!-- 화면 -->
+      <div class="acc" id="accScreen">
+        <div class="acc-head" onclick="toggleAcc('accScreen')">
+          <span class="ttl">🎨 화면</span><span class="arrow">▼</span>
+        </div>
+        <div class="acc-body"><div class="acc-inner">
+          <div class="set-row" style="padding-top:0;">
+            <div class="set-info"><div class="t">테마</div><div class="d">밝은 화면과 어두운 화면을 전환합니다</div></div>
+            <div class="seg" id="themeSeg">
+              <button data-t="dark">다크</button>
+              <button data-t="light">라이트</button>
+            </div>
           </div>
-        </div>
+        </div></div>
       </div>
 
-      <div class="section-title">📊 내 데이터</div>
-      <div class="panel">
-        <div class="data-grid" id="dataGrid">
-          <div class="data-card"><div class="n" id="dTotal">—</div><div class="l">전체 기록</div></div>
-          <div class="data-card"><div class="n" id="dCats">—</div><div class="l">활성 카테고리</div></div>
-          <div class="data-card"><div class="n" id="dDays">—</div><div class="l">활동한 날</div></div>
+      <!-- 내 데이터 -->
+      <div class="acc" id="accData">
+        <div class="acc-head" onclick="toggleAcc('accData')">
+          <span class="ttl">📊 내 데이터</span><span class="arrow">▼</span>
         </div>
-        <div class="set-row" style="margin-top:16px;">
-          <div class="set-info"><div class="t">데이터 백업</div><div class="d">모든 기록을 JSON 파일로 내려받습니다</div></div>
-          <button class="btn btn-ghost" onclick="exportData()">내보내기</button>
-        </div>
+        <div class="acc-body"><div class="acc-inner">
+          <div class="data-grid" id="dataGrid">
+            <div class="data-card"><div class="n" id="dTotal">—</div><div class="l">전체 기록</div></div>
+            <div class="data-card"><div class="n" id="dCats">—</div><div class="l">활성 카테고리</div></div>
+            <div class="data-card"><div class="n" id="dDays">—</div><div class="l">활동한 날</div></div>
+          </div>
+          <div class="set-row" style="margin-top:16px;">
+            <div class="set-info"><div class="t">데이터 백업</div><div class="d">모든 기록을 JSON 파일로 내려받습니다</div></div>
+            <button class="btn btn-ghost" onclick="exportData()">내보내기</button>
+          </div>
+        </div></div>
       </div>
 
-      <div class="section-title">🔐 계정</div>
-      <div class="panel">
-        <div class="field-block">
-          <label>비밀번호 변경 <span class="hint">새 비밀번호를 입력하면 즉시 변경됩니다</span></label>
-          <input id="pw1" type="password" placeholder="새 비밀번호 (6자 이상)" style="margin-bottom:8px;" />
-          <input id="pw2" type="password" placeholder="새 비밀번호 확인" />
-          <button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="changePw()">비밀번호 변경</button>
+      <!-- 계정 -->
+      <div class="acc" id="accAccount">
+        <div class="acc-head" onclick="toggleAcc('accAccount')">
+          <span class="ttl">🔐 계정</span><span class="arrow">▼</span>
         </div>
-        <div class="set-row">
-          <div class="set-info"><div class="t">로그아웃</div><div class="d">현재 기기에서 로그아웃합니다</div></div>
-          <button class="btn btn-danger" onclick="doLogout()">로그아웃</button>
-        </div>
+        <div class="acc-body"><div class="acc-inner">
+          <div class="field-block">
+            <label>비밀번호 변경 <span class="hint">새 비밀번호를 입력하면 즉시 변경됩니다</span></label>
+            <div class="pw-wrap" style="margin-bottom:8px;">
+              <input id="pw1" type="password" placeholder="새 비밀번호 (6자 이상)" />
+              <button class="pw-eye" onclick="togglePw('pw1',this)" type="button">👁</button>
+            </div>
+            <div class="pw-wrap">
+              <input id="pw2" type="password" placeholder="새 비밀번호 확인" />
+              <button class="pw-eye" onclick="togglePw('pw2',this)" type="button">👁</button>
+            </div>
+            <div style="display:flex;align-items:center;">
+              <button class="btn btn-primary" id="changePwBtn" style="flex:1;margin-top:10px;" onclick="changePw()">비밀번호 변경</button>
+              <span class="save-ok" id="pwOk" style="margin-top:10px;">✓ 변경 완료</span>
+            </div>
+          </div>
+          <div class="set-row">
+            <div class="set-info"><div class="t">로그아웃</div><div class="d">현재 기기에서 로그아웃합니다</div></div>
+            <button class="btn btn-danger" onclick="doLogout()">로그아웃</button>
+          </div>
+        </div></div>
       </div>
     </div>
   </div>
@@ -283,6 +332,10 @@ const days=['일','월','화','수','목','금','토'];
   $('dTotal').textContent=r.length;
   $('dCats').textContent=new Set(r.map(x=>x.category_id)).size;
   $('dDays').textContent=new Set(r.map(x=>(x.recorded_at||'').slice(0,10))).size;
+  document.querySelectorAll('input[type=date]').forEach(inp=>{
+    inp.addEventListener('click',()=>{ try{ inp.showPicker(); }catch(e){} });
+    inp.addEventListener('focus',()=>{ try{ inp.showPicker(); }catch(e){} });
+  });
 })();
 
 function setSeg(t){ document.querySelectorAll('#themeSeg button').forEach(b=>b.classList.toggle('on', b.dataset.t===t)); }
@@ -333,7 +386,10 @@ async function saveProfile(){
   const payload={ name, birthdate:birth, avatar_color:curColor, avatar_image:curImage||null };
   const { error }=await sb.from('profiles').update(payload).eq('id',user.id);
   if(error){ toast('저장 실패: '+error.message); return; }
-  $('profileNameSide').textContent=name; applyAvatar(name); toast('프로필이 저장되었습니다');
+  $('profileNameSide').textContent=name; applyAvatar(name);
+  const btn=$('saveProfileBtn'); btn.classList.add('saved'); btn.textContent='✓ 저장됨';
+  showOk('profileOk');
+  setTimeout(()=>{ btn.classList.remove('saved'); btn.textContent='프로필 저장'; },2000);
 }
 window.saveProfile=saveProfile;
 
@@ -343,7 +399,10 @@ async function changePw(){
   if(p1!==p2){ toast('새 비밀번호가 일치하지 않습니다'); return; }
   const { error }=await sb.auth.updateUser({ password:p1 });
   if(error){ toast('변경 실패: '+error.message); return; }
-  $('pw1').value=''; $('pw2').value=''; toast('비밀번호가 변경되었습니다');
+  $('pw1').value=''; $('pw2').value='';
+  const btn=$('changePwBtn'); btn.classList.add('saved'); btn.textContent='✓ 변경됨';
+  showOk('pwOk');
+  setTimeout(()=>{ btn.classList.remove('saved'); btn.textContent='비밀번호 변경'; },2000);
 }
 window.changePw=changePw;
 
@@ -355,6 +414,13 @@ async function exportData(){
   URL.revokeObjectURL(url); toast('백업 파일을 내려받았습니다');
 }
 window.exportData=exportData;
+
+function toggleAcc(id){ document.getElementById(id).classList.toggle('open'); }
+window.toggleAcc=toggleAcc;
+function togglePw(id,btn){ const el=document.getElementById(id);
+  if(el.type==='password'){ el.type='text'; btn.textContent='🙈'; } else { el.type='password'; btn.textContent='👁'; } }
+window.togglePw=togglePw;
+function showOk(elId){ const el=document.getElementById(elId); el.classList.add('on'); setTimeout(()=>el.classList.remove('on'),2500); }
 
 function toggleSidebar(){ const s=$('sidebar'),o=$('sidebarOverlay'); const op=s.classList.toggle('open'); if(o)o.classList.toggle('on',op); }
 window.toggleSidebar=toggleSidebar;
