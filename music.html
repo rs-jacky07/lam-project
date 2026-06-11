@@ -172,10 +172,10 @@
     .item-left { display:flex; flex-direction:column; gap:8px; min-width:0; }
     .item-title { font-size:16px; font-weight:800; color:var(--text);
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .item-sublabel { font-size:12px; color:var(--text3); font-weight:600; }
+    .item-sublabel { font-size:12px; color:var(--text3); font-weight:600; min-height:18px; line-height:18px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .item-date-row { display:flex; align-items:center; gap:8px; }
     .item-date { font-size:12px; color:var(--text3); flex-shrink:0; }
-    .item-stars { font-size:17px; color:var(--gold); letter-spacing:2px; }
+    .item-stars { font-size:17px; color:var(--gold); letter-spacing:2px; min-height:24px; line-height:24px; }
     .item-stars .off { color:var(--text3); }
     .item-memo { font-size:12.5px; color:var(--text2); grid-column:1/-1; margin-top:8px;
       padding-top:8px; border-top:1px solid var(--border); min-height:30px;
@@ -811,7 +811,7 @@ function practiceCard(r){
       <div class="item-left">
         <span class="item-title">${dateFull}</span>
         <div class="item-stars">${stars(Number(r.value))}</div>
-        ${song?`<span class="item-sublabel">${song}</span>`:''}
+        <span class="item-sublabel">${song||''}</span>
       </div>
       <div class="item-right">
         <div class="badges">${instBadges}</div>
@@ -834,6 +834,7 @@ function contentCard(r){
     <div class="item-main" onclick='editContent(${rj})'>
       <div class="item-left">
         <span class="item-title">${title||'(제목 없음)'}</span>
+        <div class="item-stars"></div>
         <span class="item-sublabel">${dateFull}</span>
       </div>
       <div class="item-right">
