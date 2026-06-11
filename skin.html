@@ -87,6 +87,14 @@
     .sc-value.products { color:var(--accent2); } .sc-value.done { color:var(--success); }
     .sc-value.star { color:var(--gold); } .sc-value.prog { color:var(--pink); }
     .sc-sub { font-size:11px; color:var(--text3); font-weight:600; margin-top:auto; padding-top:10px; }
+    .summary-card.act { cursor:pointer; }
+    .summary-card.act.sel { border-color:var(--accent); background:rgba(91,155,255,0.06); }
+    .summary-card.act.sel::after { content:'필터 중'; position:absolute; top:10px; right:12px; font-size:10px; font-weight:800; color:var(--accent2); background:rgba(91,155,255,0.18); padding:2px 8px; border-radius:100px; }
+    .sc-delta { display:inline-flex; align-items:center; gap:3px; font-size:11px; font-weight:700; margin-top:8px; padding:2px 8px; border-radius:100px; align-self:flex-start; }
+    .sc-delta.up { color:var(--success); background:rgba(86,217,154,0.15); }
+    .sc-delta.dn { color:var(--error); background:rgba(255,122,122,0.15); }
+    .sc-delta.flat { color:var(--text3); background:rgba(255,255,255,0.06); }
+    html[data-theme="light"] .sc-delta.flat { background:rgba(20,22,40,0.06); }
 
     /* 툴바 */
     .toolbar { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
@@ -238,28 +246,7 @@
       </div>
     </div>
     <div class="content">
-      <div class="summary-grid fade-up">
-        <div class="summary-card" style="--card-accent:#5b9bff">
-          <div class="sc-top"><span class="sc-icon">🧴</span><span class="sc-tt">등록 제품</span></div>
-          <div class="sc-value products" id="scProducts">0</div>
-          <div class="sc-sub">관리 중인 제품 수</div>
-        </div>
-        <div class="summary-card" style="--card-accent:#56d99a">
-          <div class="sc-top"><span class="sc-icon">✅</span><span class="sc-tt">완료 제품</span></div>
-          <div class="sc-value done" id="scDone">0</div>
-          <div class="sc-sub">4개 활동 모두 완료</div>
-        </div>
-        <div class="summary-card" style="--card-accent:#ffc14d">
-          <div class="sc-top"><span class="sc-icon">⭐</span><span class="sc-tt">평균 별점</span></div>
-          <div class="sc-value star" id="scStar">—</div>
-          <div class="sc-sub">화해·글로우픽 리뷰 평균</div>
-        </div>
-        <div class="summary-card" style="--card-accent:#ff8fc7">
-          <div class="sc-top"><span class="sc-icon">📊</span><span class="sc-tt">전체 진행률</span></div>
-          <div class="sc-value prog" id="scProg">0%</div>
-          <div class="sc-sub">전체 활동 완료 비율</div>
-        </div>
-      </div>
+      <div class="summary-grid fade-up" id="actSummary"></div>
 
       <div class="toolbar fade-up" style="animation-delay:0.06s">
         <div class="toolbar-search"><span>🔍</span><input id="searchInput" type="text" placeholder="제품명 검색..." /></div>
@@ -332,7 +319,7 @@ const $=id=>document.getElementById(id);
 const days=['일','월','화','수','목','금','토'];
 
 let userId=null, metricMap={}, products=[], records=[];
-let curFilter='all', searchText='';
+let curFilter='all', searchText='', actFilter=null; // actFilter: null이면 전체, 아니면 act.key
 // 활동 정의: key, 라벨, 아이콘, status, metric명, 별점여부
 const ACTS=[
   {key:'hwahae', name:'화해', icon:'📝', status:'review',  metric:'화해',      star:true},
@@ -384,24 +371,42 @@ function actRecord(productId, act){
 }
 function productProgress(p){ return ACTS.filter(a=>actRecord(p.id,a)).length; }
 
-function render(){
-  // 요약
-  const total=products.length;
-  const doneCount=products.filter(p=>productProgress(p)===4).length;
-  const reviewRecs=records.filter(r=>r.status==='review' && (midName(r.metric_id)==='화해'||midName(r.metric_id)==='글로우픽'));
-  const avgStar=reviewRecs.length? (reviewRecs.reduce((s,r)=>s+Number(r.value||0),0)/reviewRecs.length) : 0;
-  const totalActs=total*4;
-  const doneActs=products.reduce((s,p)=>s+productProgress(p),0);
-  $('scProducts').textContent=total;
-  $('scDone').textContent=doneCount;
-  $('scStar').textContent=avgStar? '★ '+avgStar.toFixed(1) : '—';
-  $('scProg').textContent=totalActs? Math.round(doneActs/totalActs*100)+'%' : '0%';
+const MONTH=new Date().getMonth()+1;
+function monthOf(r){ return Number((r.recorded_at||'').slice(5,7)); }
+// 특정 활동을 이번 달/전월에 수행한 "제품 수" (제품당 1회 카운트)
+function actCount(act, month){
+  const ids=new Set();
+  records.filter(r=>r.status===act.status && midName(r.metric_id)===act.metric && monthOf(r)===month)
+    .forEach(r=>{ if(r.product_id) ids.add(r.product_id); });
+  return ids.size;
+}
+const ACT_ACCENT={hwahae:'#ff8fc7',glowpick:'#b18cff',insta:'#ff9b5b',youtube:'#ff7a7a'};
 
+function renderSummary(){
+  $('actSummary').innerHTML=ACTS.map(a=>{
+    const cur=actCount(a,MONTH), prev=actCount(a,MONTH-1);
+    const diff=cur-prev;
+    const deltaCls=diff>0?'up':diff<0?'dn':'flat';
+    const deltaTxt=diff>0?`▲ +${diff}`:diff<0?`▼ ${diff}`:'전월과 동일';
+    const sel=actFilter===a.key?'sel':'';
+    return `<div class="summary-card act ${sel}" style="--card-accent:${ACT_ACCENT[a.key]}" onclick="toggleActFilter('${a.key}')">
+      <div class="sc-top"><span class="sc-icon">${a.icon}</span><span class="sc-tt">${a.name} ${a.status==='review'?'리뷰':'콘텐츠'}</span></div>
+      <div class="sc-value" style="color:${ACT_ACCENT[a.key]}">${cur}<span style="font-size:14px;color:var(--text3);font-weight:700;"> 건</span></div>
+      <div class="sc-delta ${deltaCls}">${deltaTxt}</div>
+      <div class="sc-sub">${MONTH}월 수행 · 전월 ${prev}건</div>
+    </div>`;
+  }).join('');
+}
+
+function render(){
+  renderSummary();
   // 필터링
   let arr=products.slice();
   if(searchText) arr=arr.filter(p=>(p.name||'').toLowerCase().includes(searchText));
   if(curFilter==='complete') arr=arr.filter(p=>productProgress(p)===4);
   else if(curFilter==='incomplete') arr=arr.filter(p=>productProgress(p)<4);
+  // 활동 필터: 그 활동을 수행한 제품만
+  if(actFilter){ const a=ACTS.find(x=>x.key===actFilter); arr=arr.filter(p=>!!actRecord(p.id,a)); }
 
   const grid=$('productGrid');
   if(!products.length){
@@ -411,10 +416,18 @@ function render(){
       <button class="btn-record" style="margin:0 auto" onclick="openProduct(null)">+ 첫 제품 추가하기</button></div>`;
     return;
   }
-  if(!arr.length){ grid.style.display='block'; grid.innerHTML=`<div class="empty-state"><div class="d">조건에 맞는 제품이 없습니다.</div></div>`; return; }
+  if(!arr.length){
+    const fname=actFilter?ACTS.find(x=>x.key===actFilter).name:'';
+    grid.style.display='block';
+    grid.innerHTML=`<div class="empty-state"><div class="d">${actFilter?`'${fname}' 활동을 한 제품이 없습니다.`:'조건에 맞는 제품이 없습니다.'}</div></div>`;
+    return;
+  }
   grid.style.display='grid';
   grid.innerHTML=arr.map(productCard).join('');
 }
+
+function toggleActFilter(key){ actFilter = (actFilter===key)? null : key; render(); }
+window.toggleActFilter=toggleActFilter;
 
 function productCard(p){
   const prog=productProgress(p);
