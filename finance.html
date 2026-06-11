@@ -80,6 +80,35 @@
 
     /* ══ 비교 카드 ══ */
     .compare { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .summary-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      padding:18px 20px; position:relative; overflow:hidden; transition:border-color 0.2s, transform 0.2s;
+      min-height:172px; display:flex; flex-direction:column; }
+    .summary-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px;
+      background:var(--card-accent,var(--accent)); opacity:0.85; }
+    .summary-card:hover { border-color:rgba(255,255,255,0.16); transform:translateY(-2px); }
+    .sc-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .sc-icon { font-size:18px; }
+    .sc-edit { font-size:11px; color:var(--text3); cursor:pointer; border:1px solid var(--border);
+      border-radius:7px; padding:3px 8px; background:var(--bg2); font-weight:700; transition:all 0.14s; font-family:'Pretendard',sans-serif; }
+    .sc-edit:hover { color:var(--accent2); border-color:var(--accent); }
+    .sc-value { font-size:22px; font-weight:800; letter-spacing:-0.02em; margin-bottom:3px; }
+    .sc-value.asset { color:var(--accent2); }
+    .sc-value.income { color:var(--success); }
+    .sc-value.expense { color:var(--error); }
+    .sc-value.save { color:var(--gold); }
+    .sc-label { font-size:12px; color:var(--text2); font-weight:600; }
+    .sc-delta { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700;
+      margin-top:8px; padding:3px 9px; border-radius:100px; align-self:flex-start; }
+    .sc-delta.up { color:var(--success); background:rgba(86,217,154,0.15); }
+    .sc-delta.dn { color:var(--error); background:rgba(255,122,122,0.15); }
+    .sc-delta.flat { color:var(--text3); background:rgba(255,255,255,0.06); }
+    html[data-theme="light"] .sc-delta.flat { background:rgba(20,22,40,0.06); }
+    .summary-card .sc-sub { margin-top:auto; padding-top:10px; font-size:11px; color:var(--text3); font-weight:600; }
+    .summary-card .sc-rank { margin-top:auto; padding-top:10px; display:flex; flex-direction:column; gap:3px; }
+    .summary-card .sc-rank .r { font-size:11px; color:var(--text2); font-weight:600; }
+    .summary-card .sc-rank .medal { margin-right:3px; }
+    @media (max-width:768px){ .summary-grid { grid-template-columns:repeat(2,1fr); } }
     .cmp-row { display:grid; grid-template-columns:130px 1fr 1fr 1fr; align-items:stretch; }
     .cmp-row + .cmp-row { border-top:1px solid var(--border); }
     .cmp-row.head { background:rgba(255,255,255,0.04); }
@@ -359,40 +388,35 @@
 
     <div class="content">
 
-      <!-- ① 비교 카드 -->
-      <div class="compare fade-up">
-        <div class="cmp-row head">
-          <div class="cmp-label"><span class="t">구분</span></div>
-          <div class="cmp-cell"><div class="cmp-head-cell"><span class="dot" style="background:var(--success)"></span><span class="ht" style="color:var(--success)">수입</span></div></div>
-          <div class="cmp-cell"><div class="cmp-head-cell"><span class="dot" style="background:var(--error)"></span><span class="ht" style="color:var(--error)">지출</span></div></div>
-          <div class="cmp-cell"><div class="cmp-head-cell"><span class="dot" style="background:var(--gold)"></span><span class="ht" style="color:var(--gold)">저축·투자</span></div></div>
+      <!-- ① 요약 카드 4개 -->
+      <div class="summary-grid fade-up">
+        <div class="summary-card" style="--card-accent:#5b9bff">
+          <div class="sc-top"><span class="sc-icon">💎 <span style="font-size:12px;color:var(--text2);font-weight:700;">총자산</span></span>
+            <button class="sc-edit" onclick="openStartAsset()">시작자산</button></div>
+          <div class="sc-value asset" id="totalAsset">0원</div>
+          <div class="sc-label">시작자산 + 누적(수입−지출)</div>
+          <div class="sc-sub" id="assetSub">이번 달까지 누적</div>
         </div>
-        <div class="cmp-row data">
-          <div class="cmp-label"><span class="t">최근 평균</span><span class="s" id="avgRange">데이터 누적 시</span></div>
-          <div class="cmp-cell income"><div class="cv" id="avgIncome">0원</div><div class="cmp-bar"><i id="barAvgIncome"></i></div></div>
-          <div class="cmp-cell expense"><div class="cv" id="avgExpense">0원</div><div class="cmp-bar"><i id="barAvgExpense"></i></div></div>
-          <div class="cmp-cell save"><div class="cv" id="avgSave">0원</div><div class="cmp-bar"><i id="barAvgSave"></i></div></div>
+        <div class="summary-card" style="--card-accent:#56d99a">
+          <div class="sc-top"><span class="sc-icon">📈 <span style="font-size:12px;color:var(--text2);font-weight:700;">이번 달 수입</span></span></div>
+          <div class="sc-value income" id="curIncome">0원</div>
+          <div class="sc-label" id="incomeLabel">6월 수입</div>
+          <div class="sc-delta flat" id="dIncome">—</div>
+          <div class="sc-rank" id="rankIncome"></div>
         </div>
-        <div class="cmp-row data">
-          <div class="cmp-label"><span class="t" id="curMonthLabel">이번 달</span><span class="s">선택한 달 · 평균 대비</span></div>
-          <div class="cmp-cell income">
-            <div class="cv" id="curIncome">0원</div>
-            <div class="cmp-bar"><i id="barCurIncome"></i></div>
-            <div class="delta flat" id="dIncome">—</div>
-            <div class="cmp-rank" id="rankIncome"></div>
-          </div>
-          <div class="cmp-cell expense">
-            <div class="cv" id="curExpense">0원</div>
-            <div class="cmp-bar"><i id="barCurExpense"></i></div>
-            <div class="delta flat" id="dExpense">—</div>
-            <div class="cmp-rank" id="rankExpense"></div>
-          </div>
-          <div class="cmp-cell save">
-            <div class="cv" id="curSave">0원</div>
-            <div class="cmp-bar"><i id="barCurSave"></i></div>
-            <div class="delta flat" id="dSave">—</div>
-            <div class="cmp-rank" id="rankSave"></div>
-          </div>
+        <div class="summary-card" style="--card-accent:#ff7a7a">
+          <div class="sc-top"><span class="sc-icon">💸 <span style="font-size:12px;color:var(--text2);font-weight:700;">이번 달 지출</span></span></div>
+          <div class="sc-value expense" id="curExpense">0원</div>
+          <div class="sc-label" id="expenseLabel">6월 지출</div>
+          <div class="sc-delta flat" id="dExpense">—</div>
+          <div class="sc-rank" id="rankExpense"></div>
+        </div>
+        <div class="summary-card" style="--card-accent:#ffc14d">
+          <div class="sc-top"><span class="sc-icon">🏦 <span style="font-size:12px;color:var(--text2);font-weight:700;">이번 달 저축·투자</span></span></div>
+          <div class="sc-value save" id="curSave">0원</div>
+          <div class="sc-label" id="saveLabel">6월 저축·투자</div>
+          <div class="sc-delta flat" id="dSave">—</div>
+          <div class="sc-rank" id="rankSave"></div>
         </div>
       </div>
 
@@ -475,6 +499,20 @@
   </div>
 </div>
 
+<!-- 시작 자산 모달 -->
+<div class="modal-bg" id="startAssetModal">
+  <div class="modal">
+    <h3>시작 자산 설정</h3>
+    <p style="font-size:13px;color:var(--text2);margin:-12px 0 20px;line-height:1.6;">
+      LAM 사용 시작 시점에 보유한 현금·자산을 입력하세요. 총자산은 여기에 누적 수입을 더하고 지출을 뺀 값입니다.</p>
+    <div class="field"><label>시작 자산 (원)</label><input id="startAssetInput" type="text" inputmode="numeric" placeholder="예: 5,000,000" /></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeStartAsset()">취소</button>
+      <button class="btn-save" onclick="saveStartAsset()">저장</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -490,6 +528,7 @@ const CAT_OPTS = {
 
 let user=null, categoryId=null, editingId=null, curType='expense';
 let yearRecords=[];
+let startAsset=0;
 let selMonth = new Date().getMonth()+1;
 let searchText='';
 let sortDir = { income:'desc', expense:'desc', save:'desc' };  // 열별 날짜 정렬 (desc=최신순)
@@ -602,6 +641,8 @@ async function loadYear(){
     .order('recorded_at',{ascending:false}).order('created_at',{ascending:false});
   if(error){ toast('불러오기 실패'); return; }
   yearRecords = recs || [];
+  const { data:prof } = await sb.from('profiles').select('start_asset').eq('id',user.id).single();
+  startAsset = Number(prof?.start_asset)||0;
   renderAll();
 }
 
@@ -633,35 +674,29 @@ function topCats(recs, status){
 function renderAll(){ renderCompare(); renderBoard(); }
 
 function renderCompare(){
-  const monthsWithData = [...new Set(yearRecords.map(monthOf))];
   const curRecs = yearRecords.filter(r=>monthOf(r)===selMonth);
   const cur = sums(curRecs);
+  // 전월(같은 해 직전 달) 비교
+  const prevRecs = yearRecords.filter(r=>monthOf(r)===selMonth-1);
+  const prev = sums(prevRecs);
 
-  let avg = {inc:0,exp:0,sav:0}, rangeText='데이터 누적 시 비교';
-  if(monthsWithData.length){
-    const tot = sums(yearRecords);
-    const n = monthsWithData.length;
-    avg = { inc:Math.round(tot.inc/n), exp:Math.round(tot.exp/n), sav:Math.round(tot.sav/n) };
-    rangeText = `${YEAR}년 ${n}개 월 평균`;
-  }
-  $('avgRange').textContent = rangeText;
-  $('avgIncome').textContent = won(avg.inc);
-  $('avgExpense').textContent = won(avg.exp);
-  $('avgSave').textContent = won(avg.sav);
+  // 총자산 = 시작자산 + 누적(수입 - 지출). (선택월까지 누적)
+  const upto = yearRecords.filter(r=>monthOf(r)<=selMonth);
+  const acc = sums(upto);
+  const total = startAsset + acc.inc - acc.exp;
+  $('totalAsset').textContent = won(total);
+  $('assetSub').textContent = `시작자산 ${won(startAsset)} · ${selMonth}월까지 누적`;
 
-  $('curMonthLabel').textContent = `${selMonth}월`;
+  $('incomeLabel').textContent = `${selMonth}월 수입`;
+  $('expenseLabel').textContent = `${selMonth}월 지출`;
+  $('saveLabel').textContent = `${selMonth}월 저축·투자`;
   $('curIncome').textContent = won(cur.inc);
   $('curExpense').textContent = won(cur.exp);
   $('curSave').textContent = won(cur.sav);
 
-  // 가로 막대: 각 유형별 (평균/이번달) 중 큰 값을 100% 기준으로
-  setBar('barAvgIncome','barCurIncome', avg.inc, cur.inc);
-  setBar('barAvgExpense','barCurExpense', avg.exp, cur.exp);
-  setBar('barAvgSave','barCurSave', avg.sav, cur.sav);
-
-  setDelta('dIncome', cur.inc, avg.inc, true);
-  setDelta('dExpense', cur.exp, avg.exp, false);
-  setDelta('dSave', cur.sav, avg.sav, true);
+  setDelta('dIncome', cur.inc, prev.inc, true);
+  setDelta('dExpense', cur.exp, prev.exp, false);
+  setDelta('dSave', cur.sav, prev.sav, true);
 
   renderRank('rankIncome', topCats(curRecs,'income'));
   renderRank('rankExpense', topCats(curRecs,'expense'));
@@ -680,16 +715,16 @@ function setBar(avgId, curId, avgVal, curVal){
 /* 증감: 이모지 + 색 배지 */
 function setDelta(id, cur, avg, goodWhenUp){
   const el = $(id);
-  if(!avg && !cur){ el.className='delta flat'; el.textContent='기록 없음'; return; }
-  if(!avg){ el.className='delta flat'; el.textContent='첫 기록'; return; }
+  if(!avg && !cur){ el.className='sc-delta flat'; el.textContent='기록 없음'; return; }
+  if(!avg){ el.className='sc-delta flat'; el.textContent='첫 기록'; return; }
   const diff = cur - avg;
-  if(diff===0){ el.className='delta flat'; el.textContent='⚖️ 평균과 동일'; return; }
+  if(diff===0){ el.className='sc-delta flat'; el.textContent='전월과 동일'; return; }
   const pct = Math.round(diff/avg*100);
   const up = diff>0;
   const good = (up && goodWhenUp) || (!up && !goodWhenUp);
-  el.className = 'delta ' + (good ? 'dn' : 'up');
+  el.className = 'sc-delta ' + (good ? 'up' : 'dn');
   const emoji = up ? '🔺' : '🔻';
-  el.textContent = `${emoji} 평균 대비 ${up?'+':'-'}${Math.abs(pct)}%`;
+  el.textContent = `${emoji} 전월 대비 ${up?'+':'-'}${Math.abs(pct)}%`;
 }
 
 function renderRank(id, top){
@@ -786,6 +821,20 @@ window.delRec = async function(id){
   toast('삭제되었습니다');
   await loadYear();
 };
+
+function openStartAsset(){ $('startAssetInput').value = startAsset? won(startAsset).replace('원','') : ''; $('startAssetModal').classList.add('on'); }
+function closeStartAsset(){ $('startAssetModal').classList.remove('on'); }
+window.openStartAsset=openStartAsset; window.closeStartAsset=closeStartAsset;
+async function saveStartAsset(){
+  const v=Number(($('startAssetInput').value||'').replace(/[^0-9]/g,''))||0;
+  const { error }=await sb.from('profiles').update({ start_asset:v }).eq('id',user.id);
+  if(error){ toast('저장 실패: '+error.message); return; }
+  startAsset=v; closeStartAsset(); toast('시작 자산이 저장되었습니다'); renderAll();
+}
+window.saveStartAsset=saveStartAsset;
+document.getElementById('startAssetModal').addEventListener('click',e=>{ if(e.target.id==='startAssetModal') closeStartAsset(); });
+document.getElementById('startAssetInput').addEventListener('input',e=>{
+  const n=e.target.value.replace(/[^0-9]/g,''); e.target.value=n?Number(n).toLocaleString('ko-KR'):''; });
 
 async function doLogout(){ await sb.auth.signOut(); location.href='index.html'; }
 
