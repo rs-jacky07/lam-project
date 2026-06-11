@@ -85,13 +85,14 @@
       margin-bottom: 8px;
     }
     .profile-avatar {
-      width: 30px; height: 30px; border-radius: 50%;
+      width: 32px; height: 32px; border-radius: 50%;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0;
+      font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+      background-size: cover; background-position: center;
     }
-    .profile-name  { font-size: 13px; font-weight: 600; color: var(--text); }
-    .profile-email { font-size: 10px; color: var(--text3); margin-top: 1px;
+    .profile-name  { font-size: 14px; font-weight: 700; color: var(--text); }
+    .profile-email { font-size: 11px; color: var(--text3); margin-top: 1px;
                      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
     .btn-logout {
       width: 100%; padding: 8px; border-radius: 8px;
@@ -142,6 +143,25 @@
     .content::-webkit-scrollbar { width: 4px; }
     .content::-webkit-scrollbar-track { background: transparent; }
     .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    /* 자산 현황 히어로 */
+    .asset-hero { display:grid; grid-template-columns:1fr 1.1fr; gap:18px; background:var(--card);
+      border:1px solid var(--border); border-radius:var(--radius); padding:22px 24px; position:relative; overflow:hidden; }
+    html[data-theme="light"] .asset-hero { box-shadow:0 1px 3px rgba(20,22,40,0.06); }
+    .asset-hero::before { content:''; position:absolute; top:0; left:0; right:0; height:3px;
+      background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+    .ah-label { font-size:13px; color:var(--text2); font-weight:700; }
+    .ah-sub { font-size:11px; color:var(--text3); font-weight:600; margin-left:4px; }
+    .ah-value { font-size:38px; font-weight:800; letter-spacing:-0.02em; color:var(--accent2); margin:8px 0 16px; }
+    .ah-chips { display:flex; flex-direction:column; gap:9px; }
+    .ah-chip { display:flex; align-items:center; justify-content:space-between; padding:10px 14px;
+      background:var(--bg2); border:1px solid var(--border); border-radius:10px; }
+    .ahc-l { font-size:12.5px; color:var(--text2); font-weight:600; }
+    .ahc-v { font-size:15px; font-weight:800; }
+    .ahc-v.cash { color:var(--success); } .ahc-v.inv { color:var(--gold); }
+    .ah-graph { display:flex; flex-direction:column; }
+    .ah-graph-title { font-size:13px; font-weight:700; color:var(--text2); margin-bottom:10px; }
+    .ah-graph-box { flex:1; position:relative; min-height:180px; }
+    @media (max-width:900px){ .asset-hero { grid-template-columns:1fr; } }
 
     /* ══ SUMMARY CARDS ══ */
     .summary-grid {
@@ -265,7 +285,7 @@
     .cal-detail-item:last-child { border-bottom:none; }
     .cal-detail-item .ci { width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
     .cal-detail-item .cinfo { min-width:0; }
-    .cal-detail-item .ctitle { font-size:13px; font-weight:700; color:var(--text); }
+    .cal-detail-item .ctitle { font-size:13px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:230px; }
     .cal-detail-item .ccat { font-size:11px; color:var(--text3); margin-top:1px; }
     .focus-card {
       padding: 14px 15px; border-radius: 11px;
@@ -473,6 +493,23 @@
     </div>
 
     <div class="content">
+
+      <!-- ⓪ 자산 현황 히어로 -->
+      <div class="asset-hero fade-up">
+        <div class="ah-main">
+          <div class="ah-label">💎 총자산 <span class="ah-sub">금융 기록 기준</span></div>
+          <div class="ah-value" id="ahTotal">0원</div>
+          <div class="ah-chips">
+            <span class="ah-chip"><span class="ahc-l">💵 가용 현금</span><span class="ahc-v cash" id="ahCash">0원</span></span>
+            <span class="ah-chip"><span class="ahc-l">🏦 투자 자산</span><span class="ahc-v inv" id="ahInv">0원</span></span>
+            <span class="ah-chip"><span class="ahc-l">📅 이번 달 수지</span><span class="ahc-v" id="ahNet">0원</span></span>
+          </div>
+        </div>
+        <div class="ah-graph">
+          <div class="ah-graph-title">월별 자산 성장</div>
+          <div class="ah-graph-box"><canvas id="assetChart"></canvas></div>
+        </div>
+      </div>
 
       <!-- ① 요약 카드 -->
       <div class="summary-grid fade-up" style="animation-delay:0s">
@@ -701,6 +738,61 @@ async function loadDashboard(){
   buildChartData(records, catId, countFor, bizPct);
   buildChart('bar');
   renderCalendar(records, catId);
+  await renderAsset(uid, records, catId);
+}
+
+/* ── 자산 현황 + 월별 성장 그래프 ── */
+let assetChart=null;
+function wonFull(v){ return (Number(v)||0).toLocaleString('ko-KR')+'원'; }
+async function renderAsset(uid, records, catId){
+  // 시작 자산
+  const { data:prof } = await sb.from('profiles').select('start_asset').eq('id',uid).single();
+  const startAsset = Number(prof?.start_asset)||0;
+  const finId = catId['금융'];
+  const fin = records.filter(r=> r.category_id===finId);
+  const mOf = r => Number((r.recorded_at||'').slice(5,7));
+
+  // 누적(올해 선택월까지 = 이번 달까지)
+  let accInc=0, accExp=0, accSav=0, mInc=0, mExp=0;
+  fin.forEach(r=>{
+    const v=Number(r.value)||0, m=mOf(r);
+    if(m<=MONTH){
+      if(r.status==='income') accInc+=v;
+      else if(r.status==='expense') accExp+=v;
+      else if(r.status==='save') accSav+=v;
+    }
+    if(m===MONTH){ if(r.status==='income') mInc+=v; else if(r.status==='expense') mExp+=v; }
+  });
+  const total = startAsset + accInc - accExp;
+  const cash  = total - accSav;
+  const net   = mInc - mExp;
+  document.getElementById('ahTotal').textContent = wonFull(total);
+  document.getElementById('ahCash').textContent = wonFull(cash);
+  document.getElementById('ahInv').textContent = wonFull(accSav);
+  const netEl=document.getElementById('ahNet');
+  netEl.textContent = (net>=0?'+':'') + wonFull(net);
+  netEl.style.color = net>=0? 'var(--success)' : 'var(--error)';
+
+  // 월별 총자산 추이 (1월~이번달): 시작자산 + 그 달까지 누적(수입-지출)
+  const labels=[], data=[];
+  for(let m=1;m<=MONTH;m++){
+    let inc=0, exp=0;
+    fin.forEach(r=>{ if(mOf(r)<=m){ const v=Number(r.value)||0;
+      if(r.status==='income') inc+=v; else if(r.status==='expense') exp+=v; } });
+    labels.push(m+'월'); data.push(startAsset + inc - exp);
+  }
+  const tc=getComputedStyle(document.documentElement).getPropertyValue('--text3').trim()||'#7e7ea4';
+  const acc=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#5b9bff';
+  if(assetChart) assetChart.destroy();
+  assetChart=new Chart(document.getElementById('assetChart'),{
+    type:'line',
+    data:{ labels, datasets:[{ data, borderColor:acc, backgroundColor:acc+'22',
+      borderWidth:2.5, tension:0.35, pointRadius:3, pointBackgroundColor:acc, fill:true }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>wonFull(c.parsed.y) } } },
+      scales:{ x:{ ticks:{color:tc,font:{size:10}}, grid:{display:false} },
+        y:{ ticks:{color:tc,font:{size:10}, callback:v=> v>=100000000?(v/100000000)+'억': v>=10000?(v/10000)+'만':v }, grid:{color:'rgba(128,128,128,0.1)'} } } }
+  });
 }
 
 /* 카테고리 진행률 렌더 */
@@ -816,6 +908,39 @@ const STATUS_LABEL_CAL={ income:'수입 기록',expense:'지출 기록',save:'�
   content:'콘텐츠 업로드',channel:'채널 수치',workout:'운동 기록',inbody:'인바디 측정',
   practice:'악기 연습',learn:'배움 기록' };
 
+// 금액 약식 (원 -> 만원/억)
+function wonShort(v){
+  v=Number(v)||0;
+  if(v>=100000000) return (v/100000000).toFixed(v%100000000?1:0)+'억';
+  if(v>=10000) return Math.round(v/10000).toLocaleString('ko-KR')+'만원';
+  return v.toLocaleString('ko-KR')+'원';
+}
+function ellip(t,n){ t=(t||'').trim(); return t.length>n? t.slice(0,n)+'…' : t; }
+// 캘린더 한 줄 약식: status별 핵심 내용
+function calDigest(r){
+  const p=(r.memo||'').split('|');
+  switch(r.status){
+    case 'income': return '수입 '+wonShort(r.value)+memoTail(r.memo);
+    case 'expense': return '지출 '+wonShort(r.value)+memoTail(r.memo);
+    case 'save': return '저축·투자 '+wonShort(r.value)+memoTail(r.memo);
+    case 'channel': return '채널 '+(Number(r.value)||0).toLocaleString('ko-KR')+'명';
+    case 'review': return (p[0]||'리뷰')+' '+'★'.repeat(Number(r.value)||0);
+    case 'content': return (p[0]||'콘텐츠');
+    case 'workout': { const part=(p[0]||'').split(',').filter(Boolean).join('·'); return '운동'+(part?' '+part:'')+' ★'+(Number(r.value)||0); }
+    case 'inbody': return '인바디 체중 '+(p[0]||r.value)+'kg';
+    case 'practice': { const inst=(p[0]||'').split(',').filter(Boolean).join('·'); const t=p[1]&&p[1]!=='0'?' '+Math.floor(p[1]/60)+'시간'+(p[1]%60?p[1]%60+'분':''):''; return (inst||'연습')+t; }
+    case 'learn': return '배움 '+(p[1]||p[0]||'');
+    default: return STATUS_LABEL_CAL[r.status]||r.status;
+  }
+}
+// 금액 기록의 메모(카테고리) 꼬리 — [카테고리] 형식에서 추출
+function memoTail(memo){
+  const m=(memo||'').match(/^\[(.+?)\]\s?(.*)$/);
+  if(!m) return '';
+  const cat=m[1], rest=(m[2]||'').trim();
+  return ' · '+ellip(cat+(rest?' '+rest:''), 14);
+}
+
 function renderCalendar(records, catId){
   const idCat={}; Object.keys(catId).forEach(n=> idCat[catId[n]]=n);
   const byDay={};
@@ -872,9 +997,10 @@ window.selectDay=function(d){
   if(!recs.length){ det.innerHTML=`<div class="cal-detail-title">${MONTH}월 ${d}일</div><div class="cal-detail-empty">이 날은 기록이 없습니다.</div>`; return; }
   const items=recs.map(r=>{
     const cat=data.idCat[r.category_id]||'기타'; const m=CAT_META_CAL[cat]||{icon:'•',color:'#888'};
+    const digest=ellip(calDigest(r), 28);
     return `<div class="cal-detail-item">
       <div class="ci" style="background:${m.color}22;color:${m.color}">${m.icon}</div>
-      <div class="cinfo"><div class="ctitle">${STATUS_LABEL_CAL[r.status]||r.status}</div><div class="ccat">${cat}</div></div>
+      <div class="cinfo"><div class="ctitle">${digest}</div><div class="ccat">${cat}</div></div>
     </div>`;
   }).join('');
   det.innerHTML=`<div class="cal-detail-title">${MONTH}월 ${d}일 · ${recs.length}건</div>${items}`;
@@ -901,6 +1027,7 @@ const months = null; // (구버전 참조 방지)
 
 let myChart;
 function buildChart(type) {
+  window.__chartType=type;
   if (myChart) myChart.destroy();
   const ctx = document.getElementById('mainChart').getContext('2d');
   myChart = new Chart(ctx, {
@@ -949,7 +1076,9 @@ function toggleSidebar(){
 window.toggleSidebar=toggleSidebar;
 
 function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); try{localStorage.setItem('lam-theme',t);}catch(e){}
-  var lbl=document.getElementById('themeLabel'); if(lbl) lbl.textContent = t==='light'?'라이트 모드':'다크 모드'; }
+  var lbl=document.getElementById('themeLabel'); if(lbl) lbl.textContent = t==='light'?'라이트 모드':'다크 모드';
+  try{ if(typeof buildChart==='function' && window.__chartType) buildChart(window.__chartType); }catch(e){}
+  try{ if(typeof loadDashboard==='function') { /* 자산차트 색 갱신 위해 가벼운 재호출 */ } }catch(e){} }
 function toggleTheme(){ var cur=document.documentElement.getAttribute('data-theme')||'dark'; applyTheme(cur==='light'?'dark':'light'); }
 window.toggleTheme=toggleTheme;
 (function(){ var t=document.documentElement.getAttribute('data-theme')||'dark'; var lbl=document.getElementById('themeLabel'); if(lbl) lbl.textContent=t==='light'?'라이트 모드':'다크 모드'; })();
