@@ -105,6 +105,12 @@
     .sc-delta.flat { color:var(--text3); background:rgba(255,255,255,0.06); }
     html[data-theme="light"] .sc-delta.flat { background:rgba(20,22,40,0.06); }
     .summary-card .sc-sub { margin-top:auto; padding-top:10px; font-size:11px; color:var(--text3); font-weight:600; }
+    .asset-split { margin-top:auto; padding-top:12px; display:flex; flex-direction:column; gap:6px; }
+    .asset-split .as-row { display:flex; align-items:center; justify-content:space-between; }
+    .asset-split .as-l { font-size:11.5px; color:var(--text3); font-weight:600; }
+    .asset-split .as-v { font-size:13px; font-weight:800; }
+    .asset-split .as-v.cash { color:var(--success); }
+    .asset-split .as-v.inv { color:var(--gold); }
     .summary-card .sc-rank { margin-top:auto; padding-top:10px; display:flex; flex-direction:column; gap:3px; }
     .summary-card .sc-rank .r { font-size:11px; color:var(--text2); font-weight:600; }
     .summary-card .sc-rank .medal { margin-right:3px; }
@@ -394,8 +400,11 @@
           <div class="sc-top"><span class="sc-icon">💎 <span style="font-size:12px;color:var(--text2);font-weight:700;">총자산</span></span>
             <button class="sc-edit" onclick="openStartAsset()">시작자산</button></div>
           <div class="sc-value asset" id="totalAsset">0원</div>
-          <div class="sc-label">시작자산 + 누적(수입−지출)</div>
-          <div class="sc-sub" id="assetSub">이번 달까지 누적</div>
+          <div class="sc-label">투자 포함 전체 자산</div>
+          <div class="asset-split" id="assetSplit">
+            <div class="as-row"><span class="as-l">💵 가용 현금</span><span class="as-v cash" id="cashAsset">0원</span></div>
+            <div class="as-row"><span class="as-l">🏦 투자 자산</span><span class="as-v inv" id="invAsset">0원</span></div>
+          </div>
         </div>
         <div class="summary-card" style="--card-accent:#56d99a">
           <div class="sc-top"><span class="sc-icon">📈 <span style="font-size:12px;color:var(--text2);font-weight:700;">이번 달 수입</span></span></div>
@@ -683,9 +692,12 @@ function renderCompare(){
   // 총자산 = 시작자산 + 누적(수입 - 지출). (선택월까지 누적)
   const upto = yearRecords.filter(r=>monthOf(r)<=selMonth);
   const acc = sums(upto);
-  const total = startAsset + acc.inc - acc.exp;
+  const total = startAsset + acc.inc - acc.exp;          // 총자산(투자 포함)
+  const cash  = startAsset + acc.inc - acc.exp - acc.sav; // 가용 현금(투자 제외)
+  const invest = acc.sav;                                 // 투자 자산
   $('totalAsset').textContent = won(total);
-  $('assetSub').textContent = `시작자산 ${won(startAsset)} · ${selMonth}월까지 누적`;
+  $('cashAsset').textContent = won(cash);
+  $('invAsset').textContent = won(invest);
 
   $('incomeLabel').textContent = `${selMonth}월 수입`;
   $('expenseLabel').textContent = `${selMonth}월 지출`;
