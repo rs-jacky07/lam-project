@@ -145,7 +145,7 @@
     .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
     /* 자산 현황 히어로 */
     .asset-hero { display:grid; grid-template-columns:1fr 1.1fr; gap:18px; background:var(--card);
-      border:1px solid var(--border); border-radius:var(--radius); padding:22px 24px; position:relative; overflow:hidden; }
+      border:1px solid var(--border); border-radius:var(--radius); padding:22px 24px; position:relative; overflow:hidden; align-items:stretch; }
     html[data-theme="light"] .asset-hero { box-shadow:0 1px 3px rgba(20,22,40,0.06); }
     .asset-hero::before { content:''; position:absolute; top:0; left:0; right:0; height:3px;
       background:linear-gradient(90deg,var(--accent),var(--accent2)); }
@@ -160,7 +160,8 @@
     .ahc-v.cash { color:var(--success); } .ahc-v.inv { color:var(--gold); }
     .ah-graph { display:flex; flex-direction:column; }
     .ah-graph-title { font-size:13px; font-weight:700; color:var(--text2); margin-bottom:10px; }
-    .ah-graph-box { flex:1; position:relative; min-height:180px; }
+    .ah-graph-box { flex:1; position:relative; min-height:180px; height:180px; }
+    .ah-graph-box canvas { position:absolute; inset:0; }
     @media (max-width:900px){ .asset-hero { grid-template-columns:1fr; } }
 
     /* ══ SUMMARY CARDS ══ */
@@ -738,7 +739,7 @@ async function loadDashboard(){
   buildChartData(records, catId, countFor, bizPct);
   buildChart('bar');
   renderCalendar(records, catId);
-  await renderAsset(uid, records, catId);
+  try { await renderAsset(uid, records, catId); } catch(e){ console.error('renderAsset 오류:', e); }
 }
 
 /* ── 자산 현황 + 월별 성장 그래프 ── */
@@ -746,8 +747,11 @@ let assetChart=null;
 function wonFull(v){ return (Number(v)||0).toLocaleString('ko-KR')+'원'; }
 async function renderAsset(uid, records, catId){
   // 시작 자산
-  const { data:prof } = await sb.from('profiles').select('start_asset').eq('id',uid).single();
-  const startAsset = Number(prof?.start_asset)||0;
+  let startAsset=0;
+  try {
+    const { data:prof } = await sb.from('profiles').select('start_asset').eq('id',uid).maybeSingle();
+    startAsset = Number(prof?.start_asset)||0;
+  } catch(e){ console.warn('start_asset 조회 실패, 0으로 진행:', e); startAsset=0; }
   const finId = catId['금융'];
   const fin = records.filter(r=> r.category_id===finId);
   const mOf = r => Number((r.recorded_at||'').slice(5,7));
