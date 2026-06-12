@@ -204,12 +204,12 @@
     }
     .cat-name {
       display: flex; align-items: center; gap: 8px;
-      font-size: 13px; font-weight: 600;
+      font-size: 13px; font-weight: 600; min-width:0; flex:1;
     }
     .cat-dot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-    .cat-right { display: flex; align-items: center; gap: 10px; }
-    .cat-change { font-size: 11px; }
-    .cat-pct    { font-size: 13px; font-weight: 700; }
+    .cat-right { display: flex; align-items: center; gap: 10px; flex-shrink:0; white-space:nowrap; }
+    .cat-change { font-size: 11px; color:var(--text3); }
+    .cat-pct    { font-size: 13px; font-weight: 700; min-width:38px; text-align:right; }
     .progress-track {
       height: 5px; background: rgba(255,255,255,0.06);
       border-radius: 100px; overflow: hidden;
@@ -776,7 +776,8 @@ function renderCats(){
     const diff = c.pct - c.prevPct;
     const chColor = c.up===true?'var(--success)': c.up===false?'var(--error)':'var(--text3)';
     let chTxt = c.name==='사업'? '진행률' : (diff>0?`+${diff}%`: diff<0?`${diff}%`:'0%');
-    if(c.goal && Number(c.goal.target)>0){ chTxt = `목표 ${Number(c.goal.target).toLocaleString('ko-KR')}${c.goal.unit||''}`; }
+    let chCol = chColor;
+    if(c.goal && Number(c.goal.target)>0){ chTxt = `목표 ${Number(c.goal.target).toLocaleString('ko-KR')}${c.goal.unit||''}`; chCol='var(--text3)'; }
     catList.innerHTML += `
       <div style="cursor:pointer" onclick="location.href='${c.file}'">
         <div class="cat-info">
@@ -785,7 +786,7 @@ function renderCats(){
             ${c.icon} ${c.name}
           </div>
           <div class="cat-right">
-            <span class="cat-change" style="color:${chColor}">${chTxt}</span>
+            <span class="cat-change" style="color:${chCol}">${chTxt}</span>
             <span class="cat-pct" style="color:${c.color}">${c.pct}%</span>
           </div>
         </div>
@@ -815,12 +816,16 @@ function renderActivities(records, catId){
   if(!sorted.length){ actList.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px;">아직 기록이 없습니다. 카테고리에서 기록을 남겨보세요.</div>'; return; }
   const today=new Date().toISOString().slice(0,10);
   sorted.forEach(r=>{
-    const cat=idCat[r.category_id]||'기타'; const m=meta[cat]||{icon:'•',bg:'rgba(255,255,255,0.08)'};
+    // status 기반으로 카테고리 판정 (category_id 연결이 불완전해도 정확)
+    const cat = STATUS_CAT[r.status] || idCat[r.category_id] || '기타';
+    const cm = CAT_META_CAL[cat] || {};
+    const m = { icon: cm.icon||'•', bg: cm.color? hexA(cm.color,0.14):'rgba(255,255,255,0.08)', file: cm.file||'' };
     const d=(r.recorded_at||'').slice(0,10);
     const dateTxt= d===today?'오늘': d.slice(5).replace('-','.');
+    const clickAttr = m.file? `style="cursor:pointer" onclick="location.href='${m.file}'"` : 'style="cursor:default"';
     actList.innerHTML += `
-      <div class="activity-item" style="cursor:pointer" onclick="location.href='${m.file||'#'}'">
-        <div class="act-dot" style="background:${m.bg}">${m.icon}</div>
+      <div class="activity-item" ${clickAttr}>
+        <div class="act-dot" style="background:${m.bg};color:${cm.color||'var(--text3)'}">${m.icon}</div>
         <div class="act-body">
           <div class="act-title">${label[r.status]||r.status}</div>
           <div class="act-meta">${cat}</div>
