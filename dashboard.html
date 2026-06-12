@@ -405,7 +405,36 @@
     html[data-theme="light"] .item { background:var(--card2); }
     html[data-theme="light"] .cal-cell { background:var(--card2); }
     html[data-theme="light"] .hamburger { background:var(--card); }
-  </style>
+      .goal-btn { font-size:12px; font-weight:700; color:var(--accent2); background:rgba(91,155,255,0.12);
+      border:1px solid rgba(91,155,255,0.3); border-radius:9px; padding:7px 12px; cursor:pointer;
+      font-family:'Pretendard',sans-serif; transition:all 0.14s; white-space:nowrap; }
+    .goal-btn:hover { background:rgba(91,155,255,0.2); }
+    .goal-row { display:flex; align-items:center; gap:10px; padding:12px 0; border-bottom:1px solid var(--border); }
+    .goal-row:last-of-type { border-bottom:none; }
+    .goal-row .gr-ic { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+    .goal-row .gr-info { flex:1; min-width:0; }
+    .goal-row .gr-name { font-size:14px; font-weight:700; }
+    .goal-row .gr-hint { font-size:11px; color:var(--text3); margin-top:1px; }
+    .goal-row .gr-input { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .goal-row .gr-input input { width:90px; background:var(--bg2); border:1px solid var(--border); border-radius:8px;
+      padding:8px 10px; color:var(--text); font-size:14px; font-family:'Pretendard',sans-serif; outline:none; text-align:right; }
+    .goal-row .gr-input input:focus { border-color:var(--accent); }
+    .goal-row .gr-unit { font-size:12px; color:var(--text2); font-weight:600; width:28px; }
+    .goal-modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.66); backdrop-filter:blur(4px);
+      display:none; align-items:center; justify-content:center; z-index:200; opacity:0; transition:opacity 0.22s; }
+    .goal-modal-bg.on { display:flex; opacity:1; }
+    .goal-modal { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:26px;
+      width:460px; max-width:92vw; max-height:88vh; overflow-y:auto; transform:scale(0.96); transition:transform 0.22s; }
+    .goal-modal-bg.on .goal-modal { transform:scale(1); }
+    .goal-modal h3 { font-size:18px; font-weight:800; margin-bottom:5px; }
+    .goal-modal .gm-sub { font-size:12.5px; color:var(--text2); margin-bottom:18px; line-height:1.5; }
+    .goal-modal-foot { display:flex; gap:9px; margin-top:22px; }
+    .goal-modal-foot button { flex:1; padding:12px; border-radius:10px; font-size:14px; font-weight:700;
+      cursor:pointer; border:none; font-family:'Pretendard',sans-serif; transition:all 0.16s; }
+    .gm-cancel { background:var(--card2); color:var(--text2); border:1px solid var(--border); }
+    .gm-save { background:linear-gradient(135deg,var(--accent),#82b4ff); color:#fff; }
+    .gm-save:hover { box-shadow:0 6px 22px rgba(91,155,255,0.5); }
+</style>
 </head>
 <body>
 <div class="app">
@@ -527,6 +556,7 @@
               <div class="panel-title">카테고리별 진행률</div>
               <div class="panel-sub" id="monthLabel"></div>
             </div>
+            <button class="goal-btn" onclick="openGoals()">🎯 목표 설정</button>
           </div>
           <div class="cat-list" id="catList"></div>
         </div>
@@ -647,6 +677,21 @@ let chartDatasets = [];
 const catList = document.getElementById('catList');
 const actList = document.getElementById('activityList');
 
+let GOALS={};  // {카테고리: {target, unit}}  이번 달 목표
+// 카테고리별 실제값의 의미(목표 입력 안내용)
+const GOAL_META={
+  '금융':{unit:'만원', label:'저축·투자 목표', hint:'이번 달 저축·투자 금액'},
+  '피부':{unit:'건', label:'활동 목표', hint:'리뷰+콘텐츠 활동 수'},
+  '건강':{unit:'일', label:'운동 목표', hint:'운동한 날 수'},
+  '음악':{unit:'회', label:'연습 목표', hint:'연습+콘텐츠 수'},
+  '사업':{unit:'%', label:'진행률 목표', hint:'영역 평균 진행률'},
+};
+// 목표 우선 달성률: 목표 있으면 실제/목표, 없으면 base 기준
+function pctWithGoal(name, actualValue, cnt, base){
+  const g=GOALS[name];
+  if(g && Number(g.target)>0){ return Math.min(100, Math.round(actualValue/Number(g.target)*100)); }
+  if(!base) return 0; return Math.min(100, Math.round(cnt/base*100));
+}
 function pctFromCount(cnt, base){ if(!base) return 0; return Math.min(100, Math.round(cnt/base*100)); }
 
 /* 카테고리별 이번달/지난달 활동량 → 진행률 */
@@ -662,6 +707,12 @@ async function loadDashboard(){
     .gte('recorded_at',`${YEAR}-01-01`).lte('recorded_at',`${YEAR}-12-31`);
   const records = recs || [];
   const mOf = r => Number((r.recorded_at||'').slice(5,7));
+  // 이번 달 목표 로드
+  GOALS={};
+  const { data:goalRows } = await sb.from('monthly_goals').select('*')
+    .eq('user_id',uid).eq('year',YEAR).eq('month',MONTH);
+  (goalRows||[]).forEach(g=>{ GOALS[g.category]={ target:Number(g.target)||0, unit:g.unit||'' }; });
+  window.__uid=uid;
   const inCat = (r,name) => r.category_id===catId[name];
 
   // 카테고리별 활동량 카운트 함수 (status 기준)
@@ -673,6 +724,16 @@ async function loadDashboard(){
     if(name==='음악')  return rs.filter(r=>['practice','content'].includes(r.status)).length;
     if(name==='사업')  return rs.filter(r=>r.status==='learn').length;
     return rs.length;
+  }
+  // 카테고리별 "목표와 비교할 실제값" (금융=저축만원, 사업=진행률%, 나머지=카운트)
+  function actualValue(name, month, cnt, bizPct){
+    if(name==='금융'){
+      const rs=records.filter(r=> inCat(r,name) && mOf(r)===month && r.status==='save');
+      const won=rs.reduce((a,r)=>a+(Number(r.value)||0),0);
+      return Math.round(won/10000); // 만원 단위
+    }
+    if(name==='사업') return bizPct;
+    return cnt; // 피부·건강·음악은 카운트가 곧 실제값
   }
   // 사업 진행률 = progress 영역 평균 (연도 무관)
   async function bizProgress(){
@@ -690,11 +751,13 @@ async function loadDashboard(){
   for(const c of CATS){
     const cnt = catId[c.name] ? countFor(c.name, MONTH) : 0;
     const prevCnt = catId[c.name] ? countFor(c.name, MONTH-1) : 0;
+    const actV = catId[c.name] ? actualValue(c.name, MONTH, cnt, bizPct) : 0;
+    const prevActV = catId[c.name] ? actualValue(c.name, MONTH-1, prevCnt, bizPct) : 0;
     let pct, prevPct;
-    if(c.name==='사업'){ pct=bizPct; prevPct=bizPct; }   // 진행률은 누적값이라 전월비교 생략
-    else { pct=pctFromCount(cnt,c.base); prevPct=pctFromCount(prevCnt,c.base); }
-    const up = c.name==='사업'? null : (pct>prevPct?true: pct<prevPct?false:null);
-    CAT_STATE.push({ ...c, pct, prevPct, count:cnt, up });
+    if(c.name==='사업' && !(GOALS['사업']&&GOALS['사업'].target>0)){ pct=bizPct; prevPct=bizPct; }
+    else { pct=pctWithGoal(c.name, actV, cnt, c.base); prevPct=pctWithGoal(c.name, prevActV, prevCnt, c.base); }
+    const up = (pct>prevPct?true: pct<prevPct?false:null);
+    CAT_STATE.push({ ...c, pct, prevPct, count:cnt, up, goal:GOALS[c.name]||null, actual:actV });
   }
 
   renderCats();
@@ -712,7 +775,8 @@ function renderCats(){
   CAT_STATE.forEach(c=>{
     const diff = c.pct - c.prevPct;
     const chColor = c.up===true?'var(--success)': c.up===false?'var(--error)':'var(--text3)';
-    const chTxt = c.name==='사업'? '진행률' : (diff>0?`+${diff}%`: diff<0?`${diff}%`:'0%');
+    let chTxt = c.name==='사업'? '진행률' : (diff>0?`+${diff}%`: diff<0?`${diff}%`:'0%');
+    if(c.goal && Number(c.goal.target)>0){ chTxt = `목표 ${Number(c.goal.target).toLocaleString('ko-KR')}${c.goal.unit||''}`; }
     catList.innerHTML += `
       <div style="cursor:pointer" onclick="location.href='${c.file}'">
         <div class="cat-info">
@@ -1012,7 +1076,53 @@ function applySidebarAvatar(p,name){
     else { el.style.backgroundImage=''; el.style.background='linear-gradient(135deg,'+col+','+col+')'; el.textContent=(name||'?').charAt(0).toUpperCase(); }
   }catch(e){}
 }
+
+function openGoals(){
+  document.getElementById('goalMonthSub').textContent = `${YEAR}년 ${MONTH}월 목표 · 카테고리별 목표를 정하면 달성률이 자동 계산됩니다. 비워두면 기본 기준.`;
+  const rows = CATS.map(c=>{
+    const meta=GOAL_META[c.name]||{unit:'',hint:''};
+    const cur=GOALS[c.name]? GOALS[c.name].target : '';
+    return `<div class="goal-row">
+      <div class="gr-ic" style="background:${c.color}22;color:${c.color}">${c.icon}</div>
+      <div class="gr-info"><div class="gr-name">${c.name}</div><div class="gr-hint">${meta.label} · ${meta.hint}</div></div>
+      <div class="gr-input"><input type="number" min="0" id="goal_${c.name}" value="${cur}" placeholder="0"><span class="gr-unit">${meta.unit}</span></div>
+    </div>`;
+  }).join('');
+  document.getElementById('goalRows').innerHTML=rows;
+  document.getElementById('goalModal').classList.add('on');
+}
+function closeGoals(){ document.getElementById('goalModal').classList.remove('on'); }
+window.openGoals=openGoals; window.closeGoals=closeGoals;
+document.getElementById('goalModal').addEventListener('click',e=>{ if(e.target.id==='goalModal') closeGoals(); });
+async function saveGoals(){
+  const uid=window.__uid; if(!uid){ alert('사용자 정보를 찾을 수 없습니다'); return; }
+  const rows=[];
+  CATS.forEach(c=>{
+    const v=Number(document.getElementById('goal_'+c.name).value)||0;
+    const meta=GOAL_META[c.name]||{unit:''};
+    rows.push({ user_id:uid, category:c.name, year:YEAR, month:MONTH, target:v, unit:meta.unit });
+  });
+  // upsert (user_id,category,year,month 유니크)
+  const { error }=await sb.from('monthly_goals').upsert(rows, { onConflict:'user_id,category,year,month' });
+  if(error){ alert('목표 저장 실패: '+error.message); return; }
+  closeGoals();
+  await loadDashboard(); // 달성률 다시 계산
+}
+window.saveGoals=saveGoals;
 </script>
+<!-- 월간 목표 설정 모달 -->
+<div class="goal-modal-bg" id="goalModal">
+  <div class="goal-modal">
+    <h3>🎯 이번 달 목표 설정</h3>
+    <div class="gm-sub" id="goalMonthSub">카테고리별 목표를 정하면 달성률이 자동 계산됩니다. 비워두면 기본 기준으로 계산됩니다.</div>
+    <div id="goalRows"></div>
+    <div class="goal-modal-foot">
+      <button class="gm-cancel" onclick="closeGoals()">취소</button>
+      <button class="gm-save" onclick="saveGoals()">목표 저장</button>
+    </div>
+  </div>
+</div>
+
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 </body>
 </html>
