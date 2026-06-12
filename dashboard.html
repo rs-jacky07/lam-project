@@ -144,25 +144,7 @@
     .content::-webkit-scrollbar-track { background: transparent; }
     .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
     /* 자산 현황 히어로 */
-    .asset-hero { display:flex; gap:20px; background:var(--card); border:1px solid var(--border);
-      border-radius:var(--radius); padding:22px 24px; position:relative; overflow:hidden; align-items:stretch; }
-    html[data-theme="light"] .asset-hero { box-shadow:0 1px 3px rgba(20,22,40,0.06); }
-    .asset-hero::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--accent2)); }
-    .ah-main { flex:1 1 40%; min-width:0; display:flex; flex-direction:column; }
-    .ah-graph { flex:1 1 56%; min-width:0; display:flex; flex-direction:column; }
-    .ah-label { font-size:13px; color:var(--text2); font-weight:700; }
-    .ah-sub { font-size:11px; color:var(--text3); font-weight:600; margin-left:4px; }
-    .ah-value { font-size:34px; font-weight:800; letter-spacing:-0.02em; color:var(--accent2); margin:10px 0 18px; line-height:1.2; }
-    html[data-theme="light"] .ah-value { color:var(--accent); }
-    .ah-chips { display:flex; flex-direction:column; gap:9px; }
-    .ah-chip { display:flex; align-items:center; justify-content:space-between; padding:11px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:10px; }
-    .ahc-l { font-size:12.5px; color:var(--text2); font-weight:600; }
-    .ahc-v { font-size:15px; font-weight:800; color:var(--text); }
-    .ahc-v.cash { color:var(--success); } .ahc-v.inv { color:var(--gold); }
-    .ah-graph-title { font-size:13px; font-weight:700; color:var(--text2); margin-bottom:10px; }
-    .ah-graph-box { flex:1; position:relative; min-height:200px; height:200px; }
-    .ah-graph-box canvas { position:absolute; inset:0; width:100% !important; height:100% !important; }
-    @media (max-width:900px){ .asset-hero { flex-direction:column; } .ah-graph-box { height:180px; } }
+
 
     /* ══ SUMMARY CARDS ══ */
     .summary-grid {
@@ -495,23 +477,6 @@
 
     <div class="content">
 
-      <!-- ⓪ 자산 현황 히어로 -->
-      <div class="asset-hero">
-        <div class="ah-main">
-          <div class="ah-label">💎 총자산 <span class="ah-sub">금융 기록 기준</span></div>
-          <div class="ah-value" id="ahTotal">0원</div>
-          <div class="ah-chips">
-            <span class="ah-chip"><span class="ahc-l">💵 가용 현금</span><span class="ahc-v cash" id="ahCash">0원</span></span>
-            <span class="ah-chip"><span class="ahc-l">🏦 투자 자산</span><span class="ahc-v inv" id="ahInv">0원</span></span>
-            <span class="ah-chip"><span class="ahc-l">📅 이번 달 수지</span><span class="ahc-v" id="ahNet">0원</span></span>
-          </div>
-        </div>
-        <div class="ah-graph">
-          <div class="ah-graph-title">월별 자산 성장</div>
-          <div class="ah-graph-box"><canvas id="assetChart"></canvas></div>
-        </div>
-      </div>
-
       <!-- ① 요약 카드 -->
       <div class="summary-grid fade-up" style="animation-delay:0s">
 
@@ -739,64 +704,6 @@ async function loadDashboard(){
   buildChartData(records, catId, countFor, bizPct);
   buildChart('bar');
   renderCalendar(records, catId);
-  try { await renderAsset(uid, records, catId); } catch(e){ console.error('renderAsset 오류:', e); }
-}
-
-/* ── 자산 현황 + 월별 성장 그래프 ── */
-let assetChart=null;
-function wonFull(v){ return (Number(v)||0).toLocaleString('ko-KR')+'원'; }
-async function renderAsset(uid, records, catId){
-  // 시작 자산
-  let startAsset=0;
-  try {
-    const { data:prof } = await sb.from('profiles').select('start_asset').eq('id',uid).maybeSingle();
-    startAsset = Number(prof?.start_asset)||0;
-  } catch(e){ console.warn('start_asset 조회 실패, 0으로 진행:', e); startAsset=0; }
-  const finId = catId['금융'];
-  const fin = records.filter(r=> r.category_id===finId);
-  const mOf = r => Number((r.recorded_at||'').slice(5,7));
-
-  // 누적(올해 선택월까지 = 이번 달까지)
-  let accInc=0, accExp=0, accSav=0, mInc=0, mExp=0;
-  fin.forEach(r=>{
-    const v=Number(r.value)||0, m=mOf(r);
-    if(m<=MONTH){
-      if(r.status==='income') accInc+=v;
-      else if(r.status==='expense') accExp+=v;
-      else if(r.status==='save') accSav+=v;
-    }
-    if(m===MONTH){ if(r.status==='income') mInc+=v; else if(r.status==='expense') mExp+=v; }
-  });
-  const total = startAsset + accInc - accExp;
-  const cash  = total - accSav;
-  const net   = mInc - mExp;
-  document.getElementById('ahTotal').textContent = wonFull(total);
-  document.getElementById('ahCash').textContent = wonFull(cash);
-  document.getElementById('ahInv').textContent = wonFull(accSav);
-  const netEl=document.getElementById('ahNet');
-  netEl.textContent = (net>=0?'+':'') + wonFull(net);
-  netEl.style.color = net>=0? 'var(--success)' : 'var(--error)';
-
-  // 월별 총자산 추이 (1월~이번달): 시작자산 + 그 달까지 누적(수입-지출)
-  const labels=[], data=[];
-  for(let m=1;m<=MONTH;m++){
-    let inc=0, exp=0;
-    fin.forEach(r=>{ if(mOf(r)<=m){ const v=Number(r.value)||0;
-      if(r.status==='income') inc+=v; else if(r.status==='expense') exp+=v; } });
-    labels.push(m+'월'); data.push(startAsset + inc - exp);
-  }
-  const tc=getComputedStyle(document.documentElement).getPropertyValue('--text3').trim()||'#7e7ea4';
-  const acc=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#5b9bff';
-  if(assetChart) assetChart.destroy();
-  assetChart=new Chart(document.getElementById('assetChart'),{
-    type:'line',
-    data:{ labels, datasets:[{ data, borderColor:acc, backgroundColor:acc+'22',
-      borderWidth:2.5, tension:0.35, pointRadius:3, pointBackgroundColor:acc, fill:true }] },
-    options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>wonFull(c.parsed.y) } } },
-      scales:{ x:{ ticks:{color:tc,font:{size:10}}, grid:{display:false} },
-        y:{ ticks:{color:tc,font:{size:10}, callback:v=> v>=100000000?(v/100000000)+'억': v>=10000?(v/10000)+'만':v }, grid:{color:'rgba(128,128,128,0.1)'} } } }
-  });
 }
 
 /* 카테고리 진행률 렌더 */
@@ -904,7 +811,17 @@ const CAT_META_CAL={
   '금융':{icon:'💰',color:'#4ecb8d',file:'finance.html'}, '피부':{icon:'✨',color:'#c97ef7',file:'skin.html'},
   '건강':{icon:'💪',color:'#f5a623',file:'health.html'}, '음악':{icon:'🎵',color:'#f06a9a',file:'music.html'},
   '사업':{icon:'💼',color:'#4f8ef7',file:'business.html'},
+  '채널':{icon:'📈',color:'#4fd5d5',file:'channels.html'},
 };
+// status -> 카테고리(색) 직접 매핑: category_id 연결이 불완전해도 색이 확실히 나오도록
+const STATUS_CAT={ income:'금융', expense:'금융', save:'금융',
+  review:'피부', content:'피부', channel:'채널',
+  workout:'건강', inbody:'건강', practice:'음악', learn:'사업', progress:'사업' };
+function catColorOf(r, idCat){
+  // 우선 status로 카테고리 판정, 없으면 category_id 매핑
+  const cat = STATUS_CAT[r.status] || idCat[r.category_id] || '기타';
+  return { cat, color:(CAT_META_CAL[cat]||{}).color||'#888', icon:(CAT_META_CAL[cat]||{}).icon||'•' };
+}
 function hexA(hex,a){ const h=hex.replace('#',''); const n=h.length===3? h.split('').map(c=>c+c).join('') : h;
   const r=parseInt(n.slice(0,2),16), g=parseInt(n.slice(2,4),16), b=parseInt(n.slice(4,6),16);
   return `rgba(${r},${g},${b},${a})`; }
@@ -967,15 +884,15 @@ function renderCalendar(records, catId){
     const groups={}; const order=[];
     recs.forEach(r=>{
       const label=STATUS_LABEL_CAL[r.status]||r.status;
-      const cat=idCat[r.category_id]||'기타';
+      const cc=catColorOf(r, idCat);
       const key=label;
-      if(!groups[key]){ groups[key]={label, cat, n:0}; order.push(key); }
+      if(!groups[key]){ groups[key]={label, cat:cc.cat, color:cc.color, n:0}; order.push(key); }
       groups[key].n++;
     });
     const MAXROWS=2;
     const shown=order.slice(0,MAXROWS);
     const chips=shown.map(k=>{
-      const g=groups[k]; const col=(CAT_META_CAL[g.cat]||{}).color||'#888';
+      const g=groups[k]; const col=g.color||'#888';
       return `<span class="cal-chip" style="--chip-c:${col};--chip-bg:${hexA(col,0.16)}">${g.label}${g.n>1?' '+g.n:''}</span>`;
     }).join('');
     const restGroups=order.length-shown.length;
@@ -1000,11 +917,11 @@ window.selectDay=function(d){
   const det=document.getElementById('calDetail');
   if(!recs.length){ det.innerHTML=`<div class="cal-detail-title">${MONTH}월 ${d}일</div><div class="cal-detail-empty">이 날은 기록이 없습니다.</div>`; return; }
   const items=recs.map(r=>{
-    const cat=data.idCat[r.category_id]||'기타'; const m=CAT_META_CAL[cat]||{icon:'•',color:'#888'};
+    const cc=catColorOf(r, data.idCat); const m={icon:cc.icon, color:cc.color};
     const digest=ellip(calDigest(r), 28);
     return `<div class="cal-detail-item">
       <div class="ci" style="background:${m.color}22;color:${m.color}">${m.icon}</div>
-      <div class="cinfo"><div class="ctitle">${digest}</div><div class="ccat">${cat}</div></div>
+      <div class="cinfo"><div class="ctitle">${digest}</div><div class="ccat">${cc.cat}</div></div>
     </div>`;
   }).join('');
   det.innerHTML=`<div class="cal-detail-title">${MONTH}월 ${d}일 · ${recs.length}건</div>${items}`;
