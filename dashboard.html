@@ -144,25 +144,25 @@
     .content::-webkit-scrollbar-track { background: transparent; }
     .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
     /* 자산 현황 히어로 */
-    .asset-hero { display:grid; grid-template-columns:1fr 1.1fr; gap:18px; background:var(--card);
-      border:1px solid var(--border); border-radius:var(--radius); padding:22px 24px; position:relative; overflow:hidden; align-items:stretch; }
+    .asset-hero { display:flex; gap:20px; background:var(--card); border:1px solid var(--border);
+      border-radius:var(--radius); padding:22px 24px; position:relative; overflow:hidden; align-items:stretch; }
     html[data-theme="light"] .asset-hero { box-shadow:0 1px 3px rgba(20,22,40,0.06); }
-    .asset-hero::before { content:''; position:absolute; top:0; left:0; right:0; height:3px;
-      background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+    .asset-hero::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+    .ah-main { flex:1 1 40%; min-width:0; display:flex; flex-direction:column; }
+    .ah-graph { flex:1 1 56%; min-width:0; display:flex; flex-direction:column; }
     .ah-label { font-size:13px; color:var(--text2); font-weight:700; }
     .ah-sub { font-size:11px; color:var(--text3); font-weight:600; margin-left:4px; }
-    .ah-value { font-size:38px; font-weight:800; letter-spacing:-0.02em; color:var(--accent2); margin:8px 0 16px; }
+    .ah-value { font-size:34px; font-weight:800; letter-spacing:-0.02em; color:var(--accent2); margin:10px 0 18px; line-height:1.2; }
+    html[data-theme="light"] .ah-value { color:var(--accent); }
     .ah-chips { display:flex; flex-direction:column; gap:9px; }
-    .ah-chip { display:flex; align-items:center; justify-content:space-between; padding:10px 14px;
-      background:var(--bg2); border:1px solid var(--border); border-radius:10px; }
+    .ah-chip { display:flex; align-items:center; justify-content:space-between; padding:11px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:10px; }
     .ahc-l { font-size:12.5px; color:var(--text2); font-weight:600; }
-    .ahc-v { font-size:15px; font-weight:800; }
+    .ahc-v { font-size:15px; font-weight:800; color:var(--text); }
     .ahc-v.cash { color:var(--success); } .ahc-v.inv { color:var(--gold); }
-    .ah-graph { display:flex; flex-direction:column; }
     .ah-graph-title { font-size:13px; font-weight:700; color:var(--text2); margin-bottom:10px; }
-    .ah-graph-box { flex:1; position:relative; min-height:180px; height:180px; }
-    .ah-graph-box canvas { position:absolute; inset:0; }
-    @media (max-width:900px){ .asset-hero { grid-template-columns:1fr; } }
+    .ah-graph-box { flex:1; position:relative; min-height:200px; height:200px; }
+    .ah-graph-box canvas { position:absolute; inset:0; width:100% !important; height:100% !important; }
+    @media (max-width:900px){ .asset-hero { flex-direction:column; } .ah-graph-box { height:180px; } }
 
     /* ══ SUMMARY CARDS ══ */
     .summary-grid {
@@ -496,7 +496,7 @@
     <div class="content">
 
       <!-- ⓪ 자산 현황 히어로 -->
-      <div class="asset-hero fade-up">
+      <div class="asset-hero">
         <div class="ah-main">
           <div class="ah-label">💎 총자산 <span class="ah-sub">금융 기록 기준</span></div>
           <div class="ah-value" id="ahTotal">0원</div>
